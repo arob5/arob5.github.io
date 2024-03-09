@@ -1,0 +1,9 @@
+I"c<p>The Metropolis-Hastings (MH) Markov Chain Monte Carlo (MCMC) method is typically
+introduced in the form of a practical algorithm. In a more theoretically-oriented
+context, one might prove that the algorithm defines a Markov chain and derive
+the associated transition (i.e. probability) kernel. I have found it insightful
+to also work through the derivations in the reverse order; given only the
+transition kernel, how could one derive the well-known MH update? In other words,
+how can you simulate the Markov chain implied by the transition kernel? In this
+post, I work through the required derivations.</p>
+:ET

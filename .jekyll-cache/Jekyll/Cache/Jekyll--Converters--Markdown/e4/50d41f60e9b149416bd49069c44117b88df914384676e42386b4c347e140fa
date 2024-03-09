@@ -1,0 +1,17 @@
+I"�<p>Originally introduced in R.E. Kalman’s seminal 1960 paper, the Kalman filter has
+found a myriad of applications in fields as disparate as robotics and economics.
+In short, the Kalman filter (KF) gives the closed-form solutions to the filtering
+problem (see my previous post) in the linear-Gaussian setting; that is, the
+deterministic dynamic model and observaton operator are each linear and subject
+to additive Gaussian noise, and the initial condition is also Gaussian.
+As in other models with Gaussian noise, the KF
+can alternatively be viewed as an optimization algorithm, which is optimal
+in the sense of minimizing the quadratic loss. Indeed, this optimization
+perspective was the one originally considered by Kalman in the original paper.
+In this post I begin by deriving the KF equations in the Bayesian statistical
+setting in two different ways. The two derivations produce two different sets
+of equations, which I show are equivalent through an application of the Woodbury
+matrix identity. I then proceed to the optimization perspective, again offering
+two different derivations, one rooted in calculus and the other–the projection
+based approach used in the 1960 paper–in linear algebra.</p>
+:ET
