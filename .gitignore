@@ -1,6 +1,6 @@
 *.png
 *.jpeg
-
+!docs/assets/photo.png
 
 # Jekyll files to ignore
 _site/
