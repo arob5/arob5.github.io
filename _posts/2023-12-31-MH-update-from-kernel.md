@@ -20,12 +20,13 @@ post, I work through the required derivations.
 {% katexmm %}
 We consider drawing samples from a target probability distribution $\mu$ supported
 on a state space $\mathcal{X} \subseteq \mathbb{R}^D$ with Borel sigma algebra
-$\mathcal{A}$. Let $\pi: \mathcal{X} \to [0,\infty]$ denote the Lebesgue density
+$\mathcal{B}$. Let $\pi: \mathcal{X} \to [0,\infty]$ denote the Lebesgue density
 of $\mu$, i.e.
 $$
-\mu(A) = \int_A \mu(d\mathbf{x}) = \int_A \pi(\mathbf{x}) d\mathbf{x}, \qquad \forall A \in \mathcal{A}.
+\mu(A) = \int_A \mu(d\mathbf{x}) = \int_A \pi(\mathbf{x}) d\mathbf{x}, \qquad \forall A \in \mathcal{B}.
 $$
-Let $Q$ denote the proposal kernel for the MH algorithm, and $q$ its Lebesgue density.
+Let $Q: \mathcal{X} \times \mathcal{B} \to [0,1]$ denote the proposal kernel for the MH algorithm,
+with $q(\mathbf{x}, \cdot)$ the Lebesgue density of the measure $Q(\mathbf{x}, \cdot)$.
 For current state $\mathbf{x} \in \mathcal{X}$ and proposal
 $\mathbf{y} \sim Q(\mathbf{x}, \cdot)$ we recall the MH acceptance probability
 $$
@@ -41,7 +42,7 @@ P(\mathbf{x},A)
 \end{align}
 where $\delta_{\mathbf{x}}(A) := \mathbf{1}(\mathbf{x} \in A)$ denotes the Dirac
 measure. The first term in the kernel is the probability of accepting a proposal in
-the set $A$, while the second term accounts for the probability of rejection in the
+the set $A$, while the second accounts for the probability of rejection in the
 case that the current state $\mathbf{x}$ is already in $A$. I will denote the
 overall probability of acceptance by
 $$
@@ -52,10 +53,11 @@ $$
 
 ## Mixture of Kernels
 {% katexmm %}
-Given the task of writing an algorithm to draw a sample from the distribution
-$P(\mathbf{x},\cdot)$ defined in (1), a reasonable place to start is to try
+Suppose we don't already know the MH algorithm, and are given the task of writing
+an algorithm to draw a sample from the distribution $P(\mathbf{x},\cdot)$ defined in (1).
+A reasonable place to start is to try
 writing $P(\mathbf{x},\cdot)$ as a mixture of kernels from which we already
-know how to sample. Let's first try this approach, attempting to write
+know how to sample. Let's first try this idea, attempting to write
 $$
 P(\mathbf{x},A) = wP_1(\mathbf{x},A) + (1-w)P_2(\mathbf{x},A), \qquad w \in [0,1], \tag{3}
 $$
@@ -108,13 +110,13 @@ with density proportional to $q(\mathbf{x},\mathbf{y})\alpha(\mathbf{x},\mathbf{
 While this approach seems to be a dead end from a practical point of view,
 we should keep in mind that the MH algorithm derived below does sample from the
 mixture (4), but does so in a way that avoids having to compute the mixture weight
-or to directly sample from $P_2(\mathbf{x},\cdot)$.
+or to directly sample from $P_1(\mathbf{x},\cdot)$.
 {% endkatexmm %}
 
 ## Marginalized Mixture of Kernels
 {% katexmm %}
 In the previous section, we feigned ignorance of the MH algorithm in order to
-approach the problem of simulating from (1) as a generic sampling problem.
+approach the problem of simulating (1) as a generic sampling problem.
 We found that $P$ can indeed be written as a mixture of kernels, but the problem
 of sampling from the resulting mixture was also intractable. To take a step in the
 right direction, it is useful to cheat a little bit and recall some of the mechanics
@@ -129,7 +131,8 @@ Of course, this can't represent the whole picture since the mixture weight in (5
 depends on $\mathbf{y}$ and the proposal kernel $Q$ is completely missing from the
 expression. The key insight is that the MH kernel $P(\mathbf{x},\cdot)$ can be
 viewed as the expectation of (5) averaged with respect to $Q(\mathbf{x},\cdot)$;
-i.e. the mixture (5) is *marginalized* over $Q(\mathbf{x},\cdot)$. To show this,
+i.e., $P(\mathbf{x},\cdot)$ is derived by *marginalizing* the mixture (5)
+with respect to $\mathbf{y} \sim Q(\mathbf{x},\cdot)$. To show this,
 we return to the original expression (1) for the MH kernel. We have
 \begin{align}
 P(\mathbf{x},A)
@@ -138,7 +141,7 @@ P(\mathbf{x},A)
 &= \int_{\mathcal{X}} \alpha(\mathbf{x},\mathbf{y}) \delta_{\mathbf{y}}(A) q(\mathbf{x},\mathbf{y}) d\mathbf{y} +  \int_{\mathcal{X}} [1-\alpha(\mathbf{x},\mathbf{y})] \delta_{\mathbf{x}}(A) q(\mathbf{x},\mathbf{y}) d\mathbf{y} \newline
 &= \int_{\mathcal{X}} \left[\alpha(\mathbf{x},\mathbf{y})\delta_{\mathbf{y}}(A) + [1-\alpha(\mathbf{x},\mathbf{y})] \delta_{\mathbf{x}}(A) \right] q(\mathbf{x},\mathbf{y}) d\mathbf{y}, \tag{6}
 \end{align}
-which is precisely the mixture (5) averaged (with respect to $\mathbf{y}$) over
+which is precisely the mixture (5) averaged (in $\mathbf{y}$) with respect to the weights
 $q(\mathbf{x},\mathbf{y})$. We now have three different representations of the MH
 transition kernel $P$: (1) is the most natural to derive when starting from the MH
 algorithm, (4) represents $P$ as a mixture of two distributions, and (6) represents
