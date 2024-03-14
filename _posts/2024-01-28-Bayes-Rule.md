@@ -60,19 +60,19 @@ is a measurable function.
 While this probability kernel is generic, we will think of $P_u$ as representing
 the conditional distribution of $Y|U=u$. To define what we mean by the other
 conditional $U|Y=y$ we similarly assume there is a probability kernel
-$\mu^Y: \mathcal{Y} \times \mathcal{B}(\mathcal{U}) \to [0,1]$, again
-satisfying the two required properties for a probability kernel. We will use
+$\mu^Y: \mathcal{Y} \times \mathcal{B}(\mathcal{U}) \to [0,1]$, satisfying the
+same two properties. We will use
 the notation $\mu^y(\cdot) := \mu^Y(y, \cdot)$ for the probability measure
 that results from fixing the first argument of the kernel at
 $y \in \mathcal{Y}$.
 
-Note that since are assuming both of these kernels exist, the statement of
+Note that since we are assuming both of these kernels exist, the statement of
 Bayes' theorem presented below will take the form "If both conditional
 distributions exist (and are given by the probability kernels described above),
 then they must be related in the following way...". This might feel a bit
 unsatisfying at first, but it is not difficult to show that in the common
-settings of interest, it is straightforward to define these probability kernels.
-I discuss this in more detail in the appendix.
+settings of interest, it is straightforward to define the required probability kernels.
+This is explored in the appendix.
 
 ### Densities
 The last missing ingredient is to consider
@@ -81,7 +81,7 @@ for the probability measures introduced above. While the typical informal
 statement of Bayes' theorem implicitly assumes the existence of Lebesgue
 densities (or probability mass functions) we can generalize this by assuming
 that there is some $\sigma$-finite measure $\nu$ such that $P_u$ is
-absolutely continous with respect to $\nu$ for each $u \in \mathcal{U}$; i.e.,
+absolutely continuous with respect to $\nu$ for each $u \in \mathcal{U}$; i.e.,
 $P_u \ll \nu$ $\forall u \in \mathcal{U}$. We recall that absolute continuity
 means that $\nu(B) = 0 \implies P_u(B)=0$ for all $B \in \mathcal{B}(\mathcal{Y})$.
 Intuitively,
@@ -93,8 +93,8 @@ respectively.
 
 ### The Statistical Interpretation
 I was careful to keep things quite generic above; at its core Bayes' theorem
-concerns the joint and conditional distributions between two generic random
-variables $U$ and $Y$. However, the result is most commonly seen applied to
+concerns the joint and conditional distributions between two random
+variables $U$ and $Y$. However, the result is most commonly seen applied in
 the field of Bayesian statistics, so I take a moment to map the above definitions
 onto their common Bayesian interpretations. In a Bayesian context, the random
 variable $Y$ is the data, while $U$ is the parameter in the statistical model
@@ -113,38 +113,27 @@ probability distributions are interpreted.
 
 
 ## Finally, Bayes' theorem
-With all of this setup out of the way, we can now state the theorem. However,
-before doing so, let's provide one last bit of motivation. Assuming the
-existence of the two probability kernels $P_u$ and $\mu^Y$ provides two
-equivalent ways to write the joint distribution on $(U, Y)$. Letting
-$A \in \mathcal{B}(\mathcal{U})$ and $B \in \mathcal{B}(\mathcal{Y})$, we have
-\begin{align}
-\mathbb{P}(U \in A, Y \in B)
-&= \int_A \int_B \mu_U(du)P(u, dy) = \int_B \int_A \mu_Y(dy) \mu^Y(y, du).
-\end{align}
-Moreover, since $P(u, \cdot) \ll \nu$ by assumption, the middle term can be
-re-written as
-\begin{align}
-\int_A \int_B \mu_U(du)P(u, dy) &= \int_A \int_B \mu_U(du) \frac{dP_u}{d\nu}(y) \nu(dy).
-\end{align}
-We know that Bayes' theorem give the relationship between the densities
-associated with the two conditional distributions. Since the above equations
-give
-\begin{align}
-\int_A \int_B \mu_U(du) \frac{dP_u}{d\nu}(y) \nu(dy)
-&= \int_B \int_A \mu_Y(dy) \mu^Y(y, du),
-\end{align}
-we see that we are almost there, aside from a few missing ingredients. The most
-obvious missing piece is the density for the other conditional distribution;
-i.e., $\frac{d\mu^Y}{d\nu}$. The first step in writing down Bayes' theorem
-should thus be establishing the existence of this density by showing that
-$\mu^y \ll \nu$ for all $y \in \mathcal{Y}$. Then, so long as we can reverse
-the order of the one of these integrals, we can start seeing how to derive
-the relationship between the densities. Indeed, this is exactly how the proof
-proceeds. Without further ado, here is the theorem
-(the proof is given in the appendix).
+With all of this setup out of the way, we proceed to the main result. As noted,
+Bayes' theorem provides a link between the two conditional distributions which
+are encoded by the kernels $P$ and $\mu^Y$. To be more specific, the result
+provides a connection between Radon-Nikodym derivatives (i.e., densities) of
+these distributions. For example, the informal statement (1) links the Lebesgue
+densities $p(u|y)$ and $p(y|u)$. We will discuss the rigorous treatment of this
+case later on, but it turns out that Bayes' theorem is more naturally
+stated in terms of $\frac{d\mu^y}{d\mu_U}$, the Radon-Nikodym of the posterior
+with respect to the prior. If you are only familiar with statements like (1),
+this formulation might feel a bit weird at first, but it is a very nice way of
+looking at things. Recall that the Radon-Nikodym derivative is the function that
+provides the correct weights to transform one measure into another. In this
+case, $\frac{d\mu^y}{d\mu_U}$ describes how to re-weight the prior in order to
+obtain the posterior. Since we know the prior-to-posterior transformation is due
+to the effect of conditioning on data, then we would expect $\frac{d\mu^y}{d\mu_U}$
+to be closely related to the likelihood. As we'll see below, it is actually
+exactly proportional to the likelihood! Once you wade through all of the
+notation, I hope that this intuition makes the theorem itself feel quite natural.
 
-**Bayes' Theorem.** Under the assumptions outlined in the preceeding sections,
+
+**Bayes' Theorem.** Under the assumptions outlined in the preceding sections,
 1. The posterior is absolutely continuous with respect to the prior:
 \begin{align}
 \mu^y \ll \mu_U \text{ for all } y \in \mathcal{Y}
@@ -161,25 +150,22 @@ is given by
 \mu^y(A) &= \mathbb{P}(U \in A|Y=y)
 = \frac{\int_A \frac{dP_u}{d\nu}(y) \mu_U(du)}{\int_{\mathcal{U}} \frac{dP_u}{d\nu}(y) \mu_U(du)},
 \end{align}
-for $A \in \mathcal{B}(\mathcal{U})$, for all $y \in \mathcal{Y}$ such that
+for $A \in \mathcal{B}(\mathcal{U})$, and for all $y \in \mathcal{Y}$ such that
 the denominator is not $0$ or infinity.
 
-From this perspective, Bayes' theorem describes the change-of-measure that changes
-the prior $\mu$ into the posterior $\mu^y$ after conditioning on data $y$. The
-theorem shows that this map simply involves re-weighting the prior by the
+As noted above, we see that Bayes' theorem describes the change-of-measure that maps
+the prior $\mu$ into the posterior $\mu^y$ through conditioning on data $y$.
+The theorem shows that this map simply involves re-weighting the prior by the
 likelihood, and then normalizing the result.
-
-## The Operator-Theoretic Viewpoint
-
 
 ## Recovering the Informal Statement
 {% katexmm %}
 One last lingering question might be how to provide a more formal justification
-for the commonly seen phrasing of Bayes' rule, as in (1). We have seen that the
-rigorous statement of Bayes' rule concerns, $\frac{d\mu^y}{d\mu_U}(u)$,
+for (1), your everyday statement of Bayes' rule. We have seen that the
+rigorous formulation concerns, $\frac{d\mu^y}{d\mu_U}(u)$,
 the Radon-Nikodym derivative of the posterior with respect to the prior,
 which is expressed in terms of some base dominating measure $\nu$. In the
-standard informal presentation of Bayes' rule for continuous random variables
+informal presentation of Bayes' rule for continuous random variables
 (e.g., (1)), $\nu$ is taken to be the Lebesgue measure $\lambda$. We can then use the
 standard likelihood notation
 \begin{align}
@@ -214,13 +200,15 @@ integration with respect to the Lebesgue measure. The last expression implies
 that $\mu^y \ll \lambda$ and moreover that the Lebesgue density of
 the posterior is given by
 \begin{align}
-\frac{d\mu^y}{d\lambda}(u) &= \frac{p(y|u)p(u)}{\int_{\mathcal{U}} p(y|u)p(u)du},
+p(u|y) := \frac{d\mu^y}{d\lambda}(u) &= \frac{p(y|u)p(u)}{\int_{\mathcal{U}} p(y|u)p(u)du},
 \end{align}
-which is precisely the typical form in which Bayes' rule is presented. To
+which is precisely (1). To
 obtain the form of Bayes' rule for discrete random variables, we simply
 substitute the Lebesgue measure for the counting measure, which has the effect
 of replacing densities with mass functions and integrals with sums.
 {% endkatexmm %}
+
+## The Operator-Theoretic Viewpoint
 
 ## Application: Bayesian Inverse Problems
 
@@ -228,6 +216,33 @@ of replacing densities with mass functions and integrals with sums.
 
 ## Appendix
 ### Bayes' Theorem Proof
+With all of this setup out of the way, we can now state the theorem. However,
+before doing so, let's provide one last bit of motivation. We know that Bayes'
+theorem provides the link between two conditional distributions encoded by
+the kernels $P_u$ and $\mu^Y$. When thinking about how to go about
+establishing this link, it is helpful to notice that each conditional
+provides a different, but equivalent, representation of the joint
+distribution on $(U, Y)$. Indeed, letting
+$A \in \mathcal{B}(\mathcal{U})$ and $B \in \mathcal{B}(\mathcal{Y})$, we have
+\begin{align}
+\mathbb{P}(U \in A, Y \in B)
+&= \int_A \int_B \mu_U(du)P(u, dy) = \int_B \int_A \mu_Y(dy) \mu^Y(y, du).
+\end{align}
+Moreover, since $P(u, \cdot) \ll \nu$ by assumption, the middle term can be
+re-written as
+\begin{align}
+\int_A \int_B \mu_U(du)P(u, dy) &= \int_A \int_B \mu_U(du) \frac{dP_u}{d\nu}(y) \nu(dy).
+\end{align}
+Given that Bayes' theorem ultimately provides the connection between Radon-Nikodym
+derivatives of the two conditionals, we see from
+\begin{align}
+\int_A \int_B \mu_U(du) \frac{dP_u}{d\nu}(y) \nu(dy)
+&= \int_B \int_A \mu_Y(dy) \mu^Y(y, du), \tag{2}
+\end{align}
+that we're actually already quite close to establishing the required link.
+Currently, (2) has a few missing pieces; the complete proof is given in the
+appendix. Without further ado, here is the theorem.
+
 We recall from the setup above that
 {% katexmm %}
 \begin{align}
