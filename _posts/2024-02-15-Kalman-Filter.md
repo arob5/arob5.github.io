@@ -86,13 +86,45 @@ and the mean and covariance for these distributions satisfy the following
 recursions.
 
 \begin{align}
-\hat{C}\_{k+1} &= G C_k G^\top + Q \newline
+\hat{C}\_{k+1} &= G C_k G^\top + Q \newline \tag{1}
 \hat{m}\_{k+1} &= Gm_k \newline
 C\_{k+1} &= \left(H^\top R^{-1} H + \hat{C}^{-1}\_{k+1}\right)^{-1} \newline
 m\_{k+1} &= C\_{k+1}\left(H^\top R^{-1}y\_{k+1} + \hat{C}^{-1}\_{k+1} \hat{m}\_{k+1} \right)
 \end{align}
 
-TODO: note that can generalize to time-varying Q and R
+### Investigating the Formulas
+Before diving into the derivations, we note some initial properties on the KF
+formulas (1). We begin by noting that the forecast mean update
+$m_k \mapsto \hat{m}_{k+1}$ is linear, and the analysis update
+$\hat{m}_{k+1} \mapsto m_{k+1}$ is affine; thus, the composition of the two
+steps defining the map $m_k \mapsto m_{k+1}$ is also affine. We similarly see
+that the covariance forecast update $C_k \mapsto \hat{C}_{k+1}$ is affine,
+while the analysis update $\hat{C}_{k+1} \mapsto C_{k+1}$ is nonlinear (due
+to the inverse). Viewed in terms of the precision matrix, the map
+$\hat{C}^{-1}_{k+1} \mapsto C^{-1}_{k+1}$ is affine. The forecast formulas
+are quite straightforward, as they simply represent the forward propagation
+of uncertainty through the linear dynamics model (see the derivation in the
+next section). The analysis formulas are a bit more interesting. The mean
+update can be viewed as a weighted average of the data $y_{k+1}$ and the
+prior mean $\hat{m}_{k+1}$, with the weights determined by observation and
+forecast precision matrices, relative to the covariance of the filtering
+distribution. In the
+one-dimensional case where the covariance matrices are scalars, then the weights
+reduce to the fraction of these precisions over the total precision of the
+filtering distribution (the data precision is also affected by $H$, but the
+interpretation is basically the same). The analysis precision matrix can
+similarly be viewed as a weighted average of the data and forecast precisions.
+Importantly, notice 
+that the covariance analysis update does not depend on the data $y_{k+1}$; the
+uncertainty in the filtering distribution is not at all affected by the
+sequence of observations. This may seem odd at first, but this property is
+shared by all linear Gaussian models, frequentist and Bayesian alike
+(recall that in a basic linear regression model with Gaussian noise the
+standard error of the coefficient estimator similarly is not a function of the
+observed response).
+
+TODO: note that can generalize to time-varying Q and R, complexity, pos-def,
+weighted sum.
 
 ## Bayesian Derivation
 We begin with an approach aligns directly with the derivations of the generic
@@ -159,13 +191,12 @@ m_{k+1}^\top C_{k+1}^{-1} m_{k+1}
 
 and equate like terms. Doing so yields
 \begin{align}
-C_{k+1} &= \left(H^\top R^{-1}H + \hat{C}\_{k+1}^{-1}\right)^{-1} \newline
+C_{k+1} &= \left(H^\top R^{-1}H + \hat{C}\_{k+1}^{-1}\right)^{-1} \tag{3} \newline
 m_{k+1} &= C_{k+1}\left(H^\top R^{-1}y_{k+1} + \hat{C}\_{k+1}^{-1}\hat{m}_{k+1}\right),
 \end{align}
 which completes the derivation.
 
-
-## A Second Bayesian Derivation: The Joint Gaussian Approach  
+## A Second Derivation of the Analysis Step: The Joint Gaussian Approach  
 We now explore a second derivation of the KF equations, which yield the second
 form of the equations presented in the proposition. The key observation here
 is that the joint distribution of $(v_{k+1},y_{k+1})|Y_k$ is Gaussian
@@ -212,19 +243,19 @@ for Gaussian conditionals, we conclude that
 $v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})$, where
 
 \begin{align}
-m_{k+1} &= \hat{m}\_{k+1} + \hat{C}^{vy}\_{k+1}\left[\hat{C}^y\_{k+1}\right]^{-1}(y_{k+1} - H\hat{m}\_{k+1}) \newline
+m_{k+1} &= \hat{m}\_{k+1} + \hat{C}^{vy}\_{k+1}\left[\hat{C}^y\_{k+1}\right]^{-1}(y_{k+1} - H\hat{m}\_{k+1}) \tag{2} \newline
 C_{k+1} &= \hat{C}_{k+1} - \hat{C}^{vy}\_{k+1}\left[\hat{C}^y\_{k+1}\right]^{-1}\hat{C}^{yv}.
 \end{align}
 
 Typically, these equations are written in terms of the $d \times n$
 **Kalman gain** matrix
 \begin{align}
-K_{k+1} = \hat{C}^{vy}_{k+1} \left[\hat{C}^y\_{k+1}\right]^{-1}
+K_{k+1} = \hat{C}^{vy}_{k+1} \left[\hat{C}^y\_{k+1}\right]^{-1} \tag{4}
 \end{align}
 which gives
 
 \begin{align}
-m_{k+1} &= \hat{m}\_{k+1} + K_{k+1}(y_{k+1} - H\hat{m}\_{k+1}) \newline
+m_{k+1} &= \hat{m}\_{k+1} + K_{k+1}(y_{k+1} - H\hat{m}\_{k+1}) \tag{5} \newline
 C_{k+1} &= \hat{C}\_{k+1} - K\_{k+1}\hat{C}^{yv}.
 \end{align}
 
@@ -232,7 +263,7 @@ Inserting the formulas for $\hat{m}_{k+1}$ and $\hat{C}_{k+1}$ provides the
 equations defining the complete maps
 $m_k \mapsto m_{k+1}$ and $C_k \mapsto C_{k+1}$.
 
-TODO: re-write the equations in the weighted average form (see Stuart book). 
+TODO: re-write the equations in the weighted average form (see Stuart book).
 
 {% endkatexmm %}
 

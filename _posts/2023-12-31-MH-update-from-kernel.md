@@ -1,6 +1,6 @@
 ---
 title: Deriving the Metropolis-Hastings Update from the Transition Kernel
-subtitle: Given only the Metroplis-Hastings transition kernel, I show how to recover the Metropolis-Hastings update rule.
+subtitle: Given only the Metropolis-Hastings transition kernel, I show how to recover the Metropolis-Hastings update rule.
 layout: default
 date: 2023-12-31
 keywords: MCMC, Prob-Theory, Comp-Stats
