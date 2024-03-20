@@ -4,7 +4,7 @@ subtitle: I discuss the generic problem of approximating the distribution result
 layout: default
 date: 2024-02-15
 keywords: Filtering, State-Space, Hidden-Markov-Model, Bayes, Data-Assimilation
-published: false
+published: true
 ---
 
 {% katexmm %}
@@ -152,9 +152,59 @@ In the non-additive error case (2), $h(\hat{v}, \epsilon_{k+1})$ replaces
 $h(\hat{v}) + \epsilon_{k+1}$ in the above expression.
 {% endkatexmm %}
 
-{% katexmm %}
 ## The Generic Problem Setting
+{% katexmm %}
+Now that we have identified the fundamental issues in the context of nonlinear
+filtering, we state the problem in generic terms. The notation used in this
+section should be viewed anew, not to be confused with the state space notation
+used above. The task is to provide a
+Gaussian approximation to a random variable $u = f(v)$, where $v$ is
+Gaussian distributed and $f$ is a nonlinear functions; more precisely,
+\begin{align}
+u &= f(v), && v \sim \mathcal{N}(m, C), \quad f: \mathbb{R}^n \to \mathbb{R}^m. \tag{3}
+\end{align}
+In the filtering context, the forecast step represented an instantiation of this
+problem where $f = g$ and hence a special case where the dimensions of the domain
+and codomain of $f$ are equal. In the analysis step, $f$ is given by the
+map $v \mapsto (v, h(v))^\top$ (ignoring the $\epsilon$ for now) and thus
+represents the case where $m > n$. Although both of these cases are subsumed
+by (3), it is also helpful to consider them separately, as the second case can
+prove more challenging due to the higher-dimensional codomain. With the generic
+problem stated, we now proceed to discuss specific methods which utilize
+different notions of linearization to produce Gaussian approximations of
+the distribution of $u$.
 {% endkatexmm %}
+
+## Taylor Series Approximations
+The first approach we consider leverages a Taylor series approximation of the
+nonlinear function $f$. When applied to the filtering problem, the resulting
+algorithm is known as the *extended Kalman filter*.
+
+### The Generic Method
+We consider approximating the nonlinear function $f$ with a local linear
+approximation, given by the Taylor series expansion around the current mean $m$,
+\begin{align}
+f(v) \approx f(m) + Df(m)[v - m].
+\end{align}
+Note that I am applying the Jacobian notation so that
+$Df(m) \in \mathbb{R}^{m \times n}$. Under this approximation we use the fact that
+$v \sim \mathcal{N}(m, C)$ to obtain
+\begin{align}
+u = f(v) & \approx f(m) + Df(m)[v - m] \tag{4} \newline
+&\sim \mathcal{N}(f(m), Df(m)C Df(m)^\top).
+\end{align}
+It is important to stress that this is a *local* approximation; the linearization
+is constructed using only the local derivative information at the point $m$. Thus,
+we would expect the quality of the approximation to decay for points farther
+from $m$, and this decay to be more severe for $f$ which are highly nonlinear.
+Thus, intuitively we would expect the approximation (4) to be reasonable when
+the distribution of $v$ is tightly clustered around its mean. Distributions that
+are more diffuse will naturally lead to poorer approximations given that more
+of the probability mass exists in regions where the local linear approximation
+is not adequate. 
+
+
+### Application: The Extended Kalman Filter
 
 
 # TODO
