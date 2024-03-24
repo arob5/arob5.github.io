@@ -77,15 +77,47 @@ Following Wendland, let $\pi_M(\mathbb{R})$ denote the space of polynomials with
 dimension at most $M$; i.e., the functions $s: \mathbb{R} \to \mathbb{R}$ which
 admit a representation
 \begin{align}
-s(x) = a_0 + a_1 x + a_2 x^2 + \cdots + a_M x^M
+s(x) = \alpha_0 + \alpha_1 x + \alpha_2 x^2 + \cdots + \alpha_M x^M
 \end{align}
-for some coefficients $a_0, \dots, a_M \in \mathbb{R}$. $\pi_M(\mathbb{R})$ is
+for some coefficients $\alpha_0, \dots, \alpha_M \in \mathbb{R}$. $\pi_M(\mathbb{R})$ is
 indeed a *space* in the linear algebra sense; it is a vector space of dimension
 $M+1$. The most obvious basis for this space is the monomial basis
 $1, x, x^2, \dots, x^M$ but many other bases are commonly used which have
 nicer theoretical and computational properties.
 
-## Interpolation with Polynomials 
+## Interpolation with Polynomials
+Let's now consider solving the interpolation problem using polynomials; that is,
+we will try to find a function $s \in \pi_{M-1}(\mathbb{R})$ which interpolates the
+data. I'm considering $M-1$ and not $M$ since the space $\pi_{M-1}(\mathbb{R})$
+has dimension $M$, which will be more convenient notationally than having to write
+$M+1$ all the time. With this choice of function space, the interpolation requirement is that
+\begin{align}
+f_j &= \alpha_0 + \alpha_1 x_j + \alpha_2 x_j^2 + \cdots \alpha_M x_j^{M-1}, &&\forall j = 1, \dots, N.
+\end{align}  
+It is convenient to define
+\begin{align}
+\varphi(x) &:= (1, x, x^2, \dots, x^{M-1})^\top \in \mathbb{R}^{M} \newline
+\alpha &:= (\alpha_0, \alpha_1, \alpha_2, \dots, \alpha_{M-1})^\top \in \mathbb{R}^{M}
+\end{align}
+so that we can re-write the above as
+\begin{align}
+f_j &= \alpha_0 + \alpha_1 x_j + \alpha_2 x_j^2 + \cdots \alpha_M x_j^{M-1} = \varphi(x_j)^\top \alpha,
+&&\forall j = 1, \dots, N. \tag{1}
+\end{align}  
+To succinctly write the equalities for all $j$, let $\Phi \in \mathbb{R}^{N \times M}$
+be the matrix with $j^{\text{th}}$ row equal to $\varphi(x_j)^\top$. The requirement
+(1) is then encoded in the linear system
+\begin{align}
+y = \Phi \alpha, \tag{2}
+\end{align}
+where we have additionally defined $y := (f_1, \dots, f_N)^\top \in \mathbb{R}^N$.
+The questions of existence and uniqueness can now be answered by appealing to known
+properties of linear systems. For an interpolating polynomial $s \in \pi_{M-1}(\mathbb{R})$
+to exist, a necessary condition is that $M \geq N$. A unique solution exists if
+and only if $\Phi$ is non-singular, which in particular requires that $\Phi$
+is square. This means that the polynomial space $\pi_{N-1}(\mathbb{R})$ provides
+a unique interpolating polynomial.
+
 
 ## Regression with Polynomials
 
