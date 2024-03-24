@@ -112,17 +112,107 @@ y = \Phi \alpha, \tag{2}
 \end{align}
 where we have additionally defined $y := (f_1, \dots, f_N)^\top \in \mathbb{R}^N$.
 The questions of existence and uniqueness can now be answered by appealing to known
-properties of linear systems. For an interpolating polynomial $s \in \pi_{M-1}(\mathbb{R})$
-to exist, a necessary condition is that $M \geq N$. A unique solution exists if
-and only if $\Phi$ is non-singular, which in particular requires that $\Phi$
-is square. This means that the polynomial space $\pi_{N-1}(\mathbb{R})$ provides
-a unique interpolating polynomial.
-
+properties of linear systems, though it is not in general obvious when (2) will have a solution.
+A unique solution exists if and only if $\Phi$ is non-singular, which in particular
+requires that $\Phi$ is square.
+In the square case, it can be
+[shown](https://en.wikipedia.org/wiki/Vandermonde_matrix) that $\Phi$ is non-singular
+if and only if all of the $x_j$ are distinct, which is the typical case for interpolation.
+Under the assumption that the $x_j$ are distinct, we thus conclude that the
+space $\pi_{N-1}(\mathbb{R})$ provides a unique interpolating polynomial, whose
+coefficients can be computed by $\hat{\alpha}_{\text{interp}} = \Phi^{-1} y$.
+The interpolated value at a new input $\tilde{x} \in (a, b)$ is then given by
+\begin{align}
+s(\tilde{x}) &= \varphi(\tilde{x})^\top \hat{\alpha}_{\text{interp}}
+= \varphi(\tilde{x})^\top \Phi^{-1} y
+\end{align}
 
 ## Regression with Polynomials
+We consider the same setting as above, but now suppose that the $f_j$ correspond
+to noisy evaluations of some underlying function $f$,
+$$
+f_j = f(x_j) + \epsilon_j.
+$$
+We now consider finding a polynomial $s \in \pi_{M-1}(\mathbb{R})$ that satisfies
+$s(x_j) \approx f_j$ for $j = 1, \dots, N$. To make this precise, we attempt
+to minimize the average squared error, which yields the ordinary least squares
+(OLS) regression problem
+\begin{align}
+\text{min}\_{s \in \pi_{M-1}(\mathbb{R})} \lVert y - s(X) \rVert_2^2 =
+\text{min}\_{\alpha \in \mathbb{R}^M} \lVert y - \Phi \alpha \rVert_2^2, \tag{3}
+\end{align}
+where $s(X) = (s(x_1), \dots, s(x_N))^\top$.
 
+The optimality condition for this problem is well-known to be given by the
+[normal equations](https://fncbook.github.io/fnc/leastsq/normaleqns.html),
+\begin{align}
+\Phi^\top \Phi \alpha = \Phi^\top y.
+\end{align}
+If $\Phi$ is of full column rank then $\Phi^\top \Phi$ is invertible, which leads
+to the unique least squares solution
+\begin{align}
+\hat{\alpha}_{\text{OLS}} = (\Phi^\top \Phi)^{-1} \Phi^\top y.
+\end{align}
+Note that the full column rank condition in particular requires $M \leq N$,
+corresponding to the usual regression setting in which the number of observations
+exceeds the number of variables. If we consider the special case where $\Phi$ is invertible, the unique OLS
+solution reduces to the interpolation solution:
+\begin{align}
+\hat{\alpha}\_{\text{OLS}} = \Phi^{-1} (\Phi^\top)^{-1} \Phi^\top y = \Phi^{-1}y = \hat{\alpha}\_{\text{interp}}.
+\end{align}
 
+Finally, note that a regression prediction (assuming the case where $\hat{\alpha}_{\text{OLS}}$
+is unique) at a new location $\tilde{x} \in (a, b)$ is given by
+\begin{align}
+s(\tilde{x}) &= \phi(\tilde{x})^\top \hat{\alpha}\_{\text{OLS}} = \phi(\tilde{x})^\top (\Phi^\top \Phi)^{-1} \Phi^\top y,
+\end{align}  
+which again reduces to the interpolation analog when $\Phi$ is invertible.
 
+## Splines
+In the previous sections, we uncovered a remarkable property possessed by (one-dimensional)
+polynomials: for any set of $N$ distinct sites $X$, the space $\pi_{N-1}(\mathbb{R})$
+contains a unique interpolating polynomial. However, even in one dimension this
+does not imply that the problem is solved in a practical sense. As the number
+of sites grows large, working with very high degree polynomials becomes very
+difficult. To prevent the dimensionality from getting out of hand, an alternative
+approach is to work in a space $S$ consisting of piecewise polynomials of lower
+dimension. A simple example is just linearly interpolating the data, but typically
+we want to work with smoother functions. Thus, we might impose constraints such
+as requiring the existence of a certain number of derivatives, which requires
+ensuring that the polynomials "line up" correctly at the interior knots. We
+briefly discuss two popular examples of such spaces below.
 
+### Cubic Splines
+We define the space of **cubic splines**, denoted $S_3(X)$, to be the set of
+all piecewise cubic polynomials that are also twice continuously differentiable,
+$$
+S_3(X) := \left\{s \in C^2[a,b] : s|[x_j, x_{j+1}) \in \pi_3(\mathbb{R}), 0 \leq j \leq N \right\}. \tag{5}
+$$
+We write $s|c, d)$ for the restriction of the function $s$ to the interval
+$[c, d)$. Also recall that by definition $x_0 = a$ and $x_{N+1}=b$.
+Note that, unlike the polynomial spaces considered above, the space of
+cubic splines is defined with respect to the specific set of locations $X$.
+
+Cubic splines are indeed a vector space, which follows from the fact that
+$C^2[a,b]$ and $\pi_3(\mathbb{R})$ are vector spaces. The dimension of $S_3(X)$
+can be established by furnishing a basis for the space, but a back-of-the-envelope
+calculation can give you a good guess. Indeed, note that the interior sites
+define $N+1$ intervals, on each of which contains cubic polynomials. Since
+$\pi_{3}(\mathbb{R})$ has dimension $4$ then this yields $4(N+1)$ degrees of
+freedom. But in neglecting the $C^2[a,b]$ constraint we have over-counted.
+This constraint requires that the function values, first derivatives, and
+second derivatives match at each of the $N$ interior nodes, thus removing
+$3N$ degrees of freedom, for a total count of $4(N+1) - 3N = N + 4$. This is
+indeed the correct dimension of $S_3(X)$, and a basis for this space is given by
+$$
+\{(x - x_j)^3_+\}_{j=1}^{N} \cup \{1, x, x^2, x^3\},
+$$
+using the notation $x_+ := \max(x, 0)$. In fact, replacing $\{1, x, x^2, x^3\}$
+with any basis of $\pi_3(\mathbb{R})$ will do the trick. Cubic splines are sometimes
+described as the simplest splines which look smooth to the human eye.
+
+As far as regression and interpolation, with a basis for $S_3(X)$ in hand we can
+proceed very similarly to the previous two sections; in this case we now have
+$\varphi(x) \in \mathbb{R}^{N+4}$ and $\Phi \in \mathbb{R}^{N \times (N+4)}$. 
 
 {% endkatexmm %}
