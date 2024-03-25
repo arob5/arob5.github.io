@@ -161,12 +161,16 @@ solution reduces to the interpolation solution:
 \hat{\alpha}\_{\text{OLS}} = \Phi^{-1} (\Phi^\top)^{-1} \Phi^\top y = \Phi^{-1}y = \hat{\alpha}\_{\text{interp}}.
 \end{align}
 
-Finally, note that a regression prediction (assuming the case where $\hat{\alpha}_{\text{OLS}}$
+A regression prediction (assuming the case where $\hat{\alpha}_{\text{OLS}}$
 is unique) at a new location $\tilde{x} \in (a, b)$ is given by
 \begin{align}
 s(\tilde{x}) &= \phi(\tilde{x})^\top \hat{\alpha}\_{\text{OLS}} = \phi(\tilde{x})^\top (\Phi^\top \Phi)^{-1} \Phi^\top y,
 \end{align}  
 which again reduces to the interpolation analog when $\Phi$ is invertible.
+
+Finally, note that in this context the function $\varphi$ is commonly referred
+to as a **feature map**, which generates the corresponding feature (i.e. basis)
+matrix $\Phi$.
 
 ## Splines
 In the previous sections, we uncovered a remarkable property possessed by (one-dimensional)
@@ -174,7 +178,10 @@ polynomials: for any set of $N$ distinct sites $X$, the space $\pi_{N-1}(\mathbb
 contains a unique interpolating polynomial. However, even in one dimension this
 does not imply that the problem is solved in a practical sense. As the number
 of sites grows large, working with very high degree polynomials becomes very
-difficult. To prevent the dimensionality from getting out of hand, an alternative
+difficult and can lead to some
+[weird results](https://en.wikipedia.org/wiki/Runge%27s_phenomenon).
+
+To prevent the dimensionality from getting out of hand, an alternative
 approach is to work in a space $S$ consisting of piecewise polynomials of lower
 dimension. A simple example is just linearly interpolating the data, but typically
 we want to work with smoother functions. Thus, we might impose constraints such
@@ -188,13 +195,13 @@ all piecewise cubic polynomials that are also twice continuously differentiable,
 $$
 S_3(X) := \left\{s \in C^2[a,b] : s|[x_j, x_{j+1}) \in \pi_3(\mathbb{R}), 0 \leq j \leq N \right\}. \tag{5}
 $$
-We write $s|c, d)$ for the restriction of the function $s$ to the interval
+We write $s|[c, d)$ for the restriction of the function $s$ to the interval
 $[c, d)$. Also recall that by definition $x_0 = a$ and $x_{N+1}=b$.
 Note that, unlike the polynomial spaces considered above, the space of
 cubic splines is defined with respect to the specific set of locations $X$.
 
-Cubic splines are indeed a vector space, which follows from the fact that
-$C^2[a,b]$ and $\pi_3(\mathbb{R})$ are vector spaces. The dimension of $S_3(X)$
+The set of cubic splines form a vector space, which follows from the fact that
+$C^2[a,b]$ and $\pi_3(\mathbb{R})$ are themselves vector spaces. The dimension of $S_3(X)$
 can be established by furnishing a basis for the space, but a back-of-the-envelope
 calculation can give you a good guess. Indeed, note that the interior sites
 define $N+1$ intervals, on each of which contains cubic polynomials. Since
@@ -205,14 +212,112 @@ second derivatives match at each of the $N$ interior nodes, thus removing
 $3N$ degrees of freedom, for a total count of $4(N+1) - 3N = N + 4$. This is
 indeed the correct dimension of $S_3(X)$, and a basis for this space is given by
 $$
-\{(x - x_j)^3_+\}_{j=1}^{N} \cup \{1, x, x^2, x^3\},
+\{(x - x_j)^3_+\}_{j=1}^{N} \cup \{1, x, x^2, x^3\}, \tag{6}
 $$
 using the notation $x_+ := \max(x, 0)$. In fact, replacing $\{1, x, x^2, x^3\}$
 with any basis of $\pi_3(\mathbb{R})$ will do the trick. Cubic splines are sometimes
-described as the simplest splines which look smooth to the human eye.
+described as the lowest order splines which look smooth to the human eye.
 
-As far as regression and interpolation, with a basis for $S_3(X)$ in hand we can
-proceed very similarly to the previous two sections; in this case we now have
-$\varphi(x) \in \mathbb{R}^{N+4}$ and $\Phi \in \mathbb{R}^{N \times (N+4)}$. 
+As far as interpolation, we can try to follow the same procedure as before, now
+defining the map $\phi$ according to the basis (6):
+$$
+\varphi(x) = \left[(x-x_1)^3_+, \dots, (x-x_N)^3_+, 1, x, x^2, x^3 \right]^\top \in \mathbb{R}^{N+4}.
+$$
+This yields a basis matrix $\Phi \in \mathbb{R}^{N \times (N+4)}$, so we see that
+we are a bit overparameterized here; i.e., the system $\Phi \alpha = y$ is not
+guaranteed to have a unique solution. To address this, we must reduce the number
+of free parameters by $4$ by adding some constraints. This is done in various ways,
+often by imposing some boundary conditions;
+[this](https://blog.timodenk.com/cubic-spline-interpolation/index.html) blog
+post nicely summarizes some options. The primary method of interest here will
+be constraining $s(\cdot)$ to be linear on the boundary regions $[a, x_1)$
+and $[x_N, b]$. This leads to the concept of the natural cubic spline, which is
+discussed in the next section.
+
+Having mainly discussed cubic spline interpolation, we briefly note that
+regression proceeds similarly. However, in this setting it is common to choose
+the spline knots to be points other $X$, which can help reign in the number
+of parameters when $N$ is large. For example, we might compute some empirical
+percentiles of our data and use these evenly-spaced points as the knots. Finally,
+we should note that the basis (6), while conceptually simple, can tend to be
+numerically unstable. For computational purposes,
+[alternative bases](https://en.wikipedia.org/wiki/B-spline) are preferred.
+
+### Natural Cubic Splines
+As mentioned above, a popular methods for adding additional constraints to
+cubic splines is to enforce linearity on the boundary regions. We thus define
+the set of natural cubic splines as
+$$
+NS_3(X) := \left\{s \in S_3(X): s|[a,x_1), s|[x_N, b] \in \pi_3(\mathbb{R}) \right\}.
+$$
+This space can equivalently be characterized by taking the subset of $S_3(X)$
+that satisfies the additional boundary constraints
+\begin{align}
+&s^{\prime\prime}(x_1) = 0, && s^{\prime\prime}(x_N) = 0
+\end{align}
+Note that imposing linearity in the boundary regions is quite a reasonable idea.
+The curve fit to these regions is essentially extrapolating, since these regions
+are only constrained by observed data at one of their two endpoints. Thus,
+enforcing linearity here acts as a sort of regularization, attempting
+to prevent overfitting in data-sparse regions.
+
+Once again, $NS_3(X)$ is a vector space. Trying to count the dimensions as before,
+we now have $2 \times 2$ parameters from the two linear bases on the
+boundary regions and $4(N-1)$ parameters from the cubic bases in the interior
+regions. Given that we are still imposing $3N$ constraints on the interior nodes,
+this yields $4 + 4(N-1) - 3N = N$ free parameters, as required to guarantee a
+unique interpolant. This is indeed correct, and it can be shown that the
+uniqueness property is satisfied for $NS_3(X)$. A basis for $NS_3(X)$ can be
+obtained by starting with a basis for $S_3(X)$ and then imposing the new
+linearity constraints. If we start with the cubic spline basis (6), such that
+any $s \in S_3(X)$ may be represented as
+$$
+s(x) = \sum_{j=1}^{N} \alpha_j (x - x_j)_+^3 + \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3,
+$$
+and impose these constraints, then we find they translate into the coefficient
+conditions
+$$
+\sum_{j=1}^{N} \alpha_j = \sum_{j=1}^{N} \alpha_j x_j = 0. \tag{7}
+$$
+{% endkatexmm %}
+
+# Generalizing to Higher Dimensions
+{% katexmm %}
+The previous section provided a very brief overview of using polynomials and
+splines for fitting smooth, nonlinear curves in one-dimensional interpolation and
+regression problems. It turns out that things get difficult when trying to
+generalize to higher dimensions. Chapter 2 of Wendland's book covers
+multivariate polynomials, so I will not dwell on this here. There are various
+ways one might approach generalizing these ideas to higher dimensions, and Wendland
+mentions a few approaches with some success in two dimensions but which
+become intractable beyond that. The real goal here is a method that works the
+same in *all* dimensions, and the key to finding this is to characterize the
+one-dimensional methods in such a way that is amenable to generalization.
+
+With this in mind, we consider the following characterization of natural cubic
+splines.
+
+**Proposition.** (Wendland Proposition 1.1) Every natural cubic spline has a
+characterization of the form
+$$
+s(x) = \sum_{j=1}^{N} \alpha_j \phi(\lvert x - x_j \rvert) + p(x), \tag{8}
+$$
+where
+1. $\phi(r) = r^3$, $r \geq 0$.
+2. $p \in \pi_1(\mathbb{R})$.
+3. The $\{\alpha_j\}$ satisfy the conditions (7).
+
+Conversely, for every set of pairwise distinct points $X = \{x_j\}_{j=1}^{N}$,
+and every $f \in \mathbb{R}^N$, there exists a function $s(\cdot)$ of the form
+(8) satisfying
+1. $f_j = s(x_j)$, for $j = 1, \dots, N$.
+2. The $\{\alpha_j\}$ satisfy the conditions (7).
+
+
+# Questions
+1. Am I reading proposition 1.1 correctly? Does the converse imply the same conditions
+on r and p?
+2. Clarification on the Sobolev space minimum norm characterization of natural cubic splines.
+
 
 {% endkatexmm %}
