@@ -164,7 +164,7 @@ solution reduces to the interpolation solution:
 A regression prediction (assuming the case where $\hat{\alpha}_{\text{OLS}}$
 is unique) at a new location $\tilde{x} \in (a, b)$ is given by
 \begin{align}
-s(\tilde{x}) &= \phi(\tilde{x})^\top \hat{\alpha}\_{\text{OLS}} = \phi(\tilde{x})^\top (\Phi^\top \Phi)^{-1} \Phi^\top y,
+s(\tilde{x}) &= \varphi(\tilde{x})^\top \hat{\alpha}\_{\text{OLS}} = \varphi(\tilde{x})^\top (\Phi^\top \Phi)^{-1} \Phi^\top y,
 \end{align}  
 which again reduces to the interpolation analog when $\Phi$ is invertible.
 
@@ -375,8 +375,8 @@ is yes, with three such examples given by
 where $\alpha > 0$ and $c > 0$.
 These are referred to as the Gaussian, inverse multiquadric, and multiquadric
 functions, respectively. A particularly important special case with links to kernel
-methods is when $A$ is also guaranteed to be positive. This additional requirement
-is satisfied by the Gaussian and inverse multiquadric radial functions. 
+methods is when $A$ is also guaranteed to be positive definite. This additional requirement
+is satisfied by the Gaussian and inverse multiquadric radial functions.
 
 
 
