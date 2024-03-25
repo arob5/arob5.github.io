@@ -275,13 +275,13 @@ $$
 s(x) = \sum_{j=1}^{N} \alpha_j (x - x_j)_+^3 + \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3,
 $$
 and impose these constraints, then we find they translate into the coefficient
-conditions
+conditions $\beta_2 = \beta_3 = 0$ as well as
 $$
 \sum_{j=1}^{N} \alpha_j = \sum_{j=1}^{N} \alpha_j x_j = 0. \tag{7}
 $$
 {% endkatexmm %}
 
-# Generalizing to Higher Dimensions
+# Generalizing to Higher Dimensions: Radial Basis Functions
 {% katexmm %}
 The previous section provided a very brief overview of using polynomials and
 splines for fitting smooth, nonlinear curves in one-dimensional interpolation and
@@ -300,7 +300,7 @@ splines.
 **Proposition.** (Wendland Proposition 1.1) Every natural cubic spline has a
 characterization of the form
 $$
-s(x) = \sum_{j=1}^{N} \alpha_j \phi(\lvert x - x_j \rvert) + p(x), \tag{8}
+s(x) = \sum_{j=1}^{N} \alpha_j \phi(\lvert x - x_j \rvert) + p(x), \qquad x \in \mathbb{R} \tag{8}
 $$
 where
 1. $\phi(r) = r^3$, $r \geq 0$.
@@ -312,6 +312,76 @@ and every $f \in \mathbb{R}^N$, there exists a function $s(\cdot)$ of the form
 (8) satisfying
 1. $f_j = s(x_j)$, for $j = 1, \dots, N$.
 2. The $\{\alpha_j\}$ satisfy the conditions (7).
+
+It is this viewpoint which provides an ideal jumping off point for generalization
+to higher dimensions. Indeed, consider that the function $\phi(\lvert x - x_j \rvert)$
+only depends on the distance $\lvert x - x_j \rvert$. Thus, we might consider the
+natural generalization $\phi(\lVert x - x_j \rVert_2)$ when $x, x_j \in \mathbb{R}^d$.
+We might similarly replace the low-dimensional polynomial $p \in \pi_{1}(\mathbb{R})$
+in (8) with a lower-dimensional multivariate polynomial $p \in \pi_{M-1}(\mathbb{R}^d)$.
+We thus consider the generalization of (8) to interpolants of the form
+\begin{align}
+s(x) = \sum_{j=1}^{N} \alpha_j \phi(\lVert x - x_j \rVert_2) + p(x), \qquad x \in \mathbb{R}^d, p \in \pi_{M-1}(\mathbb{R}^d) \tag{9}
+\end{align}
+subject to the constraint
+\begin{align}
+&\sum_{j=1}^{N} \alpha_j q(x_j) = 0, &&\forall q \in \pi_{M-1}(\mathbb{R}^d), \tag{10}
+\end{align}
+where $\phi: [0, \infty) \to \mathbb{R}$ is some fixed function.
+
+Notice that the coefficient constraints (10) echo (7), with $\pi_{M-1}(\mathbb{R}^d)$
+replacing $\pi_{1}(\mathbb{R})$. Notice that while splines provided the
+motivation for this generalization, the spaces of functions characterized by
+(9) will no longer consist of piecewise polynomials. They have thus deservedly
+been given a new name: **radial basis functions**, which we will refer to
+by the acronym **RBF**.
+
+## A first look at radial basis functions
+To start wrapping our heads around RBFs, let's start by considering the case
+where $p \equiv 0$ in (9). Wendland notes that this case actually is sufficient
+in many settings. We thus consider the space of functions of the form
+$$
+s(x) = \sum_{j=1}^{N} \alpha_j \phi(\lVert x - x_j \rVert_2), \tag{11}
+$$
+noting that the coefficient constraints (10) are not necessary in this case.
+Things are much simpler in this case, as we note that the functions under
+consideration are those in the span of the basis functions
+$\{\phi_j\}_{j=1}^{N}$ where $\phi_j(x) := \phi(\lVert x - x_j \rVert_2)$.
+The idea of defining basis functions which depend on the data sites $X$ is very
+much in the spirit of splines. Note that I am using the term *basis* a bit
+loosely at this point, given that without additional conditions on $\phi$
+there are certainly no guarantees that the $\phi_j$ functions are actually
+linearly independent (think about the trivial case $\phi \equiv 0$). In any
+case, we can consider proceeding as we did in the polynomial interpolation example,
+by first defining the map
+$$
+\varphi(x) := \left[\phi_1(x), \phi_2(x), \dots, \phi_N(x) \right]^\top \in \mathbb{R}^N
+$$
+and then constructing the interpolation matrix $A \in \mathbb{R}^{N \times N}$
+with $j^{\text{th}}$ row equal to $\varphi(x_j)^\top$. Wendland writes this
+matrix as $A_{\phi, X} = \{\phi(\lVert x_k - x_j \rVert_2)\}_{1 \leq k,j \leq N}$.
+
+As before, the interpolation
+problem reduces to solving the linear system $A \alpha = y$ and hence a
+unique interpolant is guaranteed precisely when $A$ is non-singular. Note that
+non-singularity requires, in particular, that the $\phi_j$ are independent.
+So the first question we must answer is whether we can actually find a function
+$\phi: [0, \infty) \to \mathbb{R}$ that ensures $A_{\phi, X}$ (for any $N$ and
+any set of pairwise distinct locations $X$) is non-singular? The answer
+is yes, with three such examples given by
+\begin{align}
+&\phi(r) = e^{-\alpha r^2}, &&\phi(r) = (c^2 + r^2)^{-1/2}, &&&\phi(r) = \sqrt{c^2 + r^2},
+\end{align}
+where $\alpha > 0$ and $c > 0$.
+These are referred to as the Gaussian, inverse multiquadric, and multiquadric
+functions, respectively. A particularly important special case with links to kernel
+methods is when $A$ is also guaranteed to be positive. This additional requirement
+is satisfied by the Gaussian and inverse multiquadric radial functions. 
+
+
+
+
+
 
 
 # Questions
