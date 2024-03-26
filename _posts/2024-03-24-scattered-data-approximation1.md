@@ -219,7 +219,7 @@ with any basis of $\pi_3(\mathbb{R})$ will do the trick. Cubic splines are somet
 described as the lowest order splines which look smooth to the human eye.
 
 As far as interpolation, we can try to follow the same procedure as before, now
-defining the map $\phi$ according to the basis (6):
+defining the map $\varphi$ according to the basis (6):
 $$
 \varphi(x) = \left[(x-x_1)^3_+, \dots, (x-x_N)^3_+, 1, x, x^2, x^3 \right]^\top \in \mathbb{R}^{N+4}.
 $$
@@ -357,12 +357,13 @@ by first defining the map
 $$
 \varphi(x) := \left[\phi_1(x), \phi_2(x), \dots, \phi_N(x) \right]^\top \in \mathbb{R}^N
 $$
-and then constructing the interpolation matrix $A \in \mathbb{R}^{N \times N}$
-with $j^{\text{th}}$ row equal to $\varphi(x_j)^\top$. Wendland writes this
-matrix as $A_{\phi, X} = \{\phi(\lVert x_k - x_j \rVert_2)\}_{1 \leq k,j \leq N}$.
+and then constructing the interpolation matrix $\Phi \in \mathbb{R}^{N \times N}$
+with $j^{\text{th}}$ row equal to $\varphi(x_j)^\top$. Wendland calls this matrix
+matrix as $A_{\phi, X} = \{\phi(\lVert x_k - x_j \rVert_2)\}_{1 \leq k,j \leq N}$,
+but I'll stick with $\Phi$ for now at least.
 
 As before, the interpolation
-problem reduces to solving the linear system $A \alpha = y$ and hence a
+problem reduces to solving the linear system $\Phi \alpha = y$ and hence a
 unique interpolant is guaranteed precisely when $A$ is non-singular. Note that
 non-singularity requires, in particular, that the $\phi_j$ are independent.
 So the first question we must answer is whether we can actually find a function
@@ -378,10 +379,39 @@ functions, respectively. A particularly important special case with links to ker
 methods is when $A$ is also guaranteed to be positive definite. This additional requirement
 is satisfied by the Gaussian and inverse multiquadric radial functions.
 
-
-
-
-
+### Example: Gaussian Processes
+In this section we show that under certain assumptions
+the predictive (conditional) mean of a Gaussian
+process (GP) can be viewed as an RBF interpolant. We consider a zero mean
+GP prior $f \sim \mathcal{GP}(0, k)$ on the function $f$, with $k(\cdot, \cdot)$
+the kernel (i.e., covariance function), a positive definite function. The conditional
+distribution $f|X,y$ can be shown to also be Gaussian, with mean function
+$$
+\mathbb{E}[f(\tilde{x})|X,y] = k(\tilde{x}, X) k(X, X)^{-1}y, \tag{12}
+$$
+using the notation $k(X, X^\prime)$ to denote the matrix with entries
+$k(X, X^\prime)_{jl} = k(x_j, x^\prime_l)$.  
+If we consider the basis functions $\{\phi_j\}_{j=1}^{N}$ defined
+by $\phi_j(x) = k(x, x_j)$ and the associated
+feature map $\varphi$ and matrix $\Phi$, then (12) can be re-written as
+$$
+\mathbb{E}[f(\tilde{x})|X,y] = \varphi(\tilde{x})^\top \Phi^{-1}y,
+$$
+which is precisely the generic interpolation formula we have seen several times
+at this point. Moreover, if we denote $\alpha := k(X, X)^{-1}y$ then we can
+re-write (12) as
+$$
+k(\tilde{x}, X) k(X, X)^{-1}y = k(\tilde{x}, X)\alpha = \sum_{j=1}^{N} \alpha_j k(\tilde{x}, x_j).
+$$
+If we further assume that the kernel
+depends only on the distance between locations, then it can be viewed as a
+radial function $k(x, x^\prime) = \phi(\lVert x - x^\prime \rVert)$ (this
+property of kernels is known as **isotropy** in the geostatistics literature)
+and the GP predictive mean assumes the form
+$$
+\mathbb{E}[f(\tilde{x})|X,y] = \sum_{j=1}^{N} \alpha_j \phi(\lVert x - x_j\rVert),
+$$
+an RBF interpolant!
 
 
 # Questions
