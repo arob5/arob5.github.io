@@ -409,7 +409,7 @@ radial function $k(x, x^\prime) = \phi(\lVert x - x^\prime \rVert)$ (this
 property of kernels is known as **isotropy** in the geostatistics literature)
 and the GP predictive mean assumes the form
 $$
-\mathbb{E}[f(\tilde{x})|X,y] = \sum_{j=1}^{N} \alpha_j \phi(\lVert x - x_j\rVert),
+\mathbb{E}[f(\tilde{x})|X,y] = \sum_{j=1}^{N} \alpha_j \phi(\lVert \tilde{x} - x_j\rVert),
 $$
 an RBF interpolant!
 
