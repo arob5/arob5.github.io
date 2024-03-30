@@ -13,25 +13,24 @@ I discussed the Kalman filter (KF), which provides the
 closed-form mean and covariance recursions characterizing the Gaussian filtering
 distributions for linear Gaussian hidden Markov models. In this post, we retain
 the Gaussian noise assumption, but generalize to nonlinear dynamics and
-observation operators. Our primary focus will concern the additive noise model
+observation operators. Our primary focus is additive noise model
 \begin{align}
 v_{k+1} &= g(v_k) + \eta_{k+1} && \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{1} \newline
 y_{k+1} &= h(v_{k+1}) + \epsilon_{k+1}, && \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
-v_0 &\sim \mathcal{N}(m_0, C_0) \newline
-\\{\epsilon_k\\} &\perp \\{\eta_k\\} \perp v_0
+v_0 &\sim \mathcal{N}(m_0, C_0), &&\\{\epsilon_k\\} \perp \\{\eta_k\\} \perp v_0
 \end{align}
 but we will also touch on the case where the noise is also subject to nonlinear
 mapping; i.e.,
 \begin{align}
 v_{k+1} &= g(v_k, \eta_{k+1}) && \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{2} \newline
 y_{k+1} &= h(v_{k+1}, \epsilon_{k+1}) && \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
-v_0 &\sim \mu_0.
+v_0 &\sim \mathcal{N}(m_0, C_0), &&\\{\epsilon_k\\} \perp \\{\eta_k\\} \perp v_0
 \end{align}
 Note even this more general formulation is still a special case of the generic
 Bayesian filtering problem given that we are restricting to the setting with
 Gaussian noise and a Gaussian initial condition.
 
-Let $Y_k := \{y_1, \dots, y_k\}$ denote the set up observations up through time
+Let $Y_k := \{y_1, \dots, y_k\}$ denote the set of observations up through time
 step $k$.
 We seek to characterize the filtering distributions
 $v_k|Y_k$, and update them in an online fashion as more data
@@ -56,9 +55,9 @@ nonlinear functions. My plan is to follow this up with a post on the
 unscented Kalman filter (which utilizes a quadrature-based approximation) and
 then a bunch of posts on the ensemble Kalman filter (which opts for a Monte
 Carlo approach). Although the motivation stems from the filtering problem, I
-will focus mostly on the underlying fundamental problem here: approximating the
-distribution resulting from propagating a Gaussian random variable through a
-nonlinear map. The next section illustrates how this problem arises in the
+will focus mostly on the underlying fundamental problem here: approximating
+the distribution of a nonlinear function of a Gaussian random variable.
+The next section illustrates how this problem arises in the
 filtering context.
 {% endkatexmm %}
 
@@ -68,9 +67,8 @@ We recall from the
 [post](https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/)
 on Bayesian filtering that the map $\pi_k \to \pi_{k+1}$
 naturally decomposes into two steps: the forecast and analysis steps. We assume
-here the Gaussian approximation $v := v_k|Y_k \sim \mathcal{N}(m_k, C_k)$ has been
-invoked and consider the approximations that will be required in propagating
-this distribution through the map $\pi_k \to \pi_{k+1}$.
+here the Gaussian approximation $v_k := v_k|Y_k \sim \mathcal{N}(m_k, C_k)$ has been
+invoked and consider the approximations of the map $\pi_k \mapsto \pi_{k+1}$
 
 ### Forecast
 The forecast distribution $\hat{\pi}_{k+1}(v_{k+1}) := p(v_{k+1}|Y_k)$ is
@@ -79,35 +77,35 @@ $\pi_k$ through the stochastic dynamics model. In the additive noise case (1),
 we observe that this comes down to approximating the distribution of the random
 variable
 $$
-g(v) + \epsilon, \qquad v \sim \mathcal{N}(m_k, C_k), \epsilon \sim \mathcal{N}(0, Q).
+g(v_k) + \eta_{k+1} , \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{3}
 $$
 However, since we will be invoking a Gaussian approximation
-$g(v) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})$, in addition to the assumption
-that $v$ and $\epsilon$ are independent, then we see that the $\epsilon$ will
-not be a problem. Due to the independence, once we obtain the approximation
-$g(v) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})$, then the approximation
-$g(v) + \epsilon \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1} + Q)$ is
+$g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})$, in addition to the assumption
+that $v_k$ and $\eta_{k+1}$ are independent, then we can just focus our attention
+on the $g(v_k)$ term. Due to independence, once we obtain the approximation
+$g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})$, then the approximation
+$g(v_k) + \eta_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1} + Q)$ is
 immediate.
 
 In the non-additive noise case, the problem similarly comes down to approximating
 the distribution
 $$
-g(v, \epsilon), \qquad v \sim \mathcal{N}(m_k, C_k), \epsilon \sim \mathcal{N}(0, Q).
+g(v_k, \eta_{k+1}), \qquad v \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{4}
 $$
-Again, due to the independence assumptions we have that $(v, \epsilon)$ are
+Again, due to the independence assumptions we have that $(v_k, \eta_{k+1})$ are
 jointly distributed
 \begin{align}
-\begin{pmatrix} v \newline \epsilon \end{pmatrix}
-\sim \mathcal{N}\left(\begin{pmatrix} m_k \newline 0 \end{pmatrix},
-  \begin{pmatrix} C_k & 0 \newline 0 & Q \end{pmatrix} \right).
+\begin{bmatrix} v_k \newline \eta_{k+1} \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} m_k \newline 0 \end{bmatrix},
+  \begin{bmatrix} C_k & 0 \newline 0 & Q \end{bmatrix} \right).
 \end{align}
 Thus, this situation also reduces to approximating the distribution
-of a nonlinear map of a Gaussian; in this case, $g(\tilde{v})$, where
-$\tilde{v} := (v, \epsilon)$.
+of a nonlinear map of a Gaussian; in this case, the map $g(\tilde{v}_k)$, where
+$\tilde{v}_k := (v_k, \eta_{k+1})$ is the Gaussian input.
 
 ### Analysis
 Let's now suppose that we have the forecast approximation
-$\hat{v} := v_{k+1}|Y_k \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})$ in hand.
+$\hat{v}_{k+1} := v_{k+1}|Y_k \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})$ in hand.
 The map $\hat{\pi}_{k+1} \mapsto \pi_{k+1}$ from forecast to filtering
 distribution is defined by the action of conditioning on the data $y_{k+1}$.
 In the additive noise case (1), this entails the following application of Bayes'
@@ -132,11 +130,13 @@ distribution $v_{k+1}|Y_{k+1} = v_{k+1}|y_{k+1}, Y_k$ is then obtained as
 a conditional distribution of the joint Gaussian, which is available in closed-form.
 In the present
 setting of the additive noise model (1) this joint distribution is given by
+
 \begin{align}
-\begin{pmatrix} v_{k+1} \newline y_{k+1} \end{pmatrix} \bigg| Y_k
-&= \begin{pmatrix} \hat{v} \newline h(\hat{v}) + \epsilon_{k+1} \end{pmatrix},
-&& \hat{v} \sim \mathcal{N}(\hat{m}\_{k+1}, \hat{C}\_{k+1})
+\begin{bmatrix} v_{k+1} \newline y_{k+1} \end{bmatrix} \bigg| Y_k
+&= \begin{bmatrix} \hat{v}\_{k+1} \newline h(\hat{v}\_{k+1}) + \epsilon_{k+1} \end{bmatrix},
+&& \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}\_{k+1}, \hat{C}\_{k+1})
 \end{align}
+
 which is again generally non-Gaussian due to $h$. This perspective points to the
 idea of approximating this joint distribution as a Gaussian, so that an
 approximation of the filtering distribution then falls out as a conditional.
@@ -145,11 +145,14 @@ step, in that we again want to approximate the nonlinear mapping of a Gaussian
 with a Gaussian. The problem
 is thus to furnish a Gaussian approximation of
 \begin{align}
-\tilde{h}(\hat{v}) &= \begin{pmatrix} \hat{v} \newline h(\hat{v}) + \epsilon_{k+1} \end{pmatrix},
-&& \hat{v} \sim \mathcal{N}(\hat{m}\_{k+1}, \hat{C}\_{k+1}), \epsilon_{k+1} \sim \mathcal{N}(0, R).
+\tilde{h}(\hat{v}\_{k+1}, \epsilon_{k+1}) &= \begin{bmatrix} \hat{v}\_{k+1} \newline h(\hat{v}\_{k+1}) + \epsilon_{k+1} \end{bmatrix},
+&& \hat{v}\_{k+1} \sim \mathcal{N}(\hat{m}\_{k+1}, \hat{C}\_{k+1}), \ \epsilon_{k+1} \sim \mathcal{N}(0, R). \tag{5}
 \end{align}
-In the non-additive error case (2), $h(\hat{v}, \epsilon_{k+1})$ replaces
-$h(\hat{v}) + \epsilon_{k+1}$ in the above expression.
+In the non-additive error case (2), $h(\hat{v}_{k+1}, \epsilon_{k+1})$ replaces
+$h(\hat{v}_{k+1}) + \epsilon_{k+1}$ in the above expression. Note that the
+independence assumptions imply that $(\hat{v}_{k+1}, \epsilon_{k+1})$ is joint
+Gaussian so $\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1})$ is indeed a nonlinear
+map of a Gaussian.
 {% endkatexmm %}
 
 ## The Generic Problem Setting
@@ -159,26 +162,33 @@ filtering, we state the problem in generic terms. The notation used in this
 section should be viewed anew, not to be confused with the state space notation
 used above. The task is to provide a
 Gaussian approximation to a random variable $u = f(v)$, where $v$ is
-Gaussian distributed and $f$ is a nonlinear functions; more precisely,
+Gaussian-distributed and $f$ is a nonlinear function; more precisely,
 \begin{align}
-u &= f(v), && v \sim \mathcal{N}(m, C), \quad f: \mathbb{R}^n \to \mathbb{R}^m. \tag{3}
+u &= f(v), && v \sim \mathcal{N}(m, C), \quad f: \mathbb{R}^n \to \mathbb{R}^m. \tag{6}
 \end{align}
 In the filtering context, the forecast step represented an instantiation of this
 problem where $f = g$ and hence a special case where the dimensions of the domain
 and codomain of $f$ are equal. In the analysis step, $f$ is given by the
-map $v \mapsto (v, h(v))^\top$ (ignoring the $\epsilon$ for now) and thus
+map $v \mapsto (v, h(v))^\top$ (ignoring the $\eta/\epsilon$ for now) and thus
 represents the case where $m > n$. Although both of these cases are subsumed
-by (3), it is also helpful to consider them separately, as the second case can
-prove more challenging due to the higher-dimensional codomain. With the generic
+by (4), it is also helpful to consider them separately, as the second case has
+special structure which can present a more challenging problem. We thus define
+\begin{align}
+\tilde{u} &= \tilde{f}(v) := \begin{bmatrix} v \newline f(v) \end{bmatrix}, \tag{7}
+\end{align}
+which considers this special case. With the generic
 problem stated, we now proceed to discuss specific methods which utilize
 different notions of linearization to produce Gaussian approximations of
-the distribution of $u$.
+the distribution of $u$ and $\tilde{u}$.
 {% endkatexmm %}
 
 ## Taylor Series Approximations
+{% katexmm %}
 The first approach we consider leverages a Taylor series approximation of the
 nonlinear function $f$. When applied to the filtering problem, the resulting
-algorithm is known as the *extended Kalman filter*.
+algorithm is known as the *extended Kalman filter*. We note that higher
+order Taylor approximations are also possible in certain settings, but we
+restrict to first order approximations here.
 
 ### The Generic Method
 We consider approximating the nonlinear function $f$ with a local linear
@@ -190,25 +200,53 @@ Note that I am applying the Jacobian notation so that
 $Df(m) \in \mathbb{R}^{m \times n}$. Under this approximation we use the fact that
 $v \sim \mathcal{N}(m, C)$ to obtain
 \begin{align}
-u = f(v) & \approx f(m) + Df(m)[v - m] \tag{4} \newline
-&\sim \mathcal{N}(f(m), Df(m)C Df(m)^\top).
+u = f(v) & \approx f(m) + Df(m)[v - m] \tag{8} \newline
+&\sim \mathcal{N}(f(m), [Df(m)]C [Df(m)]^\top).
 \end{align}
-It is important to stress that this is a *local* approximation; the linearization
+
+The situation for $\tilde{f}$ is quite similar:
+\begin{align}
+\tilde{f}(v) &\approx \tilde{f}(m) + D\tilde{f}(m)[v - m] \tag{9} \newline
+&= \begin{bmatrix} m \newline f(m) \end{bmatrix} + \begin{bmatrix} I \newline Df(m) \end{bmatrix}[v-m] \newline
+&\sim
+\mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
+\begin{bmatrix} I \newline Df(m) \end{bmatrix} C \begin{bmatrix} I \newline Df(m) \end{bmatrix}^\top \right) \newline
+&= \mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
+\begin{bmatrix} C & C[Df(m)]^\top \newline [Df(m)]C & [Df(m)]C[Df(m)]^\top \end{bmatrix} \right)
+\end{align}
+where the last equality is in distribution.
+It is important to stress that these are *local* approximations; the linearization
 is constructed using only the local derivative information at the point $m$. Thus,
 we would expect the quality of the approximation to decay for points farther
 from $m$, and this decay to be more severe for $f$ which are highly nonlinear.
-Thus, intuitively we would expect the approximation (4) to be reasonable when
+Thus, intuitively we would expect the approximation (8) to be reasonable when
 the distribution of $v$ is tightly clustered around its mean. Distributions that
 are more diffuse will naturally lead to poorer approximations given that more
 of the probability mass exists in regions where the local linear approximation
-is not adequate. 
-
+is not adequate. The situation in (9) presents an even greater concern; the
+quality of this approximation relies on the *joint* distribution of $(v, f(v))$
+staying close to its mean. Not only does this require the current distribution
+of $v$ to be concentrated about $m$, but also the image $f(v)$ to be clustered
+about $f(m)$. Thus, even if $v$ is tightly bound to its mean, highly nonlinear
+maps $f$ have the potential to yield a large spread of points in the codomain
+and thus reduce the quality of the approximation.  
 
 ### Application: The Extended Kalman Filter
+We now apply these generic questions to the filtering settings (1) and (2),
+again breaking the problem in the forecast and analysis steps. The resulting
+approximate filtering algorithm is called the **extended Kalman filter** (EKF).
+
+#### Forecast
+Assume the filtering distribution at time $k$ is given by
+$v_k \sim \mathcal{N}(m_k, C_k)$. Starting with the additive noise model (1),
+we see that we must approximate the distribution $g(v_k)$. Applying 
+(8) and then adding the independent Gaussian $\eta_{k+1}$ yields the approximate
+forecast distribution
+\begin{align}
+\hat{v}\_{k+1} := v_{v+1}|Y_k \sim \mathcal{N}(g(m_k), [Dg(m_k)]C_k [Dg(m_k)]^\top + Q) \tag{10}
+\end{align}
 
 
-# TODO
-Discuss the change of measure formula for the PDF, extended Kalman filter,
-statistically linearlized Kalman filter, Fourier-Hermite Kalman filter,
-unscented Kalman filter (see Saarka Bayesian estimation of time-varying
-  systems notes).
+#### Analysis
+
+{% endkatexmm %}
