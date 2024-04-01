@@ -13,7 +13,7 @@ I discussed the Kalman filter (KF), which provides the
 closed-form mean and covariance recursions characterizing the Gaussian filtering
 distributions for linear Gaussian hidden Markov models. In this post, we retain
 the Gaussian noise assumption, but generalize to nonlinear dynamics and
-observation operators. Our primary focus is additive noise model
+observation operators. Our primary focus is the additive noise model
 \begin{align}
 v_{k+1} &= g(v_k) + \eta_{k+1} && \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{1} \newline
 y_{k+1} &= h(v_{k+1}) + \epsilon_{k+1}, && \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
@@ -54,7 +54,7 @@ framework. In this post we focus on methods rooted in *linearization* of the
 nonlinear functions. My plan is to follow this up with a post on the
 unscented Kalman filter (which utilizes a quadrature-based approximation) and
 then a bunch of posts on the ensemble Kalman filter (which opts for a Monte
-Carlo approach). Although the motivation stems from the filtering problem, I
+Carlo approach). Although the motivation stems from the filtering problem, we
 will focus mostly on the underlying fundamental problem here: approximating
 the distribution of a nonlinear function of a Gaussian random variable.
 The next section illustrates how this problem arises in the
@@ -65,7 +65,7 @@ filtering context.
 {% katexmm %}
 We recall from the
 [post](https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/)
-on Bayesian filtering that the map $\pi_k \to \pi_{k+1}$
+on Bayesian filtering that the map $\pi_k \mapsto \pi_{k+1}$
 naturally decomposes into two steps: the forecast and analysis steps. We assume
 here the Gaussian approximation $v_k := v_k|Y_k \sim \mathcal{N}(m_k, C_k)$ has been
 invoked and consider the approximations of the map $\pi_k \mapsto \pi_{k+1}$
@@ -90,7 +90,7 @@ immediate.
 In the non-additive noise case, the problem similarly comes down to approximating
 the distribution
 $$
-g(v_k, \eta_{k+1}), \qquad v \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{4}
+g(v_k, \eta_{k+1}), \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{4}
 $$
 Again, due to the independence assumptions we have that $(v_k, \eta_{k+1})$ are
 jointly distributed
@@ -101,7 +101,7 @@ jointly distributed
 \end{align}
 Thus, this situation also reduces to approximating the distribution
 of a nonlinear map of a Gaussian; in this case, the map $g(\tilde{v}_k)$, where
-$\tilde{v}_k := (v_k, \eta_{k+1})$ is the Gaussian input.
+$\tilde{v}_k := (v_k, \eta_{k+1})^\top$ is the Gaussian input.
 
 ### Analysis
 Let's now suppose that we have the forecast approximation
@@ -176,7 +176,7 @@ special structure which can present a more challenging problem. We thus define
 \begin{align}
 \tilde{u} &= \tilde{f}(v) := \begin{bmatrix} v \newline f(v) \end{bmatrix}, \tag{7}
 \end{align}
-which considers this special case. With the generic
+which captures this special case. With the generic
 problem stated, we now proceed to discuss specific methods which utilize
 different notions of linearization to produce Gaussian approximations of
 the distribution of $u$ and $\tilde{u}$.
@@ -232,18 +232,18 @@ maps $f$ have the potential to yield a large spread of points in the codomain
 and thus reduce the quality of the approximation.  
 
 ### Application: The Extended Kalman Filter
-We now apply these generic questions to the filtering settings (1) and (2),
-again breaking the problem in the forecast and analysis steps. The resulting
+We now apply these generic equations to the filtering settings (1) and (2),
+again breaking the problem into the forecast and analysis steps. The resulting
 approximate filtering algorithm is called the **extended Kalman filter** (EKF).
 
 #### Forecast
 Assume the filtering distribution at time $k$ is given by
 $v_k \sim \mathcal{N}(m_k, C_k)$. Starting with the additive noise model (1),
-we see that we must approximate the distribution $g(v_k)$. Applying 
+we see that we must approximate the distribution $g(v_k)$. Applying
 (8) and then adding the independent Gaussian $\eta_{k+1}$ yields the approximate
 forecast distribution
 \begin{align}
-\hat{v}\_{k+1} := v_{v+1}|Y_k \sim \mathcal{N}(g(m_k), [Dg(m_k)]C_k [Dg(m_k)]^\top + Q) \tag{10}
+\hat{v}\_{k+1} := v_{v+1}|Y_k \sim \mathcal{N}(g(m_k), [Dg(m_k)]C_k [Dg(m_k)]^\top + Q). \tag{10}
 \end{align}
 
 
