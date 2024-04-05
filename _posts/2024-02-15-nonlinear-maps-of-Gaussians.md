@@ -245,8 +245,47 @@ forecast distribution
 \begin{align}
 \hat{v}\_{k+1} := v_{v+1}|Y_k \sim \mathcal{N}(g(m_k), [Dg(m_k)]C_k [Dg(m_k)]^\top + Q). \tag{10}
 \end{align}
+This is quite similar to the forecast distribution for the Kalman filter, which is
+$\mathcal{N}(Gm_k, GC_k G^\top + Q)$ corresponding to the linear forward model
+$g(v) = Gv$. We see that the EKF forecast covariance is equivalent to that obtained
+from the Kalman filter applied with the linear forward model $G := Dg(m_k)$.
 
+The case of the non-additive noise (4) is similar, but now we must approximate
+$g(v_k, \eta_{k+1})$. Recall that $(v_k, \eta_{k+1})$ is joint Gaussian distributed,
+with mean $(m_k, 0)$. Applying (8) thus yields
+\begin{align}
+v_{v+1}|Y_k &\sim
+\mathcal{N}\left(g(m_k,0), [Dg(m_k,0)]\begin{bmatrix} C_k & 0 \newline 0 & Q \end{bmatrix} [Dg(m_k,0)]^\top\right) \newline
+&= \mathcal{N}\left(g(m_k,0), [D_vg(m_k,0)]C_k [D_vg(m_k,0)]^\top + [D_{\eta}g(m_k,0)]Q [D_{\eta}g(m_k,0)]^\top\right), \tag{11}
+\end{align}
+where the equality is in distribution and the subscripts $D_v$, $D_{\eta}$ indicate
+the respective partial derivatives. Note the similarity between (10) and (11).
+The general form is the same, but the non-additive case requires derivatives
+with respect to the noise $\eta$ in order to approximate the effect of pushing
+$\eta$ through the nonlinear forward model. Following our intuition on when
+we expect the Taylor series linearization to be reasonable, we now observe that
+the approximation may deteriorate when either the current state $v_k$ or
+the stochastic noise $\eta_{k+1}$ is highly variable, in which case significant
+probability mass may be present in regions far from the point $(m_k, 0)$ about
+which the Taylor series is expanded.
 
 #### Analysis
+Starting with the additive noise model, we recall that the analysis step requires
+approximation of (5). To this end, we apply (9) with
+$\tilde{f}(\hat{v}_{k+1}) = (\hat{v}_{k+1}, h(\hat{v}_{k+1}))^\top$ where
+$\hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})$. We actually
+require approximation of
+$(\hat{v}_{k+1}, y_{k+1})^\top = (\hat{v}_{k+1}, h(\hat{v}_{k+1}) + \epsilon_{k+1})^\top$
+but due to independence we can simply add $(0, \epsilon_{k+1})^\top$ post-hoc.
+The combination of (9) and the addition of the noise term gives
+\begin{align}
+\begin{bmatrix} \hat{v}\_{k+1} \newline h(\hat{m}\_{k+1}) + \epsilon\_{k+1} \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} \hat{m}\_{k+1} \newline h(\hat{m}\_{k+1}) \end{bmatrix},
+\begin{bmatrix} \hat{C}\_{k+1} & \hat{C}\_{k+1}[Dh(\hat{m}\_{k+1})]^\top \newline
+[Dh(\hat{m}\_{k+1})]\hat{C}\_{k+1} & [Dh(\hat{m}\_{k+1})]\hat{C}\_{k+1} [Dh(\hat{m}\_{k+1})]^\top + R \end{bmatrix} \right) \tag{12}
+\end{align}
+
+
+
 
 {% endkatexmm %}
