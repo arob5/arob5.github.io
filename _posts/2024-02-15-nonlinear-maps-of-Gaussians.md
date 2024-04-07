@@ -277,7 +277,7 @@ $\hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})$. We actually
 require approximation of
 $(\hat{v}_{k+1}, y_{k+1})^\top = (\hat{v}_{k+1}, h(\hat{v}_{k+1}) + \epsilon_{k+1})^\top$
 but due to independence we can simply add $(0, \epsilon_{k+1})^\top$ post-hoc.
-The combination of (9) and the addition of the noise term gives
+The combination of (9) with the addition of the noise term gives
 \begin{align}
 \begin{bmatrix} \hat{v}\_{k+1} \newline h(\hat{m}\_{k+1}) + \epsilon\_{k+1} \end{bmatrix}
 \sim \mathcal{N}\left(\begin{bmatrix} \hat{m}\_{k+1} \newline h(\hat{m}\_{k+1}) \end{bmatrix},
