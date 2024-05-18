@@ -1,13 +1,32 @@
 ---
-title: Gaussian Measures in Finite Dimensions
-subtitle: A fairly deep dive into the univariate and multivariate Gaussian distributions, in preparation for an extension to infinite dimensions.
+title: Gaussian Measures, Part 1 - The Univariate Case
+subtitle: A brief introduction to Gaussian measures in one dimension, serving to provide the setup for an extension to multiple, and eventually infinite, dimensions.
 layout: default
 date: 2024-05-16
 keywords: GP, Prob-Theory
 published: true
 ---
 
-# The Univariate Gaussian
+I intend for this to be part one of a (at least) three part series on Gaussian measures,
+with the ultimate goal being to understand Gaussian processes as random elements in
+some suitable infinite-dimensional space. Defining a rigorous infinite-dimensional
+analog of the familiar Gaussian distribution is no small task, and texts on this
+subject can be quite intimidating. I've found that, personally, the key to
+make these references more approachable was to first develop a deep understanding
+of Gaussian measures in finite dimensions. Indeed, many of the concepts in the
+infinite-dimensional case are directly motivated by their finite-dimensional
+analogs. In particular, I found the parallels between the transitions from
+one-to-multiple and multiple-to-infinite dimensions to be quite enlightening.
+Therefore, we start here with the simplest case: Gaussian measures
+in one dimension. This basic case is likely worth exploring even for those
+well-acquainted with the Gaussian distribution, as it requires a shift in thinking
+about densities to thinking more abstractly in terms of measures. While the
+former seems perfectly sufficient in one dimension, we will find that the
+measure-theoretic approach becomes a necessity in generalizing to infinite
+dimensions. This post also serves to establish notation, and introduce
+some key concepts that will be used throughout this series, including
+Fourier transforms (characteristic functions), Radon-Nikodym derivatives,
+and the change-of-variables formula.
 
 ## Density Function
 We start by recalling that the univariate Gaussian density takes the form
@@ -131,11 +150,9 @@ we have
 $$
 \hat{\delta}_m(t) = \int e^{its} \delta_m(ds) = e^{itm},
 $$
-which indeed agrees with (2) with $\sigma^2 = 0$.
-
-See this: https://ccrma.stanford.edu/~jos/sasp/Gaussian_Integral_Complex_Offset.html
-and this:
-https://www.andrew.cmu.edu/course/33-341/pdf/CF-of-Gaussian.pdf
+which indeed agrees with (2) with $\sigma^2 = 0$. The complete result can
+be derived in many different ways; a quick Google should satisfy the curious
+reader.
 {% endkatexmm %}
 
 
@@ -155,10 +172,18 @@ more precise though.
   The <strong>distribution</strong> (or <strong>law</strong>) of
   $X$ is defined to be the probability
   measure $\mathbb{P} \circ X^{-1}$ on $(\mathbb{R}, \mathcal{B}(\mathbb{R}))$.
-  We say that $X$ is a <strong>Gaussian random variable</strong> if
-  $\mathbb{P} \circ X^{-1}$ is a Gaussian measure.
+  We write $\mathcal{L}(X) = \mu$ ($\mathcal{L}$ for "law") or $X \sim \mu$ to
+  mean that the random variable $X$ has distribution $\mu$.
   </p>
 </blockquote>
+
+<blockquote>
+  <p><strong>Definition.</strong>
+  We say that $X$ is a <strong>Gaussian random variable</strong> if
+  $\mathcal{L}(X) = \mathbb{P} \circ X^{-1}$ is a Gaussian measure.
+  </p>
+</blockquote>
+
 
 {% katexmm %}
 To be clear on notation, we write $\mathbb{P} \circ X^{-1}$ to denote the
@@ -169,4 +194,27 @@ To be clear on notation, we write $\mathbb{P} \circ X^{-1}$ to denote the
 Here, $X^{-1}(B) := \{\omega \in \Omega : X(\omega) \in B\}$
 denotes the **inverse image** (i.e., **pre-image**) of $B$
 under $X$.
+
+The introduction of random variables provides a new language to express the concepts
+introduced above. For example, suppose that $X \sim \mu$. Then we can write the
+expectation of $X$ in a few different ways:
+$$
+\mathbb{E}_{\mu}[X] := \int_{\mathbb{R}} x \ \mu(dx)
+= \int_{\mathbb{R}} x \ (\mathbb{P} \circ X^{-1})(dx)
+= \int_{\Omega} X(\omega) \ \mathbb{P}(d\omega).
+$$
+The final equality is courtesy of the **change-of-variables formula**, a result
+that we will be using repeatedly throughout these notes. Following the above
+notation, we can also write the Fourier transform $\hat{\mu}$ in terms of the
+random variable $X$ as
+$$
+\hat{\mu}(t) = \mathbb{E}_{\mu}\left[e^{itX} \right].
+$$
 {% endkatexmm %}
+
+
+## The Central Limit Theorem
+While it is not the focus of these notes, a post on Gaussian measures seems
+incomplete without mentioning the central limit theorem (CLT). Proving
+this result has the added benefit of reviewing some useful properties
+of Fourier transforms.
