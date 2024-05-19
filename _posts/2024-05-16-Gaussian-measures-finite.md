@@ -218,3 +218,16 @@ While it is not the focus of these notes, a post on Gaussian measures seems
 incomplete without mentioning the central limit theorem (CLT). Proving
 this result has the added benefit of reviewing some useful properties
 of Fourier transforms.
+
+<blockquote>
+  <p><strong>Theorem.</strong>
+  Let $X_1, X_2, \dots$ be independent and identically distributed random variables
+  with mean $m$ and variance $\sigma^2$. Let $S_n := X_1 + \dots + X_n$. Then
+  the following convergence result holds, which can be stated equivalently
+  in terms of weak convergence of measures or distributional convergence
+  of random variables:
+  \begin{align}
+  \mathcal{L}\left(\frac{S_n - m}{\sigma/sqrt{n}}\right) \overset{w}{\to} \mathcal{N}(0,1)
+  \end{align}
+  </p>
+</blockquote>
