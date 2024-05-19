@@ -32,7 +32,7 @@ and the change-of-variables formula.
 We start by recalling that the univariate Gaussian density takes the form
 {% katexmm %}
 $$
-\mathcal{N}(x|m, \sigma^2) := \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left\{-\frac{1}{2\sigma^2}(x - m)^2 \right\}.
+\mathcal{N}(x|m, \sigma^2) := \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left\{-\frac{1}{2\sigma^2}(x - m)^2 \right\}. \tag{1}
 $$
 {% endkatexmm %}
 We're typically used to defining the Gaussian as a random variable with density
@@ -116,7 +116,7 @@ won't take the time to prove them here.
 ## Fourier Transform
 A Gaussian measure can alternatively be defined via its Fourier transform
 \begin{align}
-\hat{\mu}(t) := (\mathcal{F}(\mu))(s) := \int e^{its} \mu(ds).
+\hat{\mu}(t) := (\mathcal{F}(\mu))(t) := \int e^{its} \mu(ds).
 \end{align}
 The notation $\mathcal{F}(\mu)$ makes it clear that the Fourier transform is
 an operator that acts on the measure $\mu$, though we will typically stick with
@@ -151,8 +151,8 @@ $$
 \hat{\delta}_m(t) = \int e^{its} \delta_m(ds) = e^{itm},
 $$
 which indeed agrees with (2) with $\sigma^2 = 0$. The complete result can
-be derived in many different ways; a quick Google should satisfy the curious
-reader.
+be derived in many different ways; a quick Google search should satisfy the
+curious reader.
 {% endkatexmm %}
 
 
@@ -215,19 +215,21 @@ $$
 
 ## The Central Limit Theorem
 While it is not the focus of these notes, a post on Gaussian measures seems
-incomplete without mentioning the central limit theorem (CLT). Proving
-this result has the added benefit of reviewing some useful properties
-of Fourier transforms.
+incomplete without mentioning the central limit theorem (CLT). We just state
+the basic result here.
 
 <blockquote>
   <p><strong>Theorem.</strong>
   Let $X_1, X_2, \dots$ be independent and identically distributed random variables
-  with mean $m$ and variance $\sigma^2$. Let $S_n := X_1 + \dots + X_n$. Then
+  with mean $m$ and variance $\sigma^2 < \infty$. Let $S_n := X_1 + \dots + X_n$ and
+  $Z \sim \mathcal{N}(0,1)$. Then
   the following convergence result holds, which can be stated equivalently
   in terms of weak convergence of measures or distributional convergence
   of random variables:
   \begin{align}
-  \mathcal{L}\left(\frac{S_n - m}{\sigma/sqrt{n}}\right) \overset{w}{\to} \mathcal{N}(0,1)
+  &\mathcal{L}\left(\frac{S_n - m}{\sigma\sqrt{n}}\right) \overset{w}{\to} \mathcal{L}(Z),
+  &&\frac{S_n - m}{\sigma\sqrt{n}} \overset{d}{\to} Z,
   \end{align}
+  as $n \to \infty$.
   </p>
 </blockquote>
