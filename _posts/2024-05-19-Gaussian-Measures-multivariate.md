@@ -95,11 +95,16 @@ combination of the entries of $X$ is univariate Gaussian. More precisely:
 <blockquote>
   <p><strong>Definition.</strong>
   Let $(\Omega, \mathcal{A}, \mathbb{P})$ be a a probability space and
-  $X: \Omega \to \mathbb{R}^n$ a random variable. Then $X$ is called
+  $X: \Omega \to \mathbb{R}^n$ a random vector. Then $X$ is called
   <strong>Gaussian</strong> if $\langle X, y \rangle$ is a univariate Gaussian
   random variable for all $y \in \mathbb{R}^n$.
   </p>
 </blockquote>
+Notice that by choosing $y := e_j$ (the vector with a $1$ in its $j^{\text{th}}$
+entry and zeros everywhere else), then this definition immediately tells us that
+a Gaussian random vector has univariate  Gaussian marginal distributions.
+That is, if $X = (X_1, \dots, X_n)^\top$ then $X_i$ is univariate Gaussian
+for all $i = 1, \dots, n$.
 {% endkatexmm %}
 
 ## Fourier Transform
@@ -155,9 +160,61 @@ In this section we provide yet another characterization of Gaussian measures.
 We consider a *generative* perspective, whereby a Gaussian random vector
 $X \in \mathbb{R}^n$ arises via a linear transformation of $n$ iid
 $\mathcal{N}(0,1)$ random variables.  
+<blockquote>
+  <p><strong>Proposition.</strong>
+  Let $Z_1, \dots, Z_n$ be iid $\mathcal{N}(0, 1)$ random variables stacked into
+  the column vector $Z \in \mathbb{R}^n$. Then, for any fixed vector
+  $m \in \mathbb{R}^n$ and matrix $A \in \mathbb{R}^{n \times n}$, the random
+  variable given by
+  $$
+  X := m + AZ \tag{6}
+  $$
+  has a Gaussian distribution $\mathcal{N}(m, AA^\top)$.
 
+  Conversely, let $X \in \mathbb{R}^n$ be a Gaussian random variable. Then
+  there exists a vector $m \in \mathbb{R}^n$ and matrix $A \in \mathbb{R}^{n \times n}$
+  such that $X = m + AZ$.
+  </p>
+</blockquote>
 
+{% katexmm %}
+Another way to think about this is that we have defined a *transport map*
+$T: \mathbb{R}^n \to \mathbb{R}^n$ such that
+\begin{align}
+T(Z) &= X, &&\text{where } T(z) = m + Az.
+\end{align}
+That is, we feed in vectors with iid standard Gaussian components, and get out
+vectors with distribution $\mathcal{N}(m, AA^\top)$. This is a very practical
+way to look at multivariate Gaussians, immediately providing the basis for
+a sampling algorithm. Indeed, suppose we want to draw iid samples from
+the distribution $\mathcal{N}(m, C)$. Then the above proposition gives us a
+way to do so, provided that we can (1) draw univariate $\mathcal{N}(0,1)$
+samples; and (2) factorize the matrix $C$ as $C = AA^\top$ for some $A$. This
+procedure is summarized in the below corollary.
 
+<blockquote>
+  <p><strong>Corollary.</strong>
+  The following algorithm produces a sample from the distribution
+  $\mathcal{N}(m, C)$. <br>
+
+  1. Draw $n$ iid samples $Z_i \sim \mathcal{N}(0,1)$ and stack them in a column
+  vector $Z$.  <br>
+  2. Compute a factorization $C = AA^\top$.  <br>
+  3. Return $m + AZ$.  <br>
+
+  Repeating steps 1 and 3 will produce independent samples from $\mathcal{N}(m, C)$
+  (the matrix factorization need not be re-computed each time).  
+  </p>
+</blockquote>
+As for the factorization, the [Cholesky decomposition](https://en.wikipedia.org/wiki/Cholesky_decomposition)
+is a standard choice. The eigendecomposition provides another option, since
+$$
+C = UDU^\top = UD^{1/2} D^{1/2} U^\top = (UD^{1/2})(UD^{1/2})^\top
+$$
+so setting $A := UD^{1/2}$ does the trick. Note that $C$ is positive semidefinite
+so $D$ is just a diagonal matrix with nonnegative values on the diagonal. 
+
+{% endkatexmm %}
 
 
 
