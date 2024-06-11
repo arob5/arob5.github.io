@@ -192,10 +192,6 @@ by the dominant eigenvectors.
 
 <blockquote>
   <p><strong>Proposition.</strong>
-  A probability measure $\mu$ defined on the Borel measurable space
-  $(\mathbb{R}^n, \mathcal{B}(\mathbb{R}^n))$ is called <strong>Gaussian</strong>
-  if, for all linear maps $\ell \in (\mathbb{R}^n)^*$, the pushforward measure
-  $\mu \circ \ell^{-1}$ is Gaussian on $(\mathbb{R}, \mathcal{B}(\mathbb{R}))$.
   </p>
 </blockquote>
 
