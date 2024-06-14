@@ -79,6 +79,9 @@ $x \in \mathcal{X}$ by
 $$
 \nabla f(x) := \left[D_1 f(x), \dots, D_d f(x) \right]^\top \in \mathbb{R}^d.
 $$
+On a notational note, for a function $\phi: \mathbb{R}^n \to \mathbb{R}^m$ we
+use $D\phi(x)$ to denote the $m \times n$ Jacobian matrix. Therefore, when applied
+to the scalar-valued function $f$, we have the relation $\nablaf(x) = Df(x)^\top$.
 By observing gradient evaluations $\nabla f(x_i)$ at a set of inputs
 $x_1, \dots, x_n$ sampled from $\mu$, we can get a sense of how the function
 varies along each coordinate direction, on average. However, it may be the case
@@ -256,6 +259,10 @@ columns of $V_1$ form an orthonormal basis for this subspace.
 The inactive subspace is the orthogonal complement of the active subspace,
 since $V_1^\top V_2 = I$.
 
+# Understanding the Low-Dimensional Subspace
+Having defined the active subspace, we now begin to investigate its
+basic properties.  
+
 ## Active and Inactive Variables
 Since the active subspace is $r$-dimensional, we can represent vectors
 living in this subspace with $r < d$ coordinates. It is this fact that allows
@@ -310,27 +317,102 @@ to when we vary $z$.
   <p><strong>Proposition.</strong>
   Let $y$ and $z$ be the active and inactive variables defined in (6). Let
   \begin{align}
-  &T(y) := f(V_1 y + V_2 z), &&S(z) := f(V_1 y + V_2 z)
+  &T_{z}(y) := V_1 y + V_2 z, &&T_{y}(z) := V_1 y + V_2 z
   \end{align}
-  denote the function $f$ viewed as either a function of $y$ or $z$ only. Then,  
+  denote the coordinate transformation from $(y,z)$ to $x$, viewed respectively
+  as functions of $y$ or $z$ only. Then,  
   \begin{align}
-  \mathbb{E} \lVert D T(y) \rVert_2^2 &= \lambda_1 + \cdots + \lambda_r \newline
-  \mathbb{E} \lVert D S(z) \rVert_2^2 &= \lambda_{r+1} + \cdots + \lambda_d.
+  \mathbb{E} \lVert D (f \circ T_{z})(y) \rVert_2^2 &= \lambda_1 + \cdots + \lambda_r \newline
+  \mathbb{E} \lVert D (f \circ S_{y})(z) \rVert_2^2 &= \lambda_{r+1} + \cdots + \lambda_d.
   \end{align}
   </p>
 </blockquote>
 
-Note that for $DT(y)$, the inactive variable is viewed as fixed with respect
+Note that for $T_{z}(y)$, the inactive variable is viewed as fixed with respect
 to the derivative operation. However, $z$ is still random, and thus the expectation
-$\mathbb{E} \lVert D T(y) \rVert_2^2$ averages over the randomness in both $y$ and $z$.
+$\mathbb{E} \lVert D (f \circ T_{z})(y) \rVert_2^2$ averages over the randomness in
+both $y$ and $z$.
 
 **Proof.**
+We only prove the result for $T_z(y)$, as the proof for $S_y(z)$ is nearly
+identical. By the chain rule we have
+\begin{align}
+D (f \circ T_{z})(y)
+= Df(x) DT_{z}(y)
+= Df(x)V_1.
+\end{align}
+For succinctness, we will use the notation
+$$
+\nabla_{y} f := [D (f \circ T_{z})(y)]^\top = V_1^\top \nabla f(x)
+$$
+in the below derivations. Thus,
+\begin{align}
+\mathbb{E} \lVert \nabla_{y} f  \rVert_2^2
+&= \mathbb{E}\left[\text{tr}\left([\nabla_y f] [\nabla_y f]^\top \right) \right] \newline
+&= \text{tr}\left(\mathbb{E}\left[[\nabla_y f] [\nabla_y f]^\top \right] \right) \newline
+&= \text{tr}\left(V_1^\top \mathbb{E}\left[\nabla f(x) \nabla f(x)^\top \right] V_1 \right) \newline
+&= \text{tr}\left(V_1^\top C V_1 \right) \newline
+&= \text{tr}\left(V_1^\top V \Lambda V^\top V_1 \right) \newline
+&= \text{tr}(\Lambda_1) \newline
+&= \lambda_1 + \dots + \lambda_r.
+\end{align}
 
+## The Distribution of the (In)Active Variables
+As mentioned in the previous section, the active and inactive variables
+are functions of the random variable $x \sim \mu$ and hence are themselves
+random variables. In this section we investigate the joint distribution
+of the random vector $u := (y, z)^\top$. We recall from (6) that this
+vector is defined as
+\begin{align}
+u := \begin{bmatrix} y \newline z \end{bmatrix}
+= \begin{bmatrix} V_1^\top x \newline V_2^\top x \end{bmatrix}
+= V^\top x,
+\end{align}
+where $V$ is orthonormal. Thus, the transformation $u = T(x) := V^\top x$ can be
+thought of as rotating the original coordinate system. In particular, note
+that $V$ is invertible with $V^{-1} = V^\top$. Let's suppose that the measure
+$\mu$ admits a density function $\rho$. Since the transformation $T$
+is invertible and differentiable, then the change-of-variables
+formula tells us the density of the random vector $u$. Denoting this density
+by $\tilde{\rho}$, we have
+$$
+\tilde{\rho}(u^\prime)
+= \rho(T^{-1}(u^\prime)) \lvert \text{det}(DT^{-1}(u^\prime)) \rvert
+= \rho(Vu^\prime)
+= \rho(x^\prime),
+$$
+following from the fact that $\text{det}(DT^{-1}(u^\prime)) = \text{det}(V) = 1$.
+In words, to compute the density of $u$ at a point $u^\prime$, we can
+simply evaluate the density of $x$ at the point $Vu^\prime$. There is
+no distortion of space here since the transformation is a rotation.
+We can also find the measure $\tilde{\mu}$ associated with the density
+$\tilde{\rho}$ by considering, for some Borel set $A \subset \mathcal{X}$,  
+\begin{align}
+\tilde{\mu}(A)
+&= \int_{\mathbb{R}^d} 1_A[u^\prime] \tilde{\mu}(du^\prime) \newline
+&= \int\_{\mathbb{R}^d} 1_A[u^\prime] (\mu \circ T^{-1})(du^\prime) \newline
+&= \int\_{\mathbb{R}^d} 1_A[T(x^\prime)] \mu(dx^\prime) \newline
+&= \int\_{\mathbb{R}^d} 1[V^\top x^\prime \in A] \mu(dx^\prime) \newline
+&=\int\_{\mathbb{R}^d} 1[x^\prime \in VA] \mu(dx^\prime) \newline
+&= \mu(VA),
+\end{align}
+where I'm defining the set
+$$
+VA := \{V u^\prime: u^\prime \in A \}.
+$$
+This result is analogous to the density one, and simply says that the distributions
+of $x$ and $u$ differ only by a change-of-variables. It is worth emphasizing that
+$\tilde{\rho}(u^\prime) = \tilde{\rho}(y^\prime, z^\prime)$ is a *joint* density
+over the active and inactive variables. We will shortly be interested in the
+marginals and conditionals of this joint distribution.
+
+### The Gaussian Case
+As usual, things work out very nicely if we work with Gaussians. Let's consider the
+case where $\mu$ is multivariate Gaussian.
+
+
+{% endkatexmm %}
 
 # References
 - Active subspace methods in theory and practice: Applications to kriging surfaces
 SIAM J. Sci. Comput., 36 (4) (2014), pp. A1500-A1524, 10.1137/130916138
-
-
-
-{% endkatexmm %}
