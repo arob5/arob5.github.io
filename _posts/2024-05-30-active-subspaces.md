@@ -81,7 +81,7 @@ $$
 $$
 On a notational note, for a function $\phi: \mathbb{R}^n \to \mathbb{R}^m$ we
 use $D\phi(x)$ to denote the $m \times n$ Jacobian matrix. Therefore, when applied
-to the scalar-valued function $f$, we have the relation $\nablaf(x) = Df(x)^\top$.
+to the scalar-valued function $f$, we have the relation $\nabla f(x) = Df(x)^\top$.
 By observing gradient evaluations $\nabla f(x_i)$ at a set of inputs
 $x_1, \dots, x_n$ sampled from $\mu$, we can get a sense of how the function
 varies along each coordinate direction, on average. However, it may be the case
@@ -283,10 +283,13 @@ represents the vector in the original $d$-dimensional coordinate system.
 We can similarly project onto the *inactive* subspace via $V_2 V_2^\top x$.
 
 <blockquote>
-  <p><strong>Definition.</strong> \tag{6}
+  <p><strong>Definition.</strong>
   Let $V_1$ and $V_2$ be defined as in (3). We introduce the notation
-  $y := V_1^\top x \in \mathbb{R}^r$ and $z := V_2^\top x \in \mathbb{R}^{d-r}$ and
-  refer to $y$ and $z$ respectively as the <strong>active variable</strong>
+  \begin{align}
+  &y := V_1^\top x, &&z \in V_2^\top x, \tag{6}
+  \end{align}
+  and refer to $y \in \mathbb{R}^r$ and $z \in \mathbb{R}^{d-r}$
+  respectively as the <strong>active variable</strong>
   and <strong>inactive variable</strong>.
   </p>
 </blockquote>
@@ -328,11 +331,6 @@ to when we vary $z$.
   </p>
 </blockquote>
 
-Note that for $T_{z}(y)$, the inactive variable is viewed as fixed with respect
-to the derivative operation. However, $z$ is still random, and thus the expectation
-$\mathbb{E} \lVert D (f \circ T_{z})(y) \rVert_2^2$ averages over the randomness in
-both $y$ and $z$.
-
 **Proof.**
 We only prove the result for $T_z(y)$, as the proof for $S_y(z)$ is nearly
 identical. By the chain rule we have
@@ -353,9 +351,16 @@ in the below derivations. Thus,
 &= \text{tr}\left(V_1^\top \mathbb{E}\left[\nabla f(x) \nabla f(x)^\top \right] V_1 \right) \newline
 &= \text{tr}\left(V_1^\top C V_1 \right) \newline
 &= \text{tr}\left(V_1^\top V \Lambda V^\top V_1 \right) \newline
-&= \text{tr}(\Lambda_1) \newline
+&= \text{tr}(\Lambda_1) &&(\dagger) \newline
 &= \lambda_1 + \dots + \lambda_r.
 \end{align}
+
+We obtained $(\dagger)$ by applying the decomposition (3). $\qquad \blacksquare$
+
+Note that for $T_{z}(y)$, the inactive variable is viewed as fixed with respect
+to the derivative operation. However, $z$ is still random, and thus the expectation
+$\mathbb{E} \lVert D (f \circ T_{z})(y) \rVert_2^2$ averages over the randomness in
+both $y$ and $z$.
 
 ## The Distribution of the (In)Active Variables
 As mentioned in the previous section, the active and inactive variables
@@ -373,7 +378,7 @@ thought of as rotating the original coordinate system. In particular, note
 that $V$ is invertible with $V^{-1} = V^\top$. Let's suppose that the measure
 $\mu$ admits a density function $\rho$. Since the transformation $T$
 is invertible and differentiable, then the change-of-variables
-formula tells us the density of the random vector $u$. Denoting this density
+formula gives us the density of the random vector $u$. Denoting this density
 by $\tilde{\rho}$, we have
 $$
 \tilde{\rho}(u^\prime)
@@ -408,7 +413,19 @@ marginals and conditionals of this joint distribution.
 
 ### The Gaussian Case
 As usual, things work out very nicely if we work with Gaussians. Let's consider the
-case where $\mu$ is multivariate Gaussian.
+case where $\mu$ is multivariate Gaussian, of the form
+$x \sim \mathcal{N}(m, \Sigma)$. Since $u = V^\top x$ is a linear transformation
+of a Gaussian, then we immediately have that
+$$
+u \sim \mathcal{N}(V^\top m, V^\top \Sigma V). \tag{8}
+$$
+Therefore, $\tilde{\rho}(u^\prime) = \mathcal{N}(\tilde{\rho} | V^\top m, V^\top \Sigma V)$.
+In this case, the marginals and conditionals of $\tilde{\rho}$ are all
+available in closed-form using standard facts about Gaussians. If we consider
+the case where $\mu$ is standard Gaussian (i.e., $x \sim \mathcal{N}(0,I)$),
+then $u \sim \mathcal{N}(0, V^\top V) = \mathcal{N}(0, I)$. In this special case,
+the marginal distributions of $y, z$ and the conditional distributions of
+$y|z$, $z|y$ are all also standard Gaussian.
 
 
 {% endkatexmm %}
