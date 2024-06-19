@@ -48,9 +48,11 @@ have $x_M|x_N \sim \mathcal{N}(\hat{\mu}_M, \hat{C}_N)$, where
 
 ### Linear Transformation of Gaussian Vector
 We recall that linear transformations of Gaussians preserve Gaussianity.
-Therefore, for a matrix $A \in \mathbb{R}^{R \times (M + N)}$ we have
+Therefore, for a matrix $A \in \mathbb{R}^{R \times (M + N)}$, the random
+vector $y := Ax$ has distribution
+
 \begin{align}
-Ax \sim \mathcal{N}(A\mu, ACA^\top). \tag{3}
+y \sim \mathcal{N}(A\mu, ACA^\top). \tag{3}
 \end{align}
 In this post we will be concerned with matrices $A$ with certain structure; the
 motivation will become more clear when we start considering GPs.
@@ -62,7 +64,7 @@ A :=
 where $A_M \in \mathbb{R}^{R_1 \times M}$ and $A_N \in \mathbb{R}^{R_2 \times N}$.
 In this case, the transformed distribution (3) assumes the form
 \begin{align}
-Ax \sim \mathcal{N}\left(
+y \sim \mathcal{N}\left(
 \begin{bmatrix} A_M\mu_M \newline A_N \mu_N \end{bmatrix},
 \begin{bmatrix}
 A_M C_M A_M^\top & A_M C_{MN} A_N^\top \newline
@@ -71,27 +73,91 @@ A_N C_{NM}A_M^\top & A_N C_N A_N^\top
 \right). \tag{5}
 \end{align}
 Having characterized the joint distribution of the transformed vector $Ax$, we
-now consider the effect on the conditional distribution. Applying the
-Gaussian conditioning identity (2), we obtain
+now consider the effect on the conditional distribution. Let
+$y_M := A_M x_M$ and $y_N := A_N x_N$. Applying the Gaussian conditioning
+identity (2), we obtain
 \begin{align}
-A_M x_M | A_N x_N \sim \mathcal{N}\left(\hat{\mu}_M^{A}, \hat{C}_M^{A} \right),
+y_M | y_N \sim \mathcal{N}\left(\hat{\mu}_M^{y}, \hat{C}_M^{y} \right),
 \end{align}  
 where
 
 \begin{align}
-\hat{\mu}\_{M}^{A}
+\hat{\mu}\_{M}^{y}
 &:= A_M \mu_M + A_M C_{MN} A_N^\top (A_N C_N A_N^\top)^{-1}[A_N x_N - A_N \mu_N] \tag{6} \newline
-\hat{C}\_{M}^{A}
-&:= A_M C_M A_M^\top - A_M C_{MN} A_N^\top (A_N C_N A_N^\top)^{-1} C_{NM} A_M.
+\hat{C}\_{M}^{y}
+&:= A_M C_M A_M^\top - A_M C_{MN} A_N^\top (A_N C_N A_N^\top)^{-1} A_N C_{NM} A_M^\top.
 \end{align}
+
+#### Generalization to Affine Maps
+The generalization from linear to affine maps is almost immediate. Consider an
+affine map of the form
+\begin{align}
+y := Ax + b
+&= \begin{bmatrix} A_M & 0 \newline 0 & A_N \end{bmatrix}
+\begin{bmatrix} x_M \newline x_N \end{bmatrix} +
+\begin{bmatrix} b_M \newline b_N \end{bmatrix}. \tag{7}
+\end{align}
+The joint distribution of $y$ is then given by  
+\begin{align}
+y \sim \mathcal{N}\left(
+\begin{bmatrix} A_M\mu_M + b_M \newline A_N \mu_N + b_N \end{bmatrix},
+\begin{bmatrix}
+A_M C_M A_M^\top & A_M C_{MN} A_N^\top \newline
+A_N C_{NM}A_M^\top & A_N C_N A_N^\top.
+\end{bmatrix} \right) \tag{8}
+\end{align}
+Note that the constant terms only affect the mean. Applying the Gaussian
+conditioning formulas then gives the conditional distribution
+\begin{align}
+y_M | y_N \sim \mathcal{N}\left(\hat{\mu}_M^{y}, \hat{C}_M^{y} \right),
+\end{align}  
+where
+
+\begin{align}
+\hat{\mu}\_{M}^{y}
+&:= b_M + A_M \mu_M + A_M C_{MN} A_N^\top (A_N C_N A_N^\top)^{-1}[A_N x_N - A_N \mu_N] \tag{9} \newline
+\hat{C}\_{M}^{y}
+&:= A_M C_M A_M^\top - A_M C_{MN} A_N^\top (A_N C_N A_N^\top)^{-1} A_N C_{NM} A_M^\top.
+\end{align}
+The only difference with respect to (6) is the addition of $b_M$ in the conditional
+mean. Note that the $A_N x_N - A_N \mu_N$ term in the conditional mean is unchanged
+due to the cancellation $b_M - b_M$.
 
 Note that $A_M$ and $A_N$ map to $\mathbb{R}^{R_1}$ and $\mathbb{R}^{R_2}$,
 respectively. Therefore, the dimension of $Ax$ may differ from that of
-$x$. Now, it would be nice to be able to write $\hat{\mu}_{M}^{A}$ and
-$\hat{C}_{M}^{A}$ as functions of $\hat{\mu}_M$ and $\hat{C}_M$, respectively.
+$x$. Now, it would be nice to be able to write $\hat{\mu}_{M}^{y}$ and
+$\hat{C}_{M}^{y}$ as functions of $\hat{\mu}_M$ and $\hat{C}_M$, respectively.
 In the general setting, there is not much we can do given that $A_N$ may
 not be invertible; thus, we can't necessarily simplify the term
 $(A_N C_N A_N^\top)^{-1}$.
+
+#### Special case: Invertibility
+Let's now consider the special case that $A_N$ is invertible; in particular,
+this means $A_N \in \mathbb{R}^{N \times N}$. We'll work with the affine map
+(7), since the linear result follows as the special case $b = 0$.
+With the invertibility assumption we can simplify (9) as
+\begin{align}
+\hat{\mu}\_{M}^{y}
+&= b_M + A_M \mu_M + A_M C_{MN} A_N^\top (A_N^\top)^{-1} C_N^{-1} A_N^{-1} A_N[x_N - \mu_N] \tag{10} \newline
+&= b_M + A_M \left(\mu_M + C_{MN} C_N^{-1} [x_N - \mu_N] \right) \newline
+&= b_M + A_M \hat{\mu}\_{M} \newline
+\hat{C}\_{M}^{y}
+&= A_M C_M A_M^\top - A_M C_{MN} A_N^\top (A_N C_N A_N^\top)^{-1} A_N C_{NM} A_M^\top \newline
+&= A_M C_M A_M^\top - A_M C_{MN} A_N^\top (A_N^\top)^{-1} C_N^{-1} A_N^{-1} A_N C_{NM} A_M^\top \newline
+&= A_M \left(C_M - C_{MN} C_N^{-1} C_{NM}\right) A_M^\top \newline
+&= A_M \hat{C}\_{M} A_M^\top.
+\end{align}
+In words, what we have just shown is that, if $A_N$ is invertible, then
+conditioning $y_M|y_N$ is equivalent to conditioning $x_M|x_N$ and then
+applying the transformation $A_M$ after the fact. We might write this symbolically
+as
+\begin{align}
+(A_M x_M | A_N x_N) \overset{d}{=} A_M(x_M | x_N). \tag{11}
+\end{align}
+This result makes intuitive sense; since $A_N$ is a bijection, then conditioning
+on $x_N$ is equivalent to conditioning on $A_N x_N$ - they both contain the
+same information. Note that no invertibility assumption is required for $A_M$;
+what matters here is the variable that is being conditioned on.
 
 {% endkatexmm %}
 
