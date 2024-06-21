@@ -157,15 +157,22 @@ as
 This result makes intuitive sense; since $A_N$ is a bijection, then conditioning
 on $x_N$ is equivalent to conditioning on $A_N x_N$ - they both contain the
 same information. Note that no invertibility assumption is required for $A_M$;
-what matters here is the variable that is being conditioned on.
-
+what matters here is the variable that is being conditioned on. This equivalence
+does not necessarily hold when $A_N$ is non-invertible. For example, consider the
+case that $A_N$ has a single row. Then conditioning on $A_N x_N$ means that
+the observed quantity is a linear combination of the elements of $x_N$. This
+quantity contains less information than observing each entry of $x_N$ directly,
+since many different realizations of $x_N$ might yield the same observed linear
+combination.
 {% endkatexmm %}
 
-
 ## Gaussian Process Review
+We now seek to apply the above results in the context of Gaussian processes (GP).
+This section provides a brief review of GPs, mainly intended to introduce notation.
+
 {% katexmm %}
 ### Gaussian Process Prior
-We consider a Gaussian process (GP) distribution over functions
+We consider a GP distribution over functions
 $f: \mathcal{U} \to \mathbb{R}$ with $\mathcal{U} \subset \mathbb{R}^D$. In
 particular, consider a GP $f(\cdot) \sim \mathcal{GP}(\mu(\cdot), k(\cdot, \cdot))$
 with mean function
@@ -173,43 +180,96 @@ $\mu: \mathcal{U} \to \mathbb{R}$ and positive definite kernel
 (i.e., covariance function) $k: \mathcal{U} \times \mathcal{U} \to \mathbb{R}$.
 Throughout this post we suppose that we have observed the function evaluations
 $\{u_n, f(u_n)\}_{n=1}^{N}$ and seek to perform inference at a set of
-new inputs $\{\tilde{u}_m\}_{m=1}^{M}$. We will only be considering these two
-sets of inputs throughout this post, so we will lighten notation by letting  
-$f, \mu \in \mathbb{R}^{N}$ denote the vectors defined by
-$f_n := f(u_n)$ and $\mu_n := \mu(u_n)$. We analogously define
-$\tilde{f}, \tilde{\mu} \in \mathbb{R}^M$ to be the vectors of the GP and mean
-function evaluations at the unobserved inputs $\tilde{u}_1, \dots, \tilde{u}_M$.
-Finally, we let $K \in \mathbb{R}^{N \times N}$,
-$\tilde{K} \in \mathbb{R}^{M \times M}$, and $C \in \mathbb{R}^{N \times M}$
+new inputs $\{\tilde{u}_m\}_{m=1}^{M}$. Echoing the notation from the previous
+sections we will let $f_N, \mu_N \in \mathbb{R}^{N}$ denote the vectors defined by
+$(f_N)_n := f(u_n)$ and $(\mu_N)_n := \mu(u_n)$. We analogously define
+$f_M, \mu_M \in \mathbb{R}^M$ to be the vectors containing the
+evaluations of $f(\cdot)$ and $\mu(\cdot)$ at the unobserved inputs
+$\tilde{u}_1, \dots, \tilde{u}_M$.
+Finally, we let $C_N \in \mathbb{R}^{N \times N}$,
+$C_M \in \mathbb{R}^{M \times M}$, and $C_{NM} \in \mathbb{R}^{N \times M}$
 denote the matrices given by
-$K_{n,n^\prime} := k(u_n, u_{n^\prime})$, $\tilde{K}_{m,m^\prime} := k(u_m, u_{m^\prime})$,
-and $C_{n, m} := k(u_n, u_m)$.
+$(C_N)_{n,n^\prime} := k(u_n, u_{n^\prime})$,
+$(C_M)_{m,m^\prime} := k(\tilde{u}_m, \tilde{u}_{m^\prime})$,
+and $(C_{NM})_{n,m} := k(u_n, \tilde{u}_m)$. We also define
+$C_{MN} := C_{NM}^\top$.
 
 ### Gaussian Process Posterior  
-The vector $\tilde{f}$ is unobserved and the goal is to characterize the
-conditional distribution $\tilde{f}|f$ (note that we will always be implicitly
+The vector $f_M$ is unobserved and the goal is to characterize the
+conditional distribution $f_M | f_N$ (note that we will always be implicitly
 conditioning on the inputs). This distribution can be derived by considering the
 joint distribution implied by the GP prior:
 \begin{align}
-\begin{bmatrix} \tilde{f} \newline f \end{bmatrix}
-\sim \mathcal{N}\left(\begin{bmatrix} \tilde{\mu} \newline \mu \end{bmatrix},
-\begin{bmatrix} \tilde{K} \quad C^\top \newline C \quad K \end{bmatrix} \right).
+\begin{bmatrix} f_M \newline f_N \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} \mu_M \newline \mu_N \end{bmatrix},
+\begin{bmatrix} C_M \quad C_{MN} \newline C_{NM} \quad C_N \end{bmatrix} \right).
 \end{align}
-The well-known Gaussian conditioning identities imply that the conditional
-$\tilde{f}_{\star} := \tilde{f}|f$ is also Gaussian
-$\tilde{f}_{\star} \sim \mathcal{N}(\tilde{\mu}_{\star}, \tilde{K}_{\star})$
+The Gaussian conditioning identities (2) imply that the conditional
+$\hat{f}_M := f_M|f_N$ is also Gaussian
+$\hat{f}_M \sim \mathcal{N}(\hat{\mu}_{M}, \hat{C}_{M})$
 with mean and covariance given by
 
-\begin{aligned}
-\tilde{\mu}^{N} &:= \tilde{\mu} + C^\top K^{-1} (f - \mu) \newline
-\tilde{K}^{N} &:= \tilde{K} - C^\top K^{-1} C.
-\end{aligned}
+\begin{align}
+\hat{\mu}\_{M} &:= \mu_M + C_{MN} C_N^{-1} (f_N - \mu_N) \tag{12} \newline
+\hat{C}\_{M} &:= C_M - C_{MN} C_N^{-1} C_{NM}.
+\end{align}
 
-Let's now consider
-
+Since GPs are characterized by their finite-dimensional distributions, (12)
+implies that the conditional distribution over functions $\hat{f} := f|f_N$ is also
+a GP. The formulas in (12) give the mean and covariance function of
+$\hat{f}$, evaluated at the arbitrary inputs $\tilde{u}_1, \dots, \tilde{u}_M$.
 {% endkatexmm %}
 
 ## Pointwise Transformations of Gaussian Processes
+{% katexmm %}
+We begin our GP applications with what I'm calling a "pointwise"
+affine transformation of the GP. Concretely, given a GP
+$f \sim \mathcal{GP}(\mu, k)$ over the input space $\mathcal{U}$,
+we define the process
+\begin{align}
+&g: \mathcal{U} \to \mathbb{R}, &&g(u) := \alpha f(u) + \beta, \tag{13}
+\end{align}
+where $0 \neq \alpha \in \mathbb{R}$ and $b \in \mathbb{R}$.
+In words, we are simply applying an invertible affine transformation to the
+GP output on a $u$-by-$u$ basis. Letting $g_N$, $g_M$ be the analogs of
+$f_N$, $f_M$ for the $g(\cdot)$ evaluations, we see that
+\begin{align}
+\begin{bmatrix} g_M \newline g_N \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} A_M \mu_M + b_M \newline A_N \mu_N + b_N \end{bmatrix},
+\begin{bmatrix} A_M C_M A_M^\top  \quad A_M C_{MN} A_N^\top \newline A_N C_{NM} A_M^\top \quad A_N C_N A_N^\top \end{bmatrix} \right),
+\end{align}
+where
+\begin{align}
+&b_N := \beta 1_N,
+&&A_N := \text{diag}(\alpha, \dots, \alpha),
+\end{align}
+with $1_N \in \mathbb{R}^N$ denoting a vector of ones. The quantities
+$A_M$ and $b_M$ are defined identically, with only the dimensions of the matrix
+and vector changing.
+
+Under the assumption $\alpha \neq 0$, $A_N$ is invertible so we are in the
+regime (10). Applying this result, we see that the conditional distribution is
+given by
+\begin{align}
+g_M | g_N &\sim \mathcal{N}(\hat{\mu}^g_M, \hat{C}^g_M),
+\end{align}
+where
+
+\begin{align}
+&\hat{\mu}^g_M := A_M \hat{\mu}_M + b_M
+&&\hat{C}^g_M := A_M \hat{C}_M A_M^\top.
+\end{align}
+
+In other words, we have shown
+\begin{align}
+\hat{g}(u) = \alpha \hat{f}(u) + \beta,
+\end{align}
+meaning that transforming the prior $f(\cdot)$ in (13)
+is equivalent to applying the same transformation to the
+posterior $\hat{f}$.
+ 
+
+{% endkatexmm %}
 
 
 ## Applications
