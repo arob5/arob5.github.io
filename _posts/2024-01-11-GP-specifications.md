@@ -4,77 +4,238 @@ subtitle: I review and derive various formulas that come in handy when sequentia
 layout: default
 date: 2024-01-11
 keywords: Gaussian-Process
-published: false
+published: true
 ---
 
+Gaussian processes (GP) are widely utilized across various fields, each with
+their own preferences, terminology, and conventions. Some notable domains that
+make significant use of GPs include
+- Spatial statistics (kriging)
+- Design and analysis of computer experiments (emulator/surrogate modeling)
+- Bayesian optimization
+- Machine learning
 
-## Setup and notation
+Even if you're a GP expert in one of these domains,
+these differences can make navigating the
+GP literature in other domains a bit tricky. The goal of this post is to
+summarize common approaches for specifying GP distributions, and emphasize
+conventions and assumptions that tend to differ across fields. By
+"specifying GP distributions", what I am really talking about here is
+parameterizing the mean and covariance functions that define the GP. While
+GPs are non-parametric models in a certain sense, specifying and
+learning the *hyperparameters* making up the mean and covariance functions
+is a crucial step to successful GP applications. I will discuss popular
+parameterizations for these functions, and different algorithms for learning
+these parameter values from data. In the spirit of drawing connections across
+different domains, I will try my best to borrow terminology from different fields,
+and will draw attention to synonymous terms by using boldface.  
+
+## Background
 {% katexmm %}
 
-### The Model
-We consider the common observation model in which observations of a GP are
-directly observed, after potentially being polluted by some additive iid
-Gaussian noise,
+### Gaussian Processes
+Gaussian processes (GPs) define a probability distribution over a space of
+functions in such a way that they can be viewed as a generalization of
+Gaussian random vectors. Just as Gaussian vectors are defined by their
+mean vector and covariance matrix, GPs are defined by a mean and covariance
+*function*. We will interchangeably refer to the latter as either the
+**covariance function** or **kernel**.
+
+We will consider GPs defined over a space of functions of the form
+$f: \mathcal{X} \to \mathbb{R}$, where $\mathcal{X} \subseteq \mathbb{R}^d$.
+We will refer to elements $x \in \mathcal{X}$ as **inputs** or
+**locations** and the images $f(x) \in \mathbb{R}$ as **outputs** or
+**responses**. If the use of the word "locations" seems odd, note that in
+spatial statistical settings, the inputs $x$ are often geographic coordinates.
+We will denote the mean and covariance function defining the
+GP by $\mu: \mathcal{X} \to \mathbb{R}$
+and $k: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$, respectively. The mean
+function is essentially unrestricted, but the covariance function $k(\cdot, \cdot)$
+must be a valid positive definite kernel. If $f(\cdot)$ is a GP with
+mean function $\mu(\cdot)$ and kernel $k(\cdot, \cdot)$ we will denote this by
 \begin{align}
-y(\mathbf{x}) &= f(\mathbf{x}) + \epsilon(\mathbf{x}) \newline \tag{1}
-f(\cdot) &\sim \mathcal{GP}(\mu(\cdot; \theta\_{\mu}), k(\cdot, \cdot; \theta_k)) \newline
-\epsilon(\mathbf{x}) &\overset{\text{iid}}{\sim} \mathcal{N}(0, \eta^2)
+f \sim \mathcal{GP}(\mu, k). \tag{1}
 \end{align}
 
-with $f$ and $\epsilon$ assumed independent. Here, the inputs $\mathbf{x}$ belong
-to some space $\mathcal{X} \subseteq \mathbb{R}^D$ and the response is
-univariate; i.e., $y(\mathbf{x}) \in \mathbb{R}$. The prior mean
-$\mu: \mathcal{X} \to \mathbb{R}$ and covariance function (i.e. kernel)
-$k: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$ are parameterized by
-some sets of parameters $\theta_{\mu}$ and $\theta_k$, respectively. Often
-we suppress writing the dependence on these *hyperparameters*, but since the
-point of this post is to explore how these parameters are specified and estimated,
-we draw explicit attention to them above. When convenient, we will collectively
-denote these parameters as $\theta := \{\theta_{\mu}, \theta_k, \eta^2 \}$,
-where we have also tossed in the observation variance $\eta^2$, which is also
-typically unknown and hence must also be estimated. This variance parameter is
-sometimes also called the *nugget*.
-
-Before proceeding, I note that the regression
-model considered here is only the tip of the iceberg when it comes to GPs,
-contrary to the way they are sometimes presented in machine learning texts.
-GPs with non-Gaussian likelihoods and non-linear mappings of GPs are routinely
-considered in such fields as Bayesian inverse problems. This post does not
-touch on these more complicated settings (the nice closed-form posterior in
-the next section doesn't even apply anymore).
-
-### GP Closed-Form Posterior, Assuming Fixed Hyperparameters
-We now consider the typical regression setting, in which a dataset consisting
-of $N$ input-output pairs $\{\mathbf{x}_n, y_n\}_{n=1}^{N}$ has been observed.
-Let $\mathbf{X}$ denote the $N \times D$ design matrix with $n^{\text{th}}$ row
-equal to $\mathbf{x}_n$. Similarly, let $\mathbf{y}$ be the $N \times 1$ vector
-with $n^{\text{th}}$ entry set to $y_n$. Suppose we are interested in predicting
-the response at some unsampled locations
-$\mathbf{\tilde{x}}_1, \dots, \mathbf{\tilde{x}}_M$, stacked into the rows of
-the $M \times D$ matrix $\mathbf{\tilde{X}}$. Denote the response at these
-locations by $\mathbf{\tilde{y}} := y(\mathbf{\tilde{X}}) \in \mathbb{R}^M$.
-The GP predictive (i.e. conditional or posterior) distribution
-$\mathbf{\tilde{y}}|\mathbf{X}, \mathbf{y}, \mathbf{\tilde{X}}$ is found by
-considering the joint distribution across the observed and unobserved locations
-and then applying the well-known Gaussian conditional formulas.
+The defining property of GPs is that their finite-dimensional distributions
+are Gaussian; that is, for an arbitrary finite set of $n$ inputs
+$X := \{x_1, \dots, x_N\} \subset \mathcal{X}$,
+the vector $f(X) \in \mathbb{R}^n$ is distributed as
 \begin{align}
-\begin{bmatrix} \mathbf{y} \\\ \mathbf{\tilde{y}} \end{bmatrix} \bigg|
-\mathbf{X}, \mathbf{\tilde{X}}
-\sim \mathcal{N}\left(
-\begin{bmatrix} \mu(\mathbf{X}) \\\ \mu(\mathbf{\tilde{X}})\end{bmatrix},
-\begin{bmatrix} \mathbf{K} & k(\mathbf{X}, \mathbf{\tilde{X}})
-\\\ k(\mathbf{\tilde{X}}, \mathbf{X}) & k(\mathbf{\tilde{X}}) \end{bmatrix}
-\right)
+f(X) \sim \mathcal{N}(\mu(X), k(X, X)). \tag{2}
 \end{align}
-where we have defined $\mathbf{K} := k(\mathbf{X})$. We see that the GP
-predictive distribution is indeed simply the conditional distribution of this
-multivariate Gaussian. Applying the formula for a Gaussian conditional yields
+We are vectorizing notation here so that $[f(X)]_i := f(x_i)$,
+$[\mu(X)]_i := \mu(x_i)$, and $[k(X, X)]_{i,j} := k(x_i, x_j)$. When the
+two input sets to the kernel are equal, we lighten notation by writing
+In particular, suppose we have two sets of inputs
+$X$ and $\tilde{X}$, containing $n$ and
+$m$ inputs, respectively. The defining property (2) then implies
+
 \begin{align}
-\mathbf{\tilde{y}}|\mathbf{X}, \mathbf{y}, \mathbf{\tilde{X}}
-\sim \mathcal{N}\left(\hat{\mu}(\mathbf{\tilde{X}}), \hat{k}(\mathbf{\tilde{X}}) \right)
+\begin{bmatrix} f(\tilde{X}) \newline f(X) \end{bmatrix}
+&\sim \mathcal{N}\left(
+  \begin{bmatrix} \mu(\tilde{X}) \newline \mu(X) \end{bmatrix},
+  \begin{bmatrix}
+  k(\tilde{X}) & k(\tilde{X}, X) \newline
+  k(X, \tilde{X}) & k(X)
+  \end{bmatrix}
+\right). \tag{3}
 \end{align}
+
+The Gaussian joint distribution (3) implies that the conditional distributions
+are also Gaussian. In particular, the distribution of $f(\tilde{X})|f(X)$ can be
+obtained by applying the well-known Gaussian conditioning identities:
+
+\begin{align}
+f(\tilde{X})|f(X) &\sim \mathcal{N}(\hat{\mu}(\tilde{X}), \hat{k}(\tilde{X})), \tag{4} \newline
+\hat{\mu}(\tilde{X}) &:= \mu(\tilde{X}) + k(\tilde{X}, X)k(X)^{-1} [f(X) - \mu(X)] \newline
+\hat{k}(\tilde{X}) &:= k(\tilde{X}) - k(\tilde{X}, X)k(X)^{-1} k(X, \tilde{X}).
+\end{align}
+The fact that the result (4) holds for arbitrary finite sets of inputs $\tilde{X}$
+implies that the conditional $f | f(X)$ is also a GP, with mean and covariance
+functions $\hat{\mu}(\cdot)$ and $\hat{k}(\cdot, \cdot)$ defined by (4).
+On a terminology note, the $n \times n$ matrix $k(X)$ is often called the
+**kernel matrix**. This is the matrix containing the kernel evaluations at the
+set of $n$ *observed* locations.
+
+### Regression with GPs
+One common application of GPs is their use as a flexible nonlinear regression
+model. Let's consider the basic regression setup with observed data pairs
+$(x_1, y_1), \dots, (x_n, y_n)$. We assume that the $y_i$ are noisy observations
+of some underlying latent function output $f(x_i)$. The GP regression model arises
+by placing a GP prior distribution on the latent function $f$. We thus consider
+the regression model
+\begin{align}
+y(x) &= f(x) + \epsilon(x) \tag{5} \newline
+f &\sim \mathcal{GP}(\mu, k) \newline
+\epsilon &\overset{iid}{\sim} \mathcal{N}(0, \sigma^2),
+\end{align}
+where we have assumed a simple additive Gaussian noise model. This assumption is
+quite common in the GP regression setting due to the fact that it results in
+closed-form conditional distributions, similar to (4). We will assume the
+error model (5) throughout this post, but note that there are many other possibilities
+if one is willing to abandon closed-form posterior inference.
+
+The solution of the regression problem is given by the distribution of
+$f(\cdot)|y(X)$ or $y(\cdot)|y(X)$, where $y(X)$ is the $n$-dimensional vector
+of observed responses. The first distribution is the posterior on the latent
+function $f$, while the second incorporates the observation noise as well.
+Both distributions can be derived in the same way, so we focus on the second.
+Letting $\tilde{X}$ denote a set of $m$ inputs at which we would like to predict the
+response, consider the joint distribution
+\begin{align}
+\begin{bmatrix} y(\tilde{X}) \newline y(X) \end{bmatrix}
+&\sim \mathcal{N}\left(
+  \begin{bmatrix} \mu(\tilde{X}) \newline \mu(X) \end{bmatrix},
+  \begin{bmatrix}
+  k(\tilde{X}) + \sigma^2 I_m & k(\tilde{X}, X) \newline
+  k(X, \tilde{X}) & k(X) + \sigma^2 I_n
+  \end{bmatrix}
+\right). \tag{6}
+\end{align}
+This is quite similar to (3), but now takes into account the noise term
+$\epsilon$. This does not affect the mean vector since $\epsilon$ is mean-zero;
+nor does it affect the off-diagonal elements of the covariance matrix since
+$\epsilon$ and $f$ were assumed independent. Applying the Gaussian conditioning
+identities (4) yields the posterior distribution
+\begin{align}
+y(\tilde{X})|y(X) &\sim \mathcal{N}(\hat{\mu}(\tilde{X}), \hat{k}(\tilde{X})), \tag{7} \newline
+\hat{\mu}(\tilde{X}) &:= \mu(\tilde{X}) + k(\tilde{X}, X)[k(X) + \sigma^2 I_n]^{-1} [f(X) - \mu(X)] \newline
+\hat{k}(\tilde{X}) &:= \sigma^2 I_m + k(\tilde{X}) - k(\tilde{X}, X)[k(X) + \sigma^2 I_n]^{-1} k(X, \tilde{X}).
+\end{align}
+We will refer to (7) as the GP **posterior**, **predictive**, or generically
+**conditional**, distribution.
+We observe that these equations are identical to (4), modulo the appearance
+of $\sigma^2$ in the predictive mean and covariance equations. The distribution
+$f(\tilde{X})|y(X)$ is identical to (7), except that the $\sigma^2 I_m$ is removed in
+the predictive covariance. Again, this reflects the subtle distinction between
+doing inference on the latent function $f$ vs. on the observation process $y$.
+
+### Noise, Nuggets, and Jitters
+Observe that this whole regression procedure is only slightly different from the
+noiseless GP setting explored in the previous section (thanks to the Gaussian
+likelihood assumption). Indeed, the conditional distribution of
+$f(\tilde{X})|y(X)$ is derived from $f(\tilde{X})|f(X)$ by simply replacing
+$k(X)$ with $k(X) + \sigma^2 I_n$ (obtaining the distribution
+$y(\tilde{X})|y(X)$ requires the one additional step of adding $\sigma^2 I_m$
+to the predictive covariance). In other words, we have simply applied standard
+GP conditioning using the modified kernel matrix
+\begin{align}
+C(X) := k(X) + \sigma^2 I_n. \tag{8}
+\end{align}
+We thus might reasonably wonder if the model (5) is equivalent to instead
+defining a GP directly on the observation process $y$. Doing so would require
+defining a kernel $c: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$ that
+is consistent with (8). This route is fraught with difficulties and subtleties, which I will
+do my best to describe clearly here. At first glance, it seems like the right
+choice is
+\begin{align}
+c(x, x^\prime) := k(x, x^\prime) + \sigma^2 \delta(x, x^\prime), \tag{9}
+\end{align}
+where $\delta(x, x^\prime) := 1[x = x^\prime]$ is sometimes called the
+**stationary white noise kernel**. Why isn't this quite right? Notice in (9)
+that $\sigma^2$ is added whenever the inputs $x = x^\prime$ are equal. However,
+suppose we observe multiple independent realizations of the process at the
+same inputs $X$. In the regression model (9) the errors $\epsilon(x)$ are
+independent across these realizations, *even at the same locations*. However,
+this will not hold true in the model under (9), since $\delta(x, x^\prime)$ only
+sees the values of the inputs, and has no sense of distinction across realizations.
+We might try to fix this by writing something like
+\begin{align}
+c(x_i, x_j) := k(x_i, x_j) + \sigma^2 \delta_{ij}, \tag{10}
+\end{align}
+where the Delta function now depends on the labels $i, j$ instead of the values
+of the inputs. In the spatial statistics literature,
+it is not uncommon to see a covariance function defined like (10), but this is
+basically a notational hack. The kernel is a function of two inputs from
+$\mathcal{X}$ - we can't have it also depending on some side information like
+the labels $i, j$. At the end of the day, (9) and (10) are attempts to
+incorporate some concept of **white noise** inside the kernel itself, rather
+than via a hierarchical model like (5). I would just stick with the hierarchical
+model, which is easily rigorously defined and much more intuitive.
+
+Nonetheless, one should not be surprised if expressions like (10) pop up,
+especially in the spatial statistics literature. Spatial statisticians refer
+to the noise term $\epsilon(x)$ as the **nugget**, and $\sigma^2$ the
+**nugget variance** (sometimes these terms are conflated). In this context,
+instead of representing observation noise, $\sigma^2$ is often thought of
+as representing some unresolved small-scale randomness in the random field
+itself. If you imagine sampling a field to determine the concentration of some
+mineral across space, then you would hope that repeated measurements (taken around
+the same time) would yield the same values. Naturally, they may not, and the
+introduction of the nugget is one way to account for this.
+
+While this discussion may seem to be needlessly abstract, we recall that the
+effect of incorporating the noise term (however you want to interpret it) is to
+replace the kernel matrix $k(X)$ with the new matrix $c(X) = k(X) + \sigma^2 I_n$.
+Confusingly, there is one more reason (having nothing to do with observation error
+or nuggets) that people use a matrix of the form $c(X)$ in place of $k(X)$:
+numerical stability. Indeed, even though $k(X)$ is theoretically positive definite,
+in practice its numerical instantiation may fail to have this property. A simple
+approach to deal with this is to add a small, fixed constant $\sigma^2$ to the
+diagonal of the kernel matrix. In this context, $\sigma^2$ is often called the
+**jitter**. While computationally its effect is the same as the nugget, note that
+its introduction is motivated very differently. The jitter is not stemming from
+some sort of random white noise; it is purely a computational hack to improve
+the conditioning of the kernel matrix. Check out
+[this](https://discourse.mc-stan.org/t/adding-gaussian-process-covariance-functions/237/67)
+thread for some entertaining debates on the use of the nugget and jitter concepts. 
+
+### Parameterized Means and Kernels
+Everything we have discussed this far assumes fixed, known mean and covariance
+functions. In practice, suitable choices for these quantities are not typically
+known. Thus, the usual approach is to specify some parametric families
+$\mu = \mu_{\psi}$ and $k = k_{\phi}$
+
+
+
+### The GP (Marginal) Likelihood Function
 {% endkatexmm %}
 
 ## Generic Hyperparameter Estimation Approaches
 ### Maximum Likelihood
 ### Bayesian Modeling
+
+# References
+- Surrogates (Gramacy)
+- Statistics or geostatistics? Sampling error or nugget effect? (Clark)
