@@ -163,8 +163,9 @@ GP conditioning using the modified kernel matrix
 \begin{align}
 C(X) := k(X) + \sigma^2 I_n. \tag{8}
 \end{align}
-We thus might reasonably wonder if the model (5) is equivalent to instead
-defining a GP directly on the observation process $y$. Doing so would require
+We thus might reasonably wonder if the model (5) admits an alternative
+equivalent representation by defining a GP directly on the observation process $y$.
+Defining such a model would require
 defining a kernel $c: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$ that
 is consistent with (8). This route is fraught with difficulties and subtleties, which I will
 do my best to describe clearly here. At first glance, it seems like the right
@@ -187,7 +188,7 @@ c(x_i, x_j) := k(x_i, x_j) + \sigma^2 \delta_{ij}, \tag{10}
 where the Delta function now depends on the labels $i, j$ instead of the values
 of the inputs. In the spatial statistics literature,
 it is not uncommon to see a covariance function defined like (10), but this is
-basically a notational hack. The kernel is a function of two inputs from
+basically a notational hack. A kernel is a function of two inputs from
 $\mathcal{X}$ - we can't have it also depending on some side information like
 the labels $i, j$. At the end of the day, (9) and (10) are attempts to
 incorporate some concept of **white noise** inside the kernel itself, rather
@@ -199,7 +200,7 @@ especially in the spatial statistics literature. Spatial statisticians refer
 to the noise term $\epsilon(x)$ as the **nugget**, and $\sigma^2$ the
 **nugget variance** (sometimes these terms are conflated). In this context,
 instead of representing observation noise, $\sigma^2$ is often thought of
-as representing some unresolved small-scale randomness in the random field
+as representing some unresolved small-scale randomness in the spatial field
 itself. If you imagine sampling a field to determine the concentration of some
 mineral across space, then you would hope that repeated measurements (taken around
 the same time) would yield the same values. Naturally, they may not, and the
@@ -207,7 +208,7 @@ introduction of the nugget is one way to account for this.
 
 While this discussion may seem to be needlessly abstract, we recall that the
 effect of incorporating the noise term (however you want to interpret it) is to
-replace the kernel matrix $k(X)$ with the new matrix $c(X) = k(X) + \sigma^2 I_n$.
+simply replace the kernel matrix $k(X)$ with the new matrix $c(X) = k(X) + \sigma^2 I_n$.
 Confusingly, there is one more reason (having nothing to do with observation error
 or nuggets) that people use a matrix of the form $c(X)$ in place of $k(X)$:
 numerical stability. Indeed, even though $k(X)$ is theoretically positive definite,
@@ -219,22 +220,135 @@ its introduction is motivated very differently. The jitter is not stemming from
 some sort of random white noise; it is purely a computational hack to improve
 the conditioning of the kernel matrix. Check out
 [this](https://discourse.mc-stan.org/t/adding-gaussian-process-covariance-functions/237/67)
-thread for some entertaining debates on the use of the nugget and jitter concepts. 
+thread for some entertaining debates on the use of the nugget and jitter concepts.
 
 ### Parameterized Means and Kernels
-Everything we have discussed this far assumes fixed, known mean and covariance
+Everything we have discussed this far assumes fixed mean and covariance
 functions. In practice, suitable choices for these quantities are not typically
 known. Thus, the usual approach is to specify some parametric families
-$\mu = \mu_{\psi}$ and $k = k_{\phi}$
+$\mu = \mu_{\psi}$ and $k = k_{\phi}$ and learn their parameters from data.
+The parameters $\psi$ and $\phi$ are often referred to as **hyperparameters**,
+since they are not the primary parameters of interest in the GP regression model.
+Recalling from (5) that the GP acts as a prior distribution on the latent
+function, we see that $\psi$ and $\phi$ control the specification of this
+prior distribution. In addition to $\psi$ and $\phi$, the parameter
+$\sigma^2$ is also typically not known. I will not wade back into the previous
+section's debate in arguing whether this should be classified as
+a "hyperparameter" or not. In any case, let's let
+$\theta := \{\psi, \phi, \sigma^2 \}$ denote the full set of
+(hyper)parameters that must be learned from data.
 
+#### Mean Functions
+The machine learning community commonly uses the simplest possible form for the
+mean function: $\mu(x) \equiv 0$. This zero-mean assumption is less restrictive
+than it seems, since GPs mainly derive their expressivity from the kernel.
+A slight generalization is to allow a constant, non-zero mean
+$\mu(x) \equiv \beta_0$, where $\beta_0 \in \mathbb{R}$.
+However, constant (including zero-mean) GP priors can have some undesirable properties;
+e.g., in the context of extrapolation. Sometimes one wants more flexibility, and
+in these cases it is quite common to consider some sort of linear regression
+model
+\begin{align}
+\mu(x) = h(x)^\top \beta, \tag{11}
+\end{align}
+where $h: \mathcal{X} \to \mathbb{R}^p$ is some feature map and $\beta \in \mathbb{R}^p$
+the associated coefficient vector. For example, $h(x) = [1, x^\top]^\top$
+would yield a standard linear model, and
+$h(x) = [1, x_1, \dots, x_d, x_1^2, \dots, x_d^2]$ would allow for a quadratic
+trend.
 
+#### Kernels
+The positive definite restriction makes defining valid covariance functions
+much more difficult than defining mean functions. Thus, one typically falls back
+on one of a few popular choices of known parametric kernel families (though
+note that kernels can be combined in various ways to give a large variety of
+options). While the goal of this post is not to explore specific kernels, in order to have
+a concrete example in mind consider the following parameterization:
+\begin{align}
+k(x, \tilde{x}) = \alpha^2 \sum_{j=1}^{d} \left(-\frac{\lvert x^{j} - \tilde{x}^j \rvert}{\ell^j}\right)^2.
+\tag{12}
+\end{align}
+Note that I'm using superscripts to index vector entries here.
+This kernel goes by many names, including **exponentiated quadratic**,
+**squared exponential**, **Gaussian**, **radial basis function**, and
+**automatic relevance determination**. The parameter $\alpha^2$ is sometimes called
+the **marginal variance**, or just the **scale parameter**. The parameters
+$\ell^1, \dots, \ell^d$ are often called **lengthscale**, **smoothness**, or
+**range** parameters, since they control the smoothness of the GP realizations
+along each coordinate direction. Other popular kernels (e.g., Matérn) have
+analogous parameters controlling similar features. Note that in this example
+we have $\phi = \{\alpha^2, \ell^1, \dots, \ell^d \}$.
+
+It is quite common in the
+spatial statistics (and sometimes the computer experiments) literature to see
+kernels written like $\alpha^2 k(\cdot, \cdot)$; in these cases $k(\cdot, \cdot)$
+typically represents a *correlation* function, which becomes the covariance function
+after multiplying by the marginal variance $\alpha^2$. There is an advantage in
+decomposing the kernel this way when it comes to estimating the hyperparameters,
+which we will discuss shortly.
 
 ### The GP (Marginal) Likelihood Function
+Let's first recall the GP regression model (5)
+\begin{align}
+y(x) &= f(x) + \epsilon(x) \newline
+f &\sim \mathcal{GP}(\mu_{\psi}, k_{\phi}) \newline
+\epsilon &\overset{iid}{\sim} \mathcal{N}(0, \sigma^2),
+\end{align}
+where we have now explicitly added the dependence on $\psi$ and $\phi$.
+This model is defined for any $x \in \mathcal{X}$. However, when estimating
+hyperparameters, we will naturally be restricting the model to $X$, the finite
+set of locations at which we actually have observations. Restricting to
+$X$ reduces the above model to the standard (finite-dimensional)
+Bayesian regression model
+\begin{align}
+y(X)|f(X), \theta &\sim \mathcal{N}(f(X), \sigma^2 I_n) \tag{13} \newline
+f(X)|\theta &\sim \mathcal{N}(\mu_{\psi}(X), k_{\phi}(X)).
+\end{align}
+We could consider completing the Bayesian specification by defining a prior
+on $\theta$, but we'll hold off on this for now.
+Notice that the model (13) defines a joint distribution over
+$[y(X), f(X)] | \theta$, with $y(X)|f(X), \theta$ representing the
+likelihood of the observations at the observed input locations $X$. At present
+everything is conditional on a fixed $\theta$.
+Now, if we marginalize the likelihood $y(X)|f(X), \theta$ with
+respect to $f(X)$ then we obtain the distribution $y(X) | \theta$. This is often
+called the **marginal likelihood**, due to the fact that $f(X)$ was marginalized
+out. Thanks to all the Gaussian assumptions here, the marginal likelihood
+is available in closed-form. One could approach the derivation using (13) as
+the starting point, but it's much easier to consider the model written out using
+random variables,
+\begin{align}
+y(X) &= f(X) + \epsilon(X).
+\end{align}
+Since $f(X)$ and $\epsilon(X)$ are independent Gaussians, then their sum is also
+Gaussian with mean and covariance given by
+\begin{align}
+\mathbb{E}[y(X)|\theta]
+&= \mathbb{E}[f(X)|\theta] + \mathbb{E}[\epsilon(X)|\theta] = \mu_{\psi}(X) \newline
+\text{Cov}[y(X)|\theta]
+&= \text{Cov}[f(X)|\theta] + \text{Cov}[\epsilon(X)|\theta]
+= k_{\phi}(X) + \sigma^2 I_n.
+\end{align}
+We have thus found that  
+\begin{align}
+y(X)|\theta \sim \mathcal{N}\left(\mu_{\psi}(X), C_{\phi, \sigma^2}(X)\right), \tag{14}
+\end{align}
+recalling the definition $C_{\phi, \sigma^2}(X) := k_{\phi}(X) + \sigma^2 I_n$.
+We will let $\mathcal{L}(\theta)$ denote the log marginal likelihood; that is,
+\begin{align}
+\mathcal{L}(\theta)
+&:= -\frac{1}{2} \log \text{det}\left(2\pi C_{\phi, \sigma^2}(X) \right) -
+\frac{1}{2} (y(X) - \mu_{\psi}(X))^\top C_{\phi, \sigma^2}(X)^{-1} (y(X) - \mu_{\psi}(X)) \tag{15}
+\end{align}
+The function $\mathcal{L}(\theta)$ plays a central role in the typical
+to hyperparameter optimization, as we will explore below. Also note that
+the above derivations also apply to the noiseless setting
+(i.e., $y(X) = f(X)$) by setting $\sigma^2 = 0$. In this case, the marginal
+likelihood is simply the GP distribution restricted to the inputs $X$.
 {% endkatexmm %}
 
-## Generic Hyperparameter Estimation Approaches
-### Maximum Likelihood
-### Bayesian Modeling
+# TODOs
+- MLE vs. GLM estimate of the coefs $\beta$
 
 # References
 - Surrogates (Gramacy)
