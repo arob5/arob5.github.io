@@ -334,7 +334,8 @@ We have thus found that
 y(X)|\theta \sim \mathcal{N}\left(\mu_{\psi}(X), C_{\phi, \sigma^2}(X)\right), \tag{14}
 \end{align}
 recalling the definition $C_{\phi, \sigma^2}(X) := k_{\phi}(X) + \sigma^2 I_n$.
-We will let $\mathcal{L}(\theta)$ denote the log marginal likelihood; that is,
+We will let $\mathcal{L}(\theta)$ denote the log density of this Gaussian
+distribution; i.e. the log **marginal likelihood**:
 \begin{align}
 \mathcal{L}(\theta)
 &:= -\frac{1}{2} \log \text{det}\left(2\pi C_{\phi, \sigma^2}(X) \right) -
@@ -345,7 +346,115 @@ to hyperparameter optimization, as we will explore below. Also note that
 the above derivations also apply to the noiseless setting
 (i.e., $y(X) = f(X)$) by setting $\sigma^2 = 0$. In this case, the marginal
 likelihood is simply the GP distribution restricted to the inputs $X$.
+
+I have henceforth been a bit verbose with the notation in (15) to make very explicit
+the dependence on the inputs $X$ and the hyperparameters. To lighten notation a
+bit, we define $y_n := y(X)$, $\mu_{\psi} := \mu_{\psi}(X)$, and
+$C_{\phi, \sigma^2} := C_{\phi, \sigma^2}(X)$, allowing us to rewrite (15) as
+\begin{align}
+\mathcal{L}(\theta)
+&:= -\frac{1}{2} \log \text{det}\left(2\pi C_{\phi, \sigma^2} \right) -
+\frac{1}{2} (y_n - \mu_{\psi})^\top C_{\phi, \sigma^2}^{-1} (y_n - \mu_{\psi}). \tag{16}
+\end{align}
+We have simply suppressed the explicit dependence on $X$ in the notation.
 {% endkatexmm %}
+
+# Hyperparameter Optimization
+{% katexmm %}
+We now begin to turn out attention to methods for learning the values of the
+hyperparameters from data. This section starts with the most popular approach:
+optimizing the marginal likelihood.  
+
+## Maximum Marginal Likelihood, or Empirical Bayes
+Recall that (16) gives the expression for the log marginal likelihood $\mathcal{L}(\theta)$, which is just the log density of $y(X)|\theta$ viewed as a function of $\theta$.
+A natural approach is to set the hyperparameters $\theta$ to their values
+that maximize $\mathcal{L}(\theta)$:
+\begin{align}
+\hat{\theta} := \text{argmax} \mathcal{L}(\theta). \tag{17}
+\end{align}
+At first glance, the Gaussian form of $\mathcal{L}(\theta)$ might look quite
+friendly to closed-form optimization.
+After all, maximum likelihood estimates of the mean and covariance of Gaussian
+vectors are indeed available in closed-form. However, upon closer inspection notice
+that the covariance is not being directly optimized; we are optimizing $\phi$, and
+the covariance $C_{\phi, \sigma^2}$ is a *nonlinear* function of this
+parameter. Thus, in general some sort of iterative numerical scheme is
+is used for the optimization. Typically, gradient-based approaches are preferred,
+meaning we must be able to calculate quantities like
+$\frac{\partial}{\partial \phi} C_{\phi, \sigma^2}$.
+The exact gradient calculations will thus depend on the choice of kernel; specifics
+on kernels and optimization schemes are not the focus of this post. We will instead
+focus on the high level ideas here. The general approach to GP regression
+that we have outlined so far can be summarized as:
+1. Solve the optimization problem (17) and fix the hyperparameters at their
+optimized values $\hat{\theta}$. The hyperparameters will be fixed from
+this point onward.
+2. Use the GP predictive equations (7) to perform inference at a set of locations
+of interest $\tilde{X}$.
+
+One might object to the fact that we are estimating the hyperparameters from
+data, and then neglecting the uncertainty in $\hat{\theta}$ during the
+prediction step. It is true that this uncertainty is being ignored, but it is
+also very computationally convenient to do so.
+We will discuss alternatives later
+on, but I would argue that this simple approach is the most commonly used
+in practice today. One way to think about this strategy is in an
+**empirical Bayes** context; that is, we can view this approach as an approximation
+to a fully Bayesian hierarchical model, which would involve equipping the
+hyperparameters with their own priors. Instead of marginalizing the hyperparameters,
+we instead fix their values at their most likely values with respect to the
+observed data. We are using the data to "fine tune" the GP prior distribution.
+In the literature you will see this general hyperparameter optimization strategy
+referred to as either **empirical Bayes**, **maximum marginal likelihood**, or
+even just **maximum likelihood**.
+
+## Special Case Closed-Form Solutions: Mean Function
+As mentioned above, in general the maximization of $\mathcal{L}(\theta)$ requires
+numerical methods. However, in certain cases elements of $\theta$ can be optimized
+in closed-form, meaning that numerical optimization may only be required for
+a subset of the hyperparameters. We start by considering closed form optimizers
+for the parameters defining the mean functions.
+
+### Constant Mean
+With the choice of constant mean $\mu_{\psi}(x) \equiv \beta_0$ the log marginal
+likelihood becomes
+
+\begin{align}
+\mathcal{L}(\theta)
+&:= -\frac{1}{2} \log \text{det}\left(2\pi C\_{\phi, \sigma^2} \right) -
+\frac{1}{2} (y_n - \beta_0 1_n)^\top C\_{\phi, \sigma^2}(X)^{-1} (y_n - \beta_0 1_n),
+\end{align}
+
+with $1_n \in \mathbb{R}^n$ denoting a vector of ones. We now consider optimizing
+$\mathcal{L}(\theta)$ as a function of $\beta_0$ only. The partial derivative
+with respect to the constant mean equals
+\begin{align}
+\frac{\partial \mathcal{L}(\theta)}{\partial \beta_0}
+&= y_n^\top C\_{\phi, \sigma^2}^{-1}1_n - \beta_0 1_n^\top C\_{\phi, \sigma^2}^{-1} 1_n.    \tag{18}
+\end{align}
+Setting (18) equal to zero and solving for $\beta_0$ gives the optimum
+\begin{align}
+\hat{\beta}_0 = \frac{y_n^\top C\_{\phi, \sigma^2}^{-1} 1_n}{1_n C\_{\phi, \sigma^2}^{-1} 1_n}. \tag{18}
+\end{align}
+Notice that $\hat{\beta}_0$ depends on the values of the other hyperparameters
+$\phi$ and $\sigma^2$. Therefore, while this does not give us the outright value
+for the mean, we can plug $\hat{\beta}_0$ in place of $\beta_0$ in the marginal
+likelihood. This yields the **profile likelihood**, which is no longer a function
+of $\beta_0$ and hence the dimensionality of the subsequent numerical optimization
+problem has been reduced.
+
+### Linear Model Coefficients
+Let's try to do the same thing with the mean function
+$\mu_{\psi}(x) = h(x)^\top x$. We will find that it doesn't work out as nicely
+in this case.
+
+
+
+## Bias Corrections
+
+{% endkatexmm %}
+
+# Bayesian Approaches
 
 # TODOs
 - MLE vs. GLM estimate of the coefs $\beta$
