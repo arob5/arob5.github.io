@@ -4,20 +4,27 @@
 # Andrew Roberts
 #
 
-
 library(kergp)
 library(ggmatplot)
 
-# Test data. 
+# Settings.   
 N <- 20
-x <- matrix(as.numeric(1:N), ncol=1)
-colnames(x) <- "x"
-y <- x^2 + 100*rnorm(n=N)
-df <- data.frame(x=drop(x), y=drop(y))
-x_tst <- matrix(seq(-50, 50, length.out=200), ncol=1)
-y_tst <- x_tst^2
-colnames(x_tst) <- "x"
+N_test <- 100
+f <- function(x) 10 * 2*(x - 10)^2
 
+# Training data. 
+X <- matrix(seq(-1,1, length.out=N), ncol=1)
+colnames(X) <- "x"
+y <- f(X) + 100*rnorm(n=N)
+df <- data.frame(x=drop(X), y=drop(y))
+
+# Test data. 
+X_test <- matrix(seq(-1, 1, length.out=N_test), nrow=N_test)
+y_test <- f(X_test)
+colnames(X_test) <- "x"
+
+
+# Quadratic kernel. 
 quad_ker_func <- function(x1, x2, par) { 
   affine_comb <- sum(x1 * x2) + par[1]
   kern <- affine_comb^2
@@ -35,20 +42,33 @@ quad_ker <- covMan(kernel = quad_ker_func,
                    inputs = "x", 
                    par = c(cst=1.0))
 
-N_test <- 100
-X_test <- matrix(seq(0, N, length.out=N_test), nrow=N_test)
-y_test <- X_test^2
-K_test <- covMat(quad_ker, X_test)
-chol_test <- chol(K_test) # PSD, not PD. 
+# Kernel matrix. 
+K <- covMat(quad_ker, X)
+chol_test <- chol(K) # PSD, not PD. 
 eps <- sqrt(.Machine$double.eps)
-chol_test <- chol(hetGP:::add_diag(K_test, rep(eps, N_test))) # Hack using jitter to make PD. 
+chol_test <- chol(hetGP:::add_diag(K, rep(eps, N))) # Hack using jitter to make PD. 
 
-# Draw prior samples. 
+# Draw prior samples at test points. 
+K_test <- covMat(quad_ker, X_test)
 eig <- eigen(K_test, symmetric=TRUE)
+eig$values[eig$values < 0] <- 0 # Some small negative values due to numerical roundoff. 
 S <- eig$vectors %*% diag(sqrt(eig$values))
 n_samp <- 5
 prior_samp <- S %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
-matplot(X_test, prior_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw samples at x=0. 
+prior_samp_0 <- drop(sqrt(covMat(quad_ker, matrix(0)))) * rnorm(10000)
+hist(prior_samp_0, breaks=30)
+mean(prior_samp_0) # close to 0, as expected
+sd(prior_samp_0) # close to 1, as expected. 
+
+# Draw samples at x=0, using larger value of constant param. 
+coef(quad_ker) <- c(cst=10)
+prior_samp_0 <- drop(sqrt(covMat(quad_ker, matrix(0)))) * rnorm(10000)
+hist(prior_samp_0, breaks=30)
+mean(prior_samp_0) # close to 0, as expected
+sd(prior_samp_0) # close to 10, as expected.
 
 # Ridge regression. 
 K <- covMat(quad_ker, x)
