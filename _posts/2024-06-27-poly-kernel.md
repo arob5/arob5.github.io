@@ -12,9 +12,15 @@ the quadratic special case. We motivate the kernel within a (regularized)
 regression context, then discuss basic properties, and applications to
 Gaussian processes.
 
-# Polynomial Regression
+# Polynomial Ridge Regression
+We start by comparing two methods for performing regression using polynomials:
+(1) explicitly regressing on polynomial features; and (2) the implicit,
+nonparametric approach using kernel methods. Much of the discussion here is
+not actually specific to polynomials, applying more generally to arbitrary
+feature maps and kernels.   
+
 {% katexmm %}
-## Basis Functions
+## Polynomial Basis Functions
 Let's start by considering a standard linear regression setting with training
 data $\{(x_i, y_i)\}_{i=1}^{n}$, stacking the inputs in the matrix
 $X \in \mathbb{R}^{n \times d}$ and the responses in
@@ -35,20 +41,22 @@ we can write the linear model in the polynomial basis as
 y &= \Phi \beta + \epsilon, &&\epsilon \sim \mathcal{N}(0, \sigma^2 I_n). \tag{1}
 \end{align}
 We consider the ridge regression setting, whereby the coefficients $\beta$
-are estimated by maximum likelihood, regularized by an $L_2$ penalty.
+are estimated by minimizing the residual sum of squares, regularized by an $L_2$ penalty.
 This yields
 \begin{align}
 \hat{\beta}
-&:= \text{argmax}_{\beta} \left[\frac{1}{\sigma^2} \lVert y-\Phi \beta \rVert_2^2 +
+&:= \text{argmin}_{\beta} \left[\lVert y-\Phi \beta \rVert_2^2 +
 \lambda \lVert \beta \rVert_2^2 \right]
-&= \left(\lambda I_q + \Phi \Phi^\top \right)^{-1} \Phi^\top y, \tag{2}
+&= \left(\lambda I_q + \Phi \Phi^\top \right)^{-1} \Phi^\top y \tag{2}
 \end{align}
 which is derived by setting the gradient of the loss equal to zero and solving
 for $\beta$. To predict at a new set of inputs $\tilde{X} \in \mathbb{R}^{m \times d}$ we
 first map $\tilde{X}$ to the feature matrix $\tilde{\Phi} \in \mathbb{R}^{m \times q}$,
 then compute
 \begin{align}
-\hat{y} &:= \tilde{\Phi} \hat{\beta} = \tilde{\Phi}\left(\lambda I_q + \Phi^\top \Phi \right)^{-1} \Phi^\top y. \tag{3}
+\hat{y}
+&:= \tilde{\Phi} \hat{\beta}
+= \tilde{\Phi}\left(\lambda I_q + \Phi^\top \Phi \right)^{-1} \Phi^\top y. \tag{3}
 \end{align}
 This is just run-of-the-mill ridge regression using polynomial basis functions,
 but we emphasize some points that will become relevant when comparing to kernel
@@ -74,7 +82,7 @@ positive definite, and hence invertible. From a numerical perspective,
 this can be useful even when $\Phi^\top \Phi$ is theoretically positive definite,
 since its numerical instantiation may fail to be so.
 
-## Kernelizing Polynomial Regression
+## Polynomial Kernel
 We now discuss an alternative route to compute the prediction $\hat{y}$ that eliminates
 the need to estimate the $q$ parameters (there will, of course, be a new cost to pay).
 The goal is to find a kernel function $k: \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$
@@ -175,8 +183,45 @@ The $n^3$ comes from the linear solve $\left[\lambda I_n + k(X, X)\right]^{-1}y$
 Once this linear solve has already been completed, prediction calculations
 scale like $n^2 m$, which now, in contrast to the first approach, depends on $n$.
 The poor scaling in $n$ is the cost we pay with this approach.  
+2. Notice that no parameters are explicitly estimated in this kernel approach.
+Instead of compressing the information into a vector of coefficients $\beta$,
+this method stores the $n \times n$ *kernel matrix* $k(X,X)$ to be used for
+prediction. The kernel approach does typically require estimating a few
+*hyperparameters* (in this case, $c$), which we discuss in detail later on.
+3. While the $q \times q$ matrix $\Phi^\top \Phi$ can be guaranteed to be
+PD under some fairly light conditions, the $n \times n$ kernel matrix
+$k(X, X) = \Phi \Phi^\top$ is almost certainly not PD. However, it still is
+PSD, as we noted above. This can also be seen by considering
+$x^\top \Phi \Phi^\top x = \lVert \Phi^\top x \rVert_2^2 \geq 0$. Therefore,
+the addition of $\lambda I_n$ with $\lambda > 0$ is crucial in this setting
+to ensure that the matrix $\lambda I_n + k(X, X)$ is invertible.
+{% endkatexmm %}
 
 
+# Bayesian Polynomial Regression
+In the previous section, we motivated the polynomial kernel within a ridge
+regression setting. In this section we walk through similar derivations, but
+from a Bayesian point of view. In particular, we compare Bayesian linear
+regression using polynomial basis functions with its kernelized analog, the
+latter giving rise to Gaussian process (GP) regression.
 
-## Kernel Regression  
+{% katexmm %}
+## Polynomial Basis Functions
+Consider the following Bayesian polynomial regression model:
+\begin{align}
+y|\beta &\sim \mathcal{N}(\Phi \beta, \sigma^2 I_n) \newline
+\beta &\sim \mathcal{N}\left(0, \lambda^{-1} I_q \right) \tag{13}
+\end{align}
+This is a linear Gaussian model, with posterior given by
+\begin{align}
+\beta | y &\sim \mathcal{N}\left(\hat{m}, \hat{C} \right), \tag{14}
+\end{align}
+where
+\begin{align}
+\hat{m} &= \left(\lambda I_q + \Phi \Phi^\top \right)^{-1} \Phi^\top y \newline
+\hat{C} &=
+\end{align}
+
+## Polynomial Kernel
+
 {% endkatexmm %}
