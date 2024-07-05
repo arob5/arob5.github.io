@@ -106,7 +106,7 @@ functions up to degree $p$; in other words, the space of all possible regression
 functions is $\mathcal{P}_p(\mathbb{R}^d)$. We let $\varphi: \mathbb{R}^d \to \mathbb{R}^q$
 be the associated feature map, scaled to align with (6).
 Let $\Phi \in \mathbb{R}^{n \times q}$ denote the *feature matrix* evaluated at
-the training inputs $X$; precisely, $\Phi_{ij} := \varphi(x^i)_j$. The linear
+the training inputs $X$; precisely, $\Phi_{ij} := \varphi_j(x^i)$. The linear
 model in the polynomial basis is thus given by
 \begin{align}
 y &= \Phi \beta + \epsilon, &&\epsilon \sim \mathcal{N}(0, \sigma^2 I_n). \tag{7}
@@ -212,7 +212,7 @@ serving as a comparison to the points listed in the previous section for the
 explicit basis function approach.
 1. Computing the $m$ predictions $\hat{y}$ is $\mathcal{O}(n^3 + n^2 m)$.
 The $n^3$ comes from the linear solve $\left[\lambda I_n + k(X, X)\right]^{-1}y$.
-Once this linear solve has already been completed, prediction calculations
+Once this linear solve has already been computed, prediction calculations
 scale like $n^2 m$, which now, in contrast to the first approach, depends on $n$.
 The poor scaling in $n$ is the cost we pay with the kernel method.   
 2. Notice that no parameters are explicitly estimated in this kernel approach.
@@ -242,7 +242,7 @@ latter giving rise to Gaussian process (GP) regression.
 Consider the following Bayesian polynomial regression model:
 \begin{align}
 y|\beta &\sim \mathcal{N}(\Phi \beta, \sigma^2 I_n) \newline
-\beta &\sim \mathcal{N}\left(0, \lambda^{-1} I_q \right) \tag{17}
+\beta &\sim \mathcal{N}\left(0, \frac{\sigma^2}{\lambda} I_q \right) \tag{17}
 \end{align}
 This is a linear Gaussian model, with posterior given by
 \begin{align}
@@ -250,8 +250,9 @@ This is a linear Gaussian model, with posterior given by
 \end{align}
 where
 \begin{align}
-\hat{m} &= \left(\lambda I_q + \Phi \Phi^\top \right)^{-1} \Phi^\top y \newline
-\hat{C} &=
+\hat{m} &= \hat{C} \left(\frac{1}{\sigma^2}\Phi^\top y \right)
+= \left(\Phi^\top \Phi + \lambda \sigma^2 I_q \right)^{-1} \Phi^\top y \newline
+\hat{C} &= \left(\frac{1}{\sigma^2} \Phi^\top \Phi + \lambda I_q \right)^{-1}
 \end{align}
 
 ## Polynomial Kernel
