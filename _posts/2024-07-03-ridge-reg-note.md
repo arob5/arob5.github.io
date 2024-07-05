@@ -6,3 +6,8 @@ date: 2024-07-03
 keywords: statistics
 published: true
 ---
+
+
+
+# References
+- Sparse Bayesian Learning and the Relevance Vector Machine (Tipping, 2001)
