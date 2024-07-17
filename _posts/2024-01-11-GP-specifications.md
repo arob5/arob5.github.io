@@ -1,6 +1,6 @@
 ---
-title: Comparing Approaches for Specifying and Estimating Gaussian Process Parameters
-subtitle: I review and derive various formulas that come in handy when sequentially adding data to a Gaussian process model.
+title: Gaussian Process Priors, Specification and Parameter Estimation
+subtitle: A deep dive into hyperparameter specifications for GP mean and covariance functions, including both frequentist and Bayesian methods for hyperparameter estimation.
 layout: default
 date: 2024-01-11
 keywords: Gaussian-Process
@@ -67,7 +67,8 @@ f(X) \sim \mathcal{N}(\mu(X), k(X, X)). \tag{2}
 We are vectorizing notation here so that $[f(X)]_i := f(x_i)$,
 $[\mu(X)]_i := \mu(x_i)$, and $[k(X, X)]_{i,j} := k(x_i, x_j)$. When the
 two input sets to the kernel are equal, we lighten notation by writing
-In particular, suppose we have two sets of inputs
+$k(X) := k(X, X)$.
+Now suppose we have two sets of inputs
 $X$ and $\tilde{X}$, containing $n$ and
 $m$ inputs, respectively. The defining property (2) then implies
 
@@ -108,7 +109,7 @@ the regression model
 \begin{align}
 y(x) &= f(x) + \epsilon(x) \tag{5} \newline
 f &\sim \mathcal{GP}(\mu, k) \newline
-\epsilon &\overset{iid}{\sim} \mathcal{N}(0, \sigma^2),
+\epsilon(x) &\overset{iid}{\sim} \mathcal{N}(0, \sigma^2),
 \end{align}
 where we have assumed a simple additive Gaussian noise model. This assumption is
 quite common in the GP regression setting due to the fact that it results in
@@ -149,7 +150,7 @@ We observe that these equations are identical to (4), modulo the appearance
 of $\sigma^2$ in the predictive mean and covariance equations. The distribution
 $f(\tilde{X})|y(X)$ is identical to (7), except that the $\sigma^2 I_m$ is removed in
 the predictive covariance. Again, this reflects the subtle distinction between
-doing inference on the latent function $f$ vs. on the observation process $y$.
+doing inference on the latent function $f$ versus on the observation process $y$.
 
 ### Noise, Nuggets, and Jitters
 Observe that this whole regression procedure is only slightly different from the
@@ -206,7 +207,7 @@ mineral across space, then you would hope that repeated measurements (taken arou
 the same time) would yield the same values. Naturally, they may not, and the
 introduction of the nugget is one way to account for this.
 
-While this discussion may seem to be needlessly abstract, we recall that the
+While this discussion may seem needlessly abstract, we recall that the
 effect of incorporating the noise term (however you want to interpret it) is to
 simply replace the kernel matrix $k(X)$ with the new matrix $c(X) = k(X) + \sigma^2 I_n$.
 Confusingly, there is one more reason (having nothing to do with observation error
@@ -254,7 +255,7 @@ model
 where $h: \mathcal{X} \to \mathbb{R}^p$ is some feature map and $\beta \in \mathbb{R}^p$
 the associated coefficient vector. For example, $h(x) = [1, x^\top]^\top$
 would yield a standard linear model, and
-$h(x) = [1, x_1, \dots, x_d, x_1^2, \dots, x_d^2]$ would allow for a quadratic
+$h(x) = [1, x_1, \dots, x_d, x_1^2, \dots, x_d^2]^\top$ would allow for a quadratic
 trend.
 
 #### Kernels
@@ -341,7 +342,7 @@ distribution; i.e. the log **marginal likelihood**:
 &:= -\frac{1}{2} \log \text{det}\left(2\pi C_{\phi, \sigma^2}(X) \right) -
 \frac{1}{2} (y(X) - \mu_{\psi}(X))^\top C_{\phi, \sigma^2}(X)^{-1} (y(X) - \mu_{\psi}(X)) \tag{15}
 \end{align}
-The function $\mathcal{L}(\theta)$ plays a central role in the typical
+The function $\mathcal{L}(\theta)$ plays a central role in the typical approach
 to hyperparameter optimization, as we will explore below. Also note that
 the above derivations also apply to the noiseless setting
 (i.e., $y(X) = f(X)$) by setting $\sigma^2 = 0$. In this case, the marginal
@@ -397,12 +398,12 @@ data, and then neglecting the uncertainty in $\hat{\theta}$ during the
 prediction step. It is true that this uncertainty is being ignored, but it is
 also very computationally convenient to do so.
 We will discuss alternatives later
-on, but I would argue that this simple approach is the most commonly used
+on, but this simple approach is probably the most commonly used
 in practice today. One way to think about this strategy is in an
 **empirical Bayes** context; that is, we can view this approach as an approximation
 to a fully Bayesian hierarchical model, which would involve equipping the
 hyperparameters with their own priors. Instead of marginalizing the hyperparameters,
-we instead fix their values at their most likely values with respect to the
+we instead fix them at their most likely values with respect to the
 observed data. We are using the data to "fine tune" the GP prior distribution.
 In the literature you will see this general hyperparameter optimization strategy
 referred to as either **empirical Bayes**, **maximum marginal likelihood**, or
@@ -434,20 +435,76 @@ with respect to the constant mean equals
 \end{align}
 Setting (18) equal to zero and solving for $\beta_0$ gives the optimum
 \begin{align}
-\hat{\beta}_0 = \frac{y_n^\top C\_{\phi, \sigma^2}^{-1} 1_n}{1_n C\_{\phi, \sigma^2}^{-1} 1_n}. \tag{18}
+\hat{\beta}_0(\phi, \sigma^2) = \frac{y_n^\top C\_{\phi, \sigma^2}^{-1} 1_n}{1_n C\_{\phi, \sigma^2}^{-1} 1_n}. \tag{19}
 \end{align}
-Notice that $\hat{\beta}_0$ depends on the values of the other hyperparameters
+Notice that $\hat{\beta}_0(\phi, \sigma^2)$ depends on the values of the other hyperparameters
 $\phi$ and $\sigma^2$. Therefore, while this does not give us the outright value
-for the mean, we can plug $\hat{\beta}_0$ in place of $\beta_0$ in the marginal
-likelihood. This yields the **profile likelihood**, which is no longer a function
-of $\beta_0$ and hence the dimensionality of the subsequent numerical optimization
-problem has been reduced.
+for the mean, we can plug $\hat{\beta}_0(\phi, \sigma^2)$ in place of $\beta_0$ in the marginal
+likelihood. This yields the **profile likelihood** (aka the **concentrated likelihood**),
+which is no longer a function of $\beta_0$ and hence the dimensionality of the subsequent numerical optimization problem has been reduced.
 
 ### Linear Model Coefficients
-Let's try to do the same thing with the mean function
-$\mu_{\psi}(x) = h(x)^\top x$. We will find that it doesn't work out as nicely
-in this case.
+Let's try to do the same thing with the mean function $\mu_{\psi}(x) = h(x)^\top \beta$.
+If we denote by $H \in \mathbb{R}^{n \times p}$ the feature matrix with rows equal
+to $h(x_i)^\top$, $i = 1, \dots, n$ then the marginal likelihood becomes
+\begin{align}
+\mathcal{L}(\theta)
+&:= -\frac{1}{2} \log \text{det}\left(2\pi C_{\phi, \sigma^2} \right) -
+\frac{1}{2} (y_n - H\beta)^\top C_{\phi, \sigma^2}^{-1} (y_n - H\beta), \tag{20}
+\end{align}
+with gradient
+\begin{align}
+\nabla_{\beta} \mathcal{L}(\theta)
+&= H^\top C_{\phi, \sigma^2}^{-1}y_n - (H^\top C_{\phi, \sigma^2}^{-1} H)\beta. \tag{21}
+\end{align}
+Setting the gradient equal to zero and solving for $\beta$ yields the optimality
+condition
+\begin{align}
+\left(H^\top C_{\phi, \sigma^2}^{-1} H\right)\hat{\beta} &= H^\top C_{\phi, \sigma^2}^{-1}y_n. \tag{22}
+\end{align}
+A unique solution for $\hat{\beta}$ thus exists when $H^\top C_{\phi, \sigma^2}^{-1} H$
+is invertible. When does this happen? First note that this matrix is positive
+semidefinite, since
+\begin{align}
+\beta^\top \left(H^\top C_{\phi, \sigma^2}^{-1} H\right) \beta
+&= \beta^\top (H^\top [LL^\top]^{-1} H) \beta
+= \lVert L^{-1} H\beta \rVert_2^2 \geq 0,
+\end{align}
+where we have used the fact that $C_{\phi, \sigma^2}$ is positive definite and
+hence admits a decomposition $LL^\top$. The matrix $H^\top C_{\phi, \sigma^2}^{-1} H$
+is thus positive definite when $L^{-1}H$ has linearly independent columns; i.e., when
+it is full rank. We already know that $L^{-1}$ is full rank. If we assume that
+$H$ is also full rank and $n \geq p$ then we can conclude that $L^{-1}H$ is
+full rank; see [this](https://math.stackexchange.com/questions/272049/rank-of-matrix-ab-when-a-and-b-have-full-rank) post for a quick proof. Thus, under these assumptions we conclude
+that $H^\top C_{\phi, \sigma^2}^{-1} H$ is invertible and so
+\begin{align}
+\hat{\beta}(\phi, \sigma^2) &= \left(H^\top C_{\phi, \sigma^2}^{-1} H\right)^{-1} H^\top C_{\phi, \sigma^2}^{-1}y_n.
+\tag{23}
+\end{align}
+Notice that (23) is simply a [generalized least squares](https://en.wikipedia.org/wiki/Generalized_least_squares) estimator. As with the constant mean, we can plug
+$\hat{\beta}(\phi, \sigma^2)$ into the marginal likelihood to concentrate out
+the parameter $\beta$. The resulting concentrated likelihood can then be numerically
+optimized as a function of the remaining hyperparameters.
 
+## Special Case Closed-Form Solutions: Marginal Variance
+We now consider a closed-form plug-in estimate for the marginal variance
+$\alpha^2$, as mentioned in (12). The takeaway from this section will be that
+a closed-form estimate is only available when the covariance matrix appearing
+in the marginal likelihood (16) is of the form
+\begin{align}
+C_{\phi} &= \alpha^2 C. \tag{24}
+\end{align}
+This holds for any kernel of the form $\alpha^2 k(\cdot, \cdot)$ provided
+that $\sigma^2 = 0$. For example, the exponentiated quadratic kernel in
+(12) has this form. After deriving the estimator, we will
+introduce a re-parameterization that admits a closed-form solution even when
+$\sigma^2 > 0$. With this setup, the marginal likelihood assumes the form
+\begin{align}
+\mathcal{L}(\theta)
+&:= -\frac{1}{2} \log \text{det}\left(2\pi \alpha^2 C \right) -
+\frac{1}{2\alpha^2} (y_n - \mu_{\psi})^\top C^{-1} (y_n - \mu_{\psi}). \tag{25}
+\end{align}
+The partial derivative with respect to $\alpha^2$ is then given by
 
 
 ## Bias Corrections
@@ -456,8 +513,147 @@ in this case.
 
 # Bayesian Approaches
 
-# TODOs
-- MLE vs. GLM estimate of the coefs $\beta$
+# Computational Considerations
+## Log Marginal Likelihood
+We start by considering the computation of the log marginal likelihood (16),
+\begin{align}
+\mathcal{L}(\theta)
+&= -\frac{n}{2} \log(2\pi) -\frac{1}{2} \log \text{det}\left(C \right) -
+\frac{1}{2} (y - \mu)^\top C^{-1} (y - \mu),
+\end{align}
+where we now suppress all dependence on hyperparameters in the notation for
+succinctness.
+Since $C = k(X) + \sigma^2 I_n$ is positive definite, we may Cholesky decompose it as
+$C = L L^\top$. Plugging this decomposition into the log marginal likelihood yields
+\begin{align}
+\mathcal{L}(\theta)
+&= -\frac{n}{2} \log(2\pi) - \frac{1}{2} \log\text{det}\left(C\right) -
+\frac{1}{2} (y_n - \mu)^\top \left(LL^\top \right)^{-1} (y_n - \mu).
+\end{align}
+The log determinant and the quadratic term can both be conveniently written in terms
+of the Cholesky factor. These terms are given respectively by
+\begin{align}
+\log\text{det}\left(LL^\top\right)
+&= \log\text{det}\left(L\right)^2
+= 2 \log \prod_{i=1}^{n} L_{ii}
+= 2 \sum_{i=1}^{n} \log\left(L_{ii} \right),
+\end{align}
+and
+\begin{align}
+(y_n - \mu)^\top \left(LL^\top \right)^{-1} (y_n - \mu)
+&= (y_n - \mu)^\top \left(L^{-1}\right)^\top L^{-1} (y_n - \mu)
+= \lVert L^{-1}(y - \mu)\rVert_2^2.
+\end{align}
+The linear solve $L^{-1}(y - \mu)$ can be computed in $\mathcal{O}(n^2)$ by
+exploiting the fact that the linear system has lower triangular structure.
+Plugging these terms back into the log marginal
+likelihood gives
+\begin{align}
+\mathcal{L}(\theta)
+&= -\frac{n}{2} \log(2\pi) - \sum_{i=1}^{n} \log\left(L_{ii}\right) -
+\frac{1}{2} \lVert L^{-1}(y - \mu)\rVert_2^2.
+\end{align}
+Note that the Cholesky factor $L$ is a function of $\phi$ and $\sigma^2$ and hence
+must be re-computed whenever the kernel hyperparameters or noise variances
+change.
+
+## Profile Log Marginal Likelihood with Linear Mean Function
+We now consider computation of the concentrated marginal log-likelihood under
+a mean function of the form (11), $\mu(x) = h(x)^\top \beta$, where the generalized
+least squares (GLS) estimator $\hat{\beta} = \left(H^\top C^{-1} H\right)^{-1} H^\top C^{-1}y$
+(see (23)) is inserted in place of $\beta$. We are thus considering the profile log
+marginal likelihood
+\begin{align}
+\mathcal{L}(\theta)
+&= -\frac{n}{2} \log(2\pi) -\frac{1}{2} \log \text{det}\left(C \right) -
+\frac{1}{2} (y - H\hat{\beta})^\top C^{-1} (y - H\hat{\beta}).
+\end{align}
+We will derive a numerically stable implementation of this expression in two steps,
+first applying a Cholesky decomposition (as in the previous section), and then
+leveraging a QR decomposition as in a typical ordinary least squares (OLS)
+computation. We first write $\hat{\beta}$ in terms of the Cholesky factor $L$,
+where $C = LL^\top$:
+\begin{align}
+\hat{\beta}
+&= \left(H^\top C^{-1} H\right)^{-1} H^\top C^{-1}y \newline
+&= \left(H^\top \left[LL^\top\right]^{-1} H\right)^{-1} H^\top \left[LL^\top\right]^{-1}y \newline
+&= \left(\left[L^{-1}H \right]^\top \left[L^{-1}H \right] \right)^{-1} \left[L^{-1}H \right]^\top
+\left[L^{-1}y\right].
+\end{align}
+Notice that the GLS computation boils down to two lower-triangular linear solves:
+$L^{-1}H$ and $L^{-1}y$. However, the above expression still requires one non-triangular
+linear solve that we will now address via the QR decomposition. The above expression
+for $\hat{\beta}$ can be viewed as a standard OLS estimator with design matrix
+$L^{-1}H$ and response vector $L^{-1}y$. At this point, we could adopt a standard
+OLS technique of taking the QR decomposition of the design matrix $L^{-1}H$.
+This was my original thought, but I found a nice alternative looking through the
+code in the R [kergp](https://github.com/cran/kergp/blob/master/R/logLikFuns.R)
+package (see the function `.logLikFun0` in the file `kergp/R/logLikFuns.R`). The approach
+is to compute the QR decomposition
+\begin{align}
+\begin{bmatrix} L^{-1}H & L^{-1}y \end{bmatrix} &= QR = Q \begin{bmatrix} \tilde{R} & r \end{bmatrix}.
+\end{align}
+That is, we compute QR on the matrix formed by concatenating $L^{-1}y$ as an additional
+column on the design matrix $L^{-1}H$. We have written the upper triangular matrix
+$R \in \mathbb{R}^{(p+1) \times (p+1)}$ as the concatenation of
+$\tilde{R} \in \mathbb{R}^{(p+1) \times p}$ and the vector
+$r \in \mathbb{R}^{p+1}$ so that $L^{-1}H = Q\tilde{R}$ and $L^{-1}y = Qr$.
+We recall the basic properties of the QR decomposition: $R$ is upper triangular
+and invertible, and $Q$ has orthonormal columns with span equal to the column space
+of $\begin{bmatrix} L^{-1}H & L^{-1}y \end{bmatrix}$. Taking the QR decomposition
+of this concatenated matrix leads to a very nice expression for the quadratic
+form term of the profile log marginal likelihood. But first let's rewrite $\hat{\beta}$
+in terms of these QR factors:
+\begin{align}
+\hat{\beta}
+&= \left(\left[L^{-1}H \right]^\top \left[L^{-1}H \right] \right)^{-1} \left[L^{-1}H \right]^\top
+\left[L^{-1}y\right] \newline
+&= \left(\left[Q\tilde{R} \right]^\top \left[Q\tilde{R} \right] \right)^{-1} \left[Q\tilde{R} \right]^\top \left[Qr\right] \newline
+&= \left(\tilde{R}^\top Q^\top Q\tilde{R} \right)^{-1} \tilde{R}^\top Q^\top Qr \newline
+&= \left(\tilde{R}^\top \tilde{R} \right)^{-1} \tilde{R}^\top r,
+\end{align}
+where we have used the fact that $Q^\top Q$ is the identity since $Q$ is orthogonal.
+Plugging this into the quadratic form term of the log likelihood gives
+\begin{align}
+(y - H\hat{\beta})^\top C^{-1} (y - H\hat{\beta})
+&= (y - H\hat{\beta})^\top \left[LL^\top \right]^{-1} (y - H\hat{\beta}) \newline
+&= \lVert L^{-1}(y - H\hat{\beta}) \rVert_2^2 \newline
+&= \lVert L^{-1}y - L^{-1}H\hat{\beta} \rVert_2^2 \newline
+&= \lVert Qr - Q\tilde{R} \hat{\beta} \rVert_2^2 \newline
+&= \left\lVert Qr - Q\tilde{R} \left(\tilde{R}^\top \tilde{R} \right)^{-1} \tilde{R}^\top r \right\rVert_2^2 \newline
+&= \left\lVert Q\left[r - \tilde{R} \left(\tilde{R}^\top \tilde{R} \right)^{-1} \tilde{R}^\top r \right] \right\rVert_2^2 \newline
+&= \left\lVert r - \tilde{R} \left(\tilde{R}^\top \tilde{R} \right)^{-1} \tilde{R}^\top \right\rVert_2^2 \newline
+&= \left\lVert \left[I - \tilde{R} \left(\tilde{R}^\top \tilde{R} \right)^{-1} \tilde{R}^\top \right]r \right\rVert_2^2,
+\end{align}
+where the penultimate line follows from the fact that $Q$ is orthogonal, and hence an
+isometry. At this point, notice that the matrix
+$P := \tilde{R} \left(\tilde{R}^\top \tilde{R} \right)^{-1} \tilde{R}^\top$ is the standard OLS projection matrix (i.e., hat matrix)
+constructed with the design matrix $\tilde{R}$. Also, take care to notice that
+$\tilde{R}$ is not invertible (it is not even square). Using standard properties
+of the projection matrix, we know that $P$ has rank $p$, since $\tilde{R}$ has rank $p$.
+Also, since $R$ is upper triangular, then the last row of $\tilde{R}$ contains all zeros.
+Letting, $e_j$ denote the $j^{\text{th}}$ standard basis vector of $\mathbb{R}^{p+1}$,
+this means that
+\begin{align}
+\mathcal{R}(P) \perp \text{span}(e_{p+1}),
+\end{align}
+where $\mathcal{R}(P)$ denotes the range (i.e., column space) of $P$.
+The only subspace of $\mathbb{R}^{p+1}$ with rank $p$ and satisfying this property
+is $\text{span}(e_1, \dots, e_p)$. The conclusion is that $P$ projects onto $\text{span}(e_1, \dots, e_p)$, and thus the annihilator $I - P$ projects onto
+the orthogonal complement $\text{span}(e_{p+1})$. We thus conclude,
+\begin{align}
+\left\lVert \left[I - P\right]r \right\rVert_2^2
+&= \lVert \langle r, e\_{p+1} \rangle e\_{p+1} \rVert_2^2 \newline
+&= \lVert r\_{p+1} e\_{p+1} \rVert_2^2 \newline
+&= r\_{p+1}^2,
+\end{align}
+where $r_{p+1}$ is the last entry of $r$; i.e., the bottom right entry of $R$.
+We finally arrive at the expression for the concentrated log marginal likelihood
+\begin{align}
+\mathcal{L}(\theta)
+&= -\frac{n}{2} \log(2\pi) - \sum_{i=1}^{n} \log\left(L_{ii}\right) -
+\frac{1}{2} r_{p+1}^2.
+\end{align}
 
 # References
 - Surrogates (Gramacy)

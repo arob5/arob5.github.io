@@ -78,6 +78,122 @@ plot(x, y)
 lines(X_test, y_test, col="red")
 lines(X_test, y_hat, col="blue")
 
+#
+# Adding kernels.  
+#
+
+default_nugget <- sqrt(.Machine$double.eps)
+
+# Quadratic kernel plus Gaussian kernel. 
+quad_plus_Gauss_ker_func <- function(x1, x2, par) { 
+  
+  # Gaussian part.
+  kern <- kergp:::kNormFun(x1, x2, par, kergp::k1FunGauss)
+  
+  # Quadratic part. Currently setting the `c` parameter to 1. 
+  kern <- kern + (tcrossprod(x1, x2) + 1)^2
+  # affine_comb <- sum(x1 * x2) + 1
+  # kern <- affine_comb^2
+  
+  # Jitter. Hack: add jitter to diagonal if number of rows are equal.
+  if(nrow(x1) == nrow(x2)) kern <- hetGP:::add_diag(kern, rep(default_nugget, nrow(x1)))
+  
+  # Gradient. 
+  # attr(kern, "gradient") <- c(cst=2*affine_comb)
+  
+  return(kern)
+}
 
 
-gp1 <- kergp::gp(y~1, data=df, inputs="x", cov=quad_ker, estim=FALSE)
+d <- 1L
+
+quad_plus_Gauss_ker <- covMan( 
+    kernel = quad_plus_Gauss_ker_func,
+    hasGrad = TRUE,
+    acceptMatrix = TRUE,
+    d = d,
+    par = c(rep(1, d), 1),
+    parLower = rep(1e-8, d + 1L),
+    parUpper = rep(Inf, d + 1L),
+    parNames = c(paste("theta", 1L:d, sep = "_"), "sigma2"),
+    label = "Gauss plus quadratic kernel"
+)
+
+
+# Draw prior samples at test points: default hyperparams. 
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw prior samples at test points: very small marginal variance. 
+coef(quad_plus_Gauss_ker)["sigma2"] <- .000001
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw prior samples at test points: very large marginal variance. 
+coef(quad_plus_Gauss_ker)["sigma2"] <- 20
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw prior samples at test points: small lengthscale. 
+coef(quad_plus_Gauss_ker)["sigma2"] <- 1
+coef(quad_plus_Gauss_ker)["theta_1"] <- .001
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw prior samples at test points: small lengthscale, small marginal variance.  
+coef(quad_plus_Gauss_ker)["sigma2"] <- .001
+coef(quad_plus_Gauss_ker)["theta_1"] <- .001
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw prior samples at test points: large lengthscale.  
+coef(quad_plus_Gauss_ker)["sigma2"] <- 1
+coef(quad_plus_Gauss_ker)["theta_1"] <- 10
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw prior samples at test points: large lengthscale, large marginal variance.   
+coef(quad_plus_Gauss_ker)["sigma2"] <- 100
+coef(quad_plus_Gauss_ker)["theta_1"] <- 10
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw prior samples at test points: large lengthscale, small marginal variance.   
+coef(quad_plus_Gauss_ker)["sigma2"] <- .001
+coef(quad_plus_Gauss_ker)["theta_1"] <- 10
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
+# Draw prior samples at test points: middle ground.  
+coef(quad_plus_Gauss_ker)["sigma2"] <- 1
+coef(quad_plus_Gauss_ker)["theta_1"] <- .1
+K_test <- covMat(quad_plus_Gauss_ker, X_test)
+L <- t(chol(K_test))
+n_samp <- 5
+prior_samp <- L %*% matrix(rnorm(N_test*n_samp), nrow=N_test, ncol=n_samp)
+matplot(X_test, prior_samp, type="l")
+
