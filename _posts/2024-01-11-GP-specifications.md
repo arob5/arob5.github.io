@@ -486,6 +486,67 @@ $\hat{\beta}(\phi, \sigma^2)$ into the marginal likelihood to concentrate out
 the parameter $\beta$. The resulting concentrated likelihood can then be numerically
 optimized as a function of the remaining hyperparameters.
 
+### Linear Model: MAP estimation
+The above section showed that, conditional on fixed kernel hyperparameters,
+the coefficients of a linear mean function can be optimized in closed form.
+We now show a similar result: if the mean coefficients are assigned a Gaussian
+prior then, conditional on fixed kernel hyperparameters, the coefficients can
+be marginalized in closed form. To this end, we consider the same linear mean
+function as above, but now equip the coefficients with a Gaussian prior:
+\begin{align}
+\mu_{\psi}(x) &= h(x)^\top \beta, &&\beta \sim \mathcal{N}(b, B).
+\end{align}
+Restricted to the model inputs $X$, the model is thus
+\begin{align}
+y_n|\beta &\sim \mathcal{N}\left(H\beta, C_{\phi, \sigma^2} \right) \newline
+\beta &\sim \mathcal{N}(b, B).
+\end{align}
+Our goal here is derive the marginal distribution of $y_n$. We could resort to
+computing the required integral by hand, but an easier approach is to notice
+that under the above model $[y_n, \beta]$ is joint Gaussian distributed.
+Therefore, the marginal distribution of $y_n$ must also be Gaussian. It thus
+remains to identify the mean and covariance of this distribution. We obtain  
+\begin{align}
+\mathbb{E}[y_n]
+&= \mathbb{E}\mathbb{E}[y_n|\beta] = \mathbb{E}[H\beta] = Hb \newline
+\text{Cov}[y_n]
+&= \mathbb{E}[y_n y_n^\top] - \mathbb{E}[y_n]\mathbb{E}[y_n]^\top \newline
+&= \mathbb{E} \mathbb{E}\left[y_n y_n^\top | \beta\right] - (Hb)(Hb)^\top \newline
+&= \mathbb{E}\left[\text{Cov}[y_n|\beta] + \mathbb{E}[y_n|\beta] \mathbb{E}[y_n|\beta]^\top \right] - Hbb^\top H^\top \newline
+&= \mathbb{E}\left[C_{\phi, \sigma^2} + (H\beta)(H\beta)^\top \right] - Hbb^\top H^\top \newline
+&= C_{\phi, \sigma^2} + H\mathbb{E}\left[\beta \beta^\top \right]H^\top - Hbb^\top H^\top \newline
+&= C_{\phi, \sigma^2} + H\left[B + bb^\top \right]H^\top - Hbb^\top H^\top \newline
+&= C_{\phi, \sigma^2} + HBH^\top,
+\end{align}
+where we have used the law of total expectation and the various equivalent
+definitions for the covariance matrix. To summarize, we have found that the
+above hierarchical model implies the marginal distribution
+\begin{align}
+y_n &\sim \mathcal{N}\left(Hb, C_{\phi, \sigma^2} + HBH^\top \right).
+\end{align}
+Since this holds for any set of inputs, we obtain the analogous result for the
+GP prior:
+\begin{align}
+y(x) &= f(x) + \epsilon(x) \newline
+f &\sim \mathcal{GP}\left(\mu^\prime, k^\prime \right) \newline
+\epsilon(x) &\overset{iid}{\sim} \mathcal{N}(0, \sigma^2),
+\end{align}
+where
+\begin{align}
+\mu^\prime(x) &= h(x)^\top b \newline
+k^\prime(x_1, x_2) &= k(x_1, x_2) + h(x_1)^\top B h(x_2).
+\end{align}
+After marginalizing, we again end up with a mean function that is linear in the
+basis functions $h(\cdot)$. The basis function coefficients are now given by
+the prior mean $b$. The mean $b$ is something that we can prescribe, or we could
+again entertain an empirical Bayes approach to set its value. Note that we have
+descended another step in the hierarchical ladder. The kernel that appears from
+the marginalization is now a sum of two kernels: the original kernel $k$ and
+the kernel $h(x_1)^\top B h(x_2)$. The latter can be viewed as a linear kernel
+in the transformed inputs $h(x_1)$, $h(x_2)$ and weighted by the positive
+definite matrix $B$. It serves to account for the uncertainty in the coefficients
+of the mean function. 
+
 ## Special Case Closed-Form Solutions: Marginal Variance
 We now consider a closed-form plug-in estimate for the marginal variance
 $\alpha^2$, as mentioned in (12). The takeaway from this section will be that
