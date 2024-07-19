@@ -416,7 +416,7 @@ in closed-form, meaning that numerical optimization may only be required for
 a subset of the hyperparameters. We start by considering closed form optimizers
 for the parameters defining the mean functions.
 
-### Constant Mean
+### Constant Mean: Plug-In MLE
 With the choice of constant mean $\mu_{\psi}(x) \equiv \beta_0$ the log marginal
 likelihood becomes
 
@@ -443,8 +443,10 @@ for the mean, we can plug $\hat{\beta}_0(\phi, \sigma^2)$ in place of $\beta_0$ 
 likelihood. This yields the **profile likelihood** (aka the **concentrated likelihood**),
 which is no longer a function of $\beta_0$ and hence the dimensionality of the subsequent numerical optimization problem has been reduced.
 
-### Linear Model Coefficients
+### Linear Model Coefficients: Plug-In MLE
 Let's try to do the same thing with the mean function $\mu_{\psi}(x) = h(x)^\top \beta$.
+The constant mean function is actually just a special case of this more general
+setting, but its common enough that it warranted its own section.
 If we denote by $H \in \mathbb{R}^{n \times p}$ the feature matrix with rows equal
 to $h(x_i)^\top$, $i = 1, \dots, n$ then the marginal likelihood becomes
 \begin{align}
@@ -486,7 +488,7 @@ $\hat{\beta}(\phi, \sigma^2)$ into the marginal likelihood to concentrate out
 the parameter $\beta$. The resulting concentrated likelihood can then be numerically
 optimized as a function of the remaining hyperparameters.
 
-### Linear Model: MAP estimation
+### Linear Model Coefficients: Closed-Form Marginalization
 The above section showed that, conditional on fixed kernel hyperparameters,
 the coefficients of a linear mean function can be optimized in closed form.
 We now show a similar result: if the mean coefficients are assigned a Gaussian
@@ -545,7 +547,7 @@ the marginalization is now a sum of two kernels: the original kernel $k$ and
 the kernel $h(x_1)^\top B h(x_2)$. The latter can be viewed as a linear kernel
 in the transformed inputs $h(x_1)$, $h(x_2)$ and weighted by the positive
 definite matrix $B$. It serves to account for the uncertainty in the coefficients
-of the mean function. 
+of the mean function.
 
 ## Special Case Closed-Form Solutions: Marginal Variance
 We now consider a closed-form plug-in estimate for the marginal variance
@@ -557,15 +559,49 @@ C_{\phi} &= \alpha^2 C. \tag{24}
 \end{align}
 This holds for any kernel of the form $\alpha^2 k(\cdot, \cdot)$ provided
 that $\sigma^2 = 0$. For example, the exponentiated quadratic kernel in
-(12) has this form. After deriving the estimator, we will
-introduce a re-parameterization that admits a closed-form solution even when
-$\sigma^2 > 0$. With this setup, the marginal likelihood assumes the form
+(12) satisfies this requirement.
+With this assumption, the marginal likelihood is given by
 \begin{align}
 \mathcal{L}(\theta)
-&:= -\frac{1}{2} \log \text{det}\left(2\pi \alpha^2 C \right) -
+&= -\frac{n}{2} \log\left(2\pi \alpha^2 \right) - \frac{1}{2}\log\text{det}(C) -
 \frac{1}{2\alpha^2} (y_n - \mu_{\psi})^\top C^{-1} (y_n - \mu_{\psi}). \tag{25}
 \end{align}
-The partial derivative with respect to $\alpha^2$ is then given by
+The analytical derivations given below go through for a log marginal likelihood
+of this form. However, this doesn't work for the common setting with an observation
+variance $\sigma^2 > 0$, since in this case the covariance assumes
+the form
+\begin{align}
+C &= \left(\alpha^2 k(X) + \sigma^2 I_n \right).
+\end{align}
+This can be addressed via the simple reparameterization
+\begin{align}
+\tilde{\alpha}^2 C &:= \tilde{\alpha}^2\left(k(X) + \tilde{\sigma}^2 I_n \right).
+\end{align}
+This gives the required form of the covariance, and maintains the same number
+of parameters as before. The one downside is that we lose the straightforward
+interpretation of the noise variance; the observation noise is now given by
+the product $\tilde{\alpha}^2 \tilde{\sigma}^2$ instead of being encoded in
+the single parameter $\sigma^2$. This
+reparameterization is utilized in the R package [hetGP](https://cran.r-project.org/package=hetGP).
+
+
+### Plug-In MLE
+Let's consider optimizing the log marginal likelihood with respect to $\alpha^2$.
+The partial derivative of (25) with respect to $\alpha^2$ is given by
+\begin{align}
+\frac{\partial \mathcal{L}(\theta)}{\partial \alpha^2}
+&= -\frac{n}{2}\frac{2\pi}{2\pi \alpha^2} - \frac{(y_n - \mu_{\psi})^\top C^{-1} (y_n - \mu_{\psi})}{2\alpha^4} \newline
+&= -\frac{n}{2\alpha^2} - \frac{(y_n - \mu_{\psi})^\top C^{-1} (y_n - \mu_{\psi})}{2\alpha^4}.
+\end{align}
+Setting this expression equal to zero and solving for $\alpha^2$ yields
+\begin{align}
+\hat{\alpha}^2 &= \frac{(y_n - \mu_{\psi})^\top C^{-1} (y_n - \mu_{\psi})}{n}.
+\end{align}
+Following the same procedure as before, the estimate $\hat{\alpha}^2$ can be
+subbed in for $\alpha^2$ in $\mathcal{L}(\theta)$ to obtain the
+concentrated log marginal likelihood.
+
+### Closed-Form Marginalization
 
 
 ## Bias Corrections
