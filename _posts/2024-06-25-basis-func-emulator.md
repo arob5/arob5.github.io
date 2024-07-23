@@ -1,5 +1,5 @@
 ---
-title: Emulating Computer Models with many Outputs: The Basis Function Approach
+title: Emulating Computer Models with many Outputs - The Basis Function Approach
 subtitle: A discussion of the popular output dimensionality strategy for emulating multi-output functions.
 layout: default
 date: 2024-06-25
