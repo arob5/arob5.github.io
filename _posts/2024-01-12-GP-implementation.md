@@ -19,7 +19,17 @@ correction).
 4. Does the package offer scaling and normalization functionality for the
 regression inputs and outputs?
 
-
 # High-Level Implementation Choices
 
 ## Computing the predictive equations
+
+# GPy
+
+# PyMC
+
+# GPflow
+
+# GPyTorch
+
+# References
+- [Comparison of Gaussian process software](https://en.wikipedia.org/wiki/Comparison_of_Gaussian_process_software)

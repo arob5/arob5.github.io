@@ -278,8 +278,13 @@ $\ell^1, \dots, \ell^d$ are often called **lengthscale**, **smoothness**, or
 **range** parameters, since they control the smoothness of the GP realizations
 along each coordinate direction. Other popular kernels (e.g., Matérn) have
 analogous parameters controlling similar features. Note that in this example
-we have $\phi = \{\alpha^2, \ell^1, \dots, \ell^d \}$.
-
+we have $\phi = \{\alpha^2, \ell^1, \dots, \ell^d \}$. Also note that people
+choose to parameterize the Gaussian kernel in many different ways; for example,
+it's not uncommon to see a $1/2$ factor included inside the exponential to make
+the kernel align with the typical parameterization of the Gaussian probability
+density function. Knowing which parameterization you're working with is important
+for interpreting the hyperparameters, specifying bounds, defining priors, etc.
+  
 It is quite common in the
 spatial statistics (and sometimes the computer experiments) literature to see
 kernels written like $\alpha^2 k(\cdot, \cdot)$; in these cases $k(\cdot, \cdot)$
@@ -755,3 +760,5 @@ We finally arrive at the expression for the concentrated log marginal likelihood
 # References
 - Surrogates (Gramacy)
 - Statistics or geostatistics? Sampling error or nugget effect? (Clark)
+- Michael Betencourt's very nice [post](https://betanalpha.github.io/assets/case_studies/gp_part3/part3.html#4_adding_an_informative_prior_for_the_length_scale) on setting
+priors on GP hyperparameters.
