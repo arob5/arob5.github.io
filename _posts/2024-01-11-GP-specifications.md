@@ -284,7 +284,7 @@ it's not uncommon to see a $1/2$ factor included inside the exponential to make
 the kernel align with the typical parameterization of the Gaussian probability
 density function. Knowing which parameterization you're working with is important
 for interpreting the hyperparameters, specifying bounds, defining priors, etc.
-  
+
 It is quite common in the
 spatial statistics (and sometimes the computer experiments) literature to see
 kernels written like $\alpha^2 k(\cdot, \cdot)$; in these cases $k(\cdot, \cdot)$
@@ -318,8 +318,14 @@ likelihood of the observations at the observed input locations $X$. At present
 everything is conditional on a fixed $\theta$.
 Now, if we marginalize the likelihood $y(X)|f(X), \theta$ with
 respect to $f(X)$ then we obtain the distribution $y(X) | \theta$. This is often
-called the **marginal likelihood**, due to the fact that $f(X)$ was marginalized
-out. Thanks to all the Gaussian assumptions here, the marginal likelihood
+called the **marginal likelihood**, due to the fact that $f$ was marginalized
+out. In particular, the distribution $y(X) | \theta$ has implicitly marginalized
+the function values $f(\tilde{x})$ at all location $\tilde{x}$ other than $X$.
+This same logic and terminology applies in the noiseless setting with $\sigma^2 = 0$,
+in which case the marginal likelihood is given by $f(X) | \theta$. In the noiseless
+setting we are marginalizing both over the unobserved function values and
+the noise $\epsilon$.  
+Thanks to all the Gaussian assumptions here, the marginal likelihood
 is available in closed-form. One could approach the derivation using (13) as
 the starting point, but it's much easier to consider the model written out using
 random variables,
@@ -440,7 +446,7 @@ with respect to the constant mean equals
 \end{align}
 Setting (18) equal to zero and solving for $\beta_0$ gives the optimum
 \begin{align}
-\hat{\beta}_0(\phi, \sigma^2) = \frac{y_n^\top C\_{\phi, \sigma^2}^{-1} 1_n}{1_n C\_{\phi, \sigma^2}^{-1} 1_n}. \tag{19}
+\hat{\beta}_0(\phi, \sigma^2) = \frac{y_n^\top C\_{\phi, \sigma^2}^{-1} 1_n}{1_n^\top C\_{\phi, \sigma^2}^{-1} 1_n}. \tag{19}
 \end{align}
 Notice that $\hat{\beta}_0(\phi, \sigma^2)$ depends on the values of the other hyperparameters
 $\phi$ and $\sigma^2$. Therefore, while this does not give us the outright value
