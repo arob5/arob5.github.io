@@ -4,5 +4,5 @@ subtitle: Latin hypercube sampling for integration and space-filling experimenta
 layout: default
 date: 2024-07-27
 keywords: statistics
-published: true
+published: false
 ---

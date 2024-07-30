@@ -148,12 +148,39 @@ an alternate definition of Gaussian measures.
   semi-definite matrix $C \in \mathbb{R}^{n \times n}$.
   </p>
 </blockquote>
+The proof, which is given in the appendix, also provides the expressions for
+the mean and covariance of $\mu$ as a byproduct.
+<blockquote>
+  <p><strong>Corollary.</strong>
+  Let $\mu$ be a Gaussian measure with Fourier transform
+  $\hat{\mu}(y) = \exp\left\{\langle y, m\rangle - \frac{1}{2}\langle Cy, y\rangle\right\}$. Then the mean vector and covariance matrix of $\mu$ are
+  given by
+  \begin{align}
+  \int x \mu(dx) &= m \tag{5} \newline
+  \int (x-m)(x-m)^\top \mu(dx) &= C.
+  \end{align}
+  </p>
+</blockquote>
 
-**Proof.**
 {% endkatexmm %}
 
 
 ## Density Function
+The one-dimensional projections and Fourier transform provide equivalent
+definitions of multivariate Gaussian measures that apply in full generality.
+The more familiar notion of the Gaussian density provides a third characterization,
+with the caveat that it only pertains to the case that the covariance matrix
+$C$ is positive definite.
+<blockquote>
+  <p><strong>Proposition.</strong>
+  Let $\mu$ be a Gaussian measure with mean vector and
+  covariance matrix $m$ and $C$, respectively, given as in (5). Then $\mu$ admits
+  a Lebesgue density if and only if $C$ is positive definite, in which case
+  $$
+  \frac{d\mu}{d\lambda}(x) &= \text{det}(2\pi C)^{-1/2}\langle C^{-1}(y-m), y-m\rangle.
+  $$
+  </p>
+</blockquote>
 
 ## Transformation of Standard Gaussian Random Variables
 In this section we provide yet another characterization of Gaussian measures.
@@ -207,15 +234,16 @@ procedure is summarized in the below corollary.
   </p>
 </blockquote>
 As for the factorization, the [Cholesky decomposition](https://en.wikipedia.org/wiki/Cholesky_decomposition)
-is a standard choice. The eigendecomposition provides another option, since
+is a standard choice when $C$ is positive definite.
+When $C$ is only positive semidefinite,
+the eigendecomposition provides another option, since
 $$
 C = UDU^\top = UD^{1/2} D^{1/2} U^\top = (UD^{1/2})(UD^{1/2})^\top
 $$
 so setting $A := UD^{1/2}$ does the trick. Note that $C$ is positive semidefinite
-so $D$ is just a diagonal matrix with nonnegative values on the diagonal. 
+so $D$ is just a diagonal matrix with nonnegative values on the diagonal.
 
 {% endkatexmm %}
-
 
 
 ## Covariance Operator
@@ -223,3 +251,81 @@ so $D$ is just a diagonal matrix with nonnegative values on the diagonal.
 ## Conditional Distributions
 
 ## Appendix
+
+### Proof of (4): Fourier Transform Characterization
+{% katexmm %}
+Assume that the probability measure $\mu$ has a Fourier transform given by
+$$
+\hat{\mu}(y) = \exp\left\{i \langle m, y\rangle - \frac{1}{2}\langle Cy, y\rangle \right\},
+$$
+for some nonrandom vector $m \in \mathbb{R}^n$ and symmetric positive semidefinite
+matrix $C \in \mathbb{R}^{n \times n}$. We must show that the pushforward
+$\mu \circ \ell_y^{-1}$ is Gaussian for an arbitrary
+$\ell_y \in \left(\mathbb{R}^n\right)^*$. We will do so by invoking the known
+form of the Fourier transform for univariate Gaussians. To this end, let
+$t \in \mathbb{R}$ and consider
+\begin{align}
+\mathcal{F}\left(\mu \circ \ell_y^{-1}\right)(t)
+&= \int e^{its} \left(\mu \circ \ell_y^{-1} \right)(ds) \newline
+&= \int e^{it \ell_y(x)} \mu(dx) \newline
+&= \int e^{i \langle ty, x\rangle} \mu(dx) \newline
+&= \hat{\mu}(ty) \newline
+&= \exp\left(i \langle m, ty\rangle - \frac{1}{2}\langle C(ty), ty\rangle \right) \newline
+&= \exp\left(it \langle m, y\rangle - \frac{1}{2}t^2\langle Cy, y\rangle \right),
+\end{align}
+where the second equality uses the change-of-variables formula, and the final
+uses the assumed form of $\hat{\mu}$. Also recall the alternate notation for
+the Fourier transform: $\hat{\mu}(y) = \mathcal{F}(\mu)(y)$.
+We recognize the final expression above as
+the Fourier transform of a univariate Gaussian measure with mean
+$\langle y, m\rangle$ and variance $\langle Cy, y\rangle$, evaluated at
+frequency $t$. This implies that $\mu \circ \ell_y^{-1}$ is Gaussian. Since
+$\ell_y \in \left(\mathbb{R}^n \right)^*$ was arbitrary, it follows by definition
+that $\mu$ is Gaussian.
+
+Conversely, assume that $\mu$ is Gaussian. Then, $\mu \circ \ell_y^{-1}$ is
+univariate Gaussian for all $\ell_y \in \left(\mathbb{R}^n \right)^*$. We must
+show that $\hat{\mu}$ assumes the claimed form. Letting $y \in \mathbb{R}^n$,
+we have
+\begin{align}
+\hat{\mu}(y)
+&= \int e^{i \langle y, x\rangle} \mu(dx) \newline
+&= \int e^{is} \left(\mu \circ \ell_y^{-1}\right)(ds) \newline
+&= \mathcal{F}\left(\mu \circ \ell_y^{-1}\right)(1) \newline
+&= \exp\left(i m(y) - \frac{1}{2}\sigma^2(y) \right),
+\end{align}
+where $m(y)$ and $\sigma^2(y)$ are the mean and variance of $\mu \circ \ell_y^{-1}$,
+respectively. The first equality again uses the change-of-variables formula, while
+the last expression follows from the assumption that $\mu \circ \ell_y^{-1}$
+is Gaussian, and hence must have a Fourier transform of this form. It remains
+to verify that $m(y) = \langle y, m\rangle$ and
+$\sigma^2(y) = \langle Cy, y\rangle$ to complete the proof. By definition, the  
+mean of $\mu \circ \ell_y^{-1}$ is given by
+\begin{align}
+m(y) &= \int \ell_y(x) \mu(dx) \newline
+&= \int \langle y, x\rangle \mu(dx) \newline
+&= \left\langle y, \int x \mu(dx) \right\rangle \newline
+&=: \langle y, m \rangle,
+\end{align}
+where we have used the linearity of integration and defined the nonrandom
+vector $m := \int x \mu(dx)$. Now, for the variance we have
+\begin{align}
+\sigma^2(y)
+&= \int \left[\ell_y(x) - m(y) \right]^2 \mu(dx) \newline
+&= \int \left[\langle y, x\rangle - \langle y, m \rangle \right]^2 \mu(dx) \newline
+&= \int \langle y, x-m\rangle^2 \mu(dx) \newline
+&= y^\top \left[\int (x-m)(x-m)^\top \mu(dx) \right] y \newline
+&=: y^\top C y \newline
+&= \langle Cy, y \rangle.
+\end{align}
+Note that $\sigma^2(y)$ is the expectation of a nonnegative quantity, so
+$\langle Cy, y \rangle \geq 0$ for all $y \in \mathbb{R}^n$; i.e.,  
+$C$ is positive semidefinite. We have thus shown that
+\begin{align}
+\hat{\mu}(y) &= \exp\left(\langle y, m\rangle - \frac{1}{2}\langle Cy,y\rangle \right),
+\end{align}
+with $C$ a positive semidefinite matrix, as required. $\qquad \blacksquare$
+{% endkatexmm %}
+
+
+## References
