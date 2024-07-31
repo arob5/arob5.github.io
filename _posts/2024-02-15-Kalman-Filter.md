@@ -250,13 +250,15 @@ C_{k+1} &= \hat{C}_{k+1} - \hat{C}^{vy}\_{k+1}\left[\hat{C}^y\_{k+1}\right]^{-1}
 Typically, these equations are written in terms of the $d \times n$
 **Kalman gain** matrix
 \begin{align}
-K_{k+1} = \hat{C}^{vy}_{k+1} \left[\hat{C}^y\_{k+1}\right]^{-1} \tag{4}
+K_{k+1} = \hat{C}^{vy}_{k+1} \left[\hat{C}^y\_{k+1}\right]^{-1}
+= \hat{C}\_{k+1}H^\top \left(H\hat{C}_{k+1}H^\top + R\right), \tag{4}
 \end{align}
 which gives
 
 \begin{align}
 m_{k+1} &= \hat{m}\_{k+1} + K_{k+1}(y_{k+1} - H\hat{m}\_{k+1}) \tag{5} \newline
-C_{k+1} &= \hat{C}\_{k+1} - K\_{k+1}\hat{C}^{yv}.
+C_{k+1} &= \hat{C}\_{k+1} - K\_{k+1}\hat{C}^{yv}\_{k+1}
+= \left(I - K\_{k+1}H\right)\hat{C}_{k+1}.
 \end{align}
 
 Inserting the formulas for $\hat{m}_{k+1}$ and $\hat{C}_{k+1}$ provides the
