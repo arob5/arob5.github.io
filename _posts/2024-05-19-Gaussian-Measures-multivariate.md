@@ -156,28 +156,28 @@ the mean and covariance of $\mu$ as a byproduct.
   $\hat{\mu}(y) = \exp\left\{\langle y, m\rangle - \frac{1}{2}\langle Cy, y\rangle\right\}$. Then the mean vector and covariance matrix of $\mu$ are
   given by
   \begin{align}
-  \int x \mu(dx) &= m \tag{5} \newline
-  \int (x-m)(x-m)^\top \mu(dx) &= C.
+  m &= \int x \mu(dx) \tag{5} \newline
+  C &= \int (x-m)(x-m)^\top \mu(dx).
   \end{align}
   </p>
 </blockquote>
 
 {% endkatexmm %}
 
-
 ## Density Function
 The one-dimensional projections and Fourier transform provide equivalent
-definitions of multivariate Gaussian measures that apply in full generality.
+definitions of multivariate Gaussian measures.
 The more familiar notion of the Gaussian density provides a third characterization,
 with the caveat that it only pertains to the case that the covariance matrix
 $C$ is positive definite.
 <blockquote>
   <p><strong>Proposition.</strong>
-  Let $\mu$ be a Gaussian measure with mean vector and
-  covariance matrix $m$ and $C$, respectively, given as in (5). Then $\mu$ admits
+  Let $\mu$ be a Gaussian measure with mean vector $m$ and
+  covariance matrix $C$, as in (5). Then $\mu$ admits
   a Lebesgue density if and only if $C$ is positive definite, in which case
   $$
-  \frac{d\mu}{d\lambda}(x) &= \text{det}(2\pi C)^{-1/2}\langle C^{-1}(y-m), y-m\rangle.
+  \frac{d\mu}{d\lambda}(x)
+  = \text{det}(2\pi C)^{-1/2}\exp\left\{\langle C^{-1}(x-m), x-m\rangle\right\}. \tag{6}
   $$
   </p>
 </blockquote>
@@ -247,6 +247,60 @@ so $D$ is just a diagonal matrix with nonnegative values on the diagonal.
 
 
 ## Covariance Operator
+{% katexmm %}
+As shown in (5) (and derived in the appendix), the covariance matrix associated with
+a Gaussian measure $\mu$ satisfies
+\begin{align}
+C &= \int (x - m)(x - m)^\top \mu(dx),
+\end{align}
+where $m$ and $C$ are the quantities given in the Fourier transform (4). We take
+a step further in this section by viewing the covariance as an operator rather
+than a matrix. Definitions of the covariance operator differ slightly across various
+textbooks and literature; we will try to touch on the different conventions here
+and explain their connections. As a starting point, we consider the following
+definition.
+<blockquote>
+  <p><strong>Definition.</strong>
+  Let $\mu$ be a Gaussian measure with Fourier transform given by (4). Then
+  the **covariance operator** of $\mu$ is defined as the function
+  $\mathcal{C}: \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R}$ given by
+  $$
+  \mathcal{C}\left(y, y^\prime \right) = \langle Cy, y^\prime\rangle.
+  $$
+  </p>
+</blockquote>
+We immediately have a variety of equivalent expressions for this operator:
+\begin{align}
+\mathcal{C}\left(y, y^\prime \right)
+&= \langle Cy, y^\prime\rangle \newline
+&= y^\top \left[\int (x - m)(x - m)^\top \mu(dx)\right] y^\prime \newline
+&= \int \langle y, x - m\rangle \langle y^\prime, x - m \langle \mu(dx).
+\end{align}
+In terms of the random variable $X \sim \mu$, we can also write this as
+\begin{align}
+\mathcal{C}\left(y, y^\prime \right)
+&= \int \langle y, x - m\rangle \langle y^\prime, x - m \langle \mu(dx) \newline
+&= \int \left[\langle y, x\rangle - \langle y, \mathbb{E}[X]\rangle\right]
+\left[\langle y^\prime, x\rangle - \langle y^\prime, \mathbb{E}[X]\rangle\right] \mu(dx) \newline
+&= \text{Cov}\left[\langle y,X\rangle, \langle y^\prime,X\rangle \right].
+\end{align}
+In words, the covariance operator $\mathcal{C}\left(y, y^\prime \right)$ outputs
+the covariance between the one dimensional projections of $X$ along the directions
+$y$ and $y^\prime$. Given that the multivariate Gaussian measure is defined in terms
+of its one-dimensional projections, this definitely should feel fairly natural.
+In fact, we see that the Fourier transform of $\mu$ can be written as
+$$
+\hat{\mu}(y) = \exp\left\{i\langle y, m\rangle - \frac{1}{2}\mathcal{C}(y,y) \right\}.
+$$
+As in the above expression, when the same argument is fed into both slots of
+the covariance operator, the result is seen to correspond to the variance of
+the one-dimensional projection:
+$$
+\mathcal{C}(y,y) = \text{Var}\left[\langle y, X\rangle \right].
+$$
+
+{% endkatexmm %}
+
 
 ## Conditional Distributions
 
@@ -327,5 +381,43 @@ $C$ is positive semidefinite. We have thus shown that
 with $C$ a positive semidefinite matrix, as required. $\qquad \blacksquare$
 {% endkatexmm %}
 
+### Proof of (6): Density Function
+{% katexmm %}
+Let's start by assuming $\mu$ is a Gaussian measure with mean $m$ and
+positive definite covariance matrix $C$. Then $C$ admits an eigendecomposition
+$C = UDU^\top$ where the columns $u_1, \dots, u_n$ of $U$ are orthonormal and
+$D = \text{diag}\left(\lambda_1, \dots, \lambda_n\right)$ with
+$\lambda_1 \geq \lambda_2 \geq \cdots \lambda_n > 0$. Then by definition of a
+Gaussian measure, the one-dimensional projections $\mu \circ \ell^{-1}_{u_i}$
+are Gaussian, with respective means $\langle m, u_i\rangle$ and variances
+$\langle Cu_i, u_i\rangle = \langle \lambda_i u_i, u_i\rangle = \lambda_i > 0$
+(see the above proof for the derivation of the mean and variance). Note that
+the positive definite assumption ensures that the variances are all strictly
+positive. Since the variances are positive, each of these univariate Gaussians
+admits a density
+$$
+\frac{d\left(\mu \circ \ell^{-1}_{u_i}\right)}{d\lambda}(t)
+= \exp\left\{-\frac{1}{2\lambda_i}\left(t - \langle m, u_i\rangle \right)^2\right\},
+$$
+for $i = 1, \dots, n$. We will now show that $\mu$ can be written as the
+product of $n$ independent univariate Gaussian measures. We will
+leverage the Fourier transform to establish this fact. Letting $y \in \mathbb{R}^n$,
+we will lighten notation by writing $\alpha_i := \langle y, u_i\rangle$ and
+$\beta_i := \langle m, u_i \rangle$; $y$ and $m$ can thus be represented with
+respect to the eigenbasis as
+\begin{align}
+&y = \sum_{i=1}^{n} \alpha_i u_i, &m = \sum_{i=1}^{n} \beta_i u_i.
+\end{align}
+Taking the Fourier transform of $\mu$, we have
+\begin{align}
+\hat{\mu}(y)
+&= \exp\left(i\langle y,m\rangle - \frac{1}{2}\langle Cy,y\rangle \right) \newline
+&= \exp\left(i\left\langle \sum_{i=1}^{n} \alpha_i u_i, \sum_{i=1}^{n} \beta_i u_i  \right\rangle - \frac{1}{2}\left\langle \sum_{i=1}^{n} \alpha_i Cu_i, \sum_{i=1}^{n} \alpha_i u_i \right\rangle \right) \newline
+&= \exp\left(i\sum_{i=1}^{n} \alpha_i \beta_i - \frac{1}{2}\sum_{i=1}^{n}\lambda_i \alpha_i^2 \right) \newline
+&= \prod_{i=1}^{n} \exp\left(i\alpha_i \beta_i - \frac{1}{2}\lambda_i \alpha_i^2 \right) \newline
+&= \prod_{i=1}^{n} \mathcal{F}\left(\mathcal{N}(\beta_i, \lambda_i) \right)(\alpha_i).
+\end{align}
+
+{% endkatexmm %}
 
 ## References

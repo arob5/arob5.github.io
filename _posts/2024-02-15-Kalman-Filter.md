@@ -78,8 +78,8 @@ equations are given in the subsequent sections.
 distributions are both Gaussian
 
 \begin{align}
-&\text{Forecast Distribution: } v_k|Y_{k-1} \sim \mathcal{N}(\hat{m}_k, \hat{C}_k) \newline
-&\text{Filtering Distribution: } v_k|Y_k \sim \mathcal{N}(m_k, C_k)
+&\text{Forecast Distribution: } v_{k+1}|Y_{k} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1}) \newline
+&\text{Filtering Distribution: } v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})
 \end{align}
 
 and the mean and covariance for these distributions satisfy the following
@@ -114,7 +114,7 @@ reduce to the fraction of these precisions over the total precision of the
 filtering distribution (the data precision is also affected by $H$, but the
 interpretation is basically the same). The analysis precision matrix can
 similarly be viewed as a weighted average of the data and forecast precisions.
-Importantly, notice 
+Importantly, notice
 that the covariance analysis update does not depend on the data $y_{k+1}$; the
 uncertainty in the filtering distribution is not at all affected by the
 sequence of observations. This may seem odd at first, but this property is
