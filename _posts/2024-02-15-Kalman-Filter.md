@@ -10,7 +10,9 @@ published: true
 Originally introduced in R.E. Kalman's seminal 1960 paper, the Kalman filter has
 found a myriad of applications in fields as disparate as robotics and economics.
 In short, the Kalman filter (KF) gives the closed-form solutions to the filtering
-problem (see my previous post) in the linear-Gaussian setting; that is, the
+problem (see my previous
+[post](https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/)) defining the
+filtering problem) in the linear-Gaussian setting; that is, the
 deterministic dynamic model and observaton operator are each linear and subject
 to additive Gaussian noise, and the initial condition is also Gaussian.
 As in other models with Gaussian noise, the KF
@@ -20,15 +22,9 @@ perspective was the one originally considered by Kalman in the original paper.
 In this post I begin by deriving the KF equations in the Bayesian statistical
 setting in two different ways. The two derivations produce two different sets
 of equations, which I show are equivalent through an application of the Woodbury
-matrix identity. I then proceed to the optimization perspective, again offering
-two different derivations, one rooted in calculus and the other--the projection
-based approach used in the 1960 paper--in linear algebra.
-
-
-TODOs:
-1. Add section that just views this as a sequential implementation of linear regression.
-2. Add section on interpreting the KF equations.
-3. Add section on computational complexity.
+matrix identity. I then proceed to the optimization perspective, which is
+interesting in its own right as well as providing motivation for more complex
+algorithms used in the nonlinear setting.   
 
 ## The Model and Problem
 {% katexmm %}
@@ -56,7 +52,7 @@ we can state the overarching goal, which is two-fold:
 2. Recursively update this characterization as the time index is stepped forward.
 
 What it means to "characterize" a distribution can vary, and often entails some
-sort of Monte Carlo or closed-form approximation to the true distribution. However,
+sort of approximation to the true distribution. However,
 the linear Gaussian setting is special in that the filtering distributions
 are available in closed-form. The derivation of the KF thus entails performing
 analytical calculations to derive the closed-form distribution $\mu_{k+1}$
@@ -68,33 +64,63 @@ setting are themselves Gaussian, and we will denote their densities by
 $\pi_k(v_k) = \mathcal{N}(v_k|m_k, C_k)$. The problem of determining the update  
 $\pi_k(v_k) \to \pi_{k+1}(v_{k+1})$ thus simplifies to that of establishing
 recursions for the filtering mean and covariance; i.e., $m_k \to m_{k+1}$ and
-$C_k \to C_{k+1}$. The following proposition summarizes the main result, providing
+$C_k \to C_{k+1}$. The following propositions summarize the main result, providing
 these recursions in two different (but equivalent) forms. These filtering equations
 are broken into two stages, following the *forecast* and *analysis* steps
-that I discussed in a previous post. Derivations of these
-equations are given in the subsequent sections.
+that I discussed in [this](https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/)
+post. Derivations of these equations are given in the subsequent sections.
 
-**Proposition.** Given the state space model (1), the forecast and filtering
-distributions are both Gaussian
+<blockquote>
+  <p><strong>Proposition.</strong>
+  Given the state space model (1), the forecast and filtering
+  distributions are both Gaussian and are given by
+  \begin{align}
+  &v_{k+1}|Y_{k} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1}),
+  &&v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})
+  \end{align}
+  with the forecast mean and covariance given by
+  \begin{align}
+  \hat{C}_{k+1} &= G C_k G^\top + Q \tag{2} \newline
+  \hat{m}_{k+1} &= Gm_k.
+  \end{align}
+  The recursions for the filtering mean and covariance are given below in two
+  equivalent forms.
+  </p>
+</blockquote>
 
-\begin{align}
-&\text{Forecast Distribution: } v_{k+1}|Y_{k} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1}) \newline
-&\text{Filtering Distribution: } v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})
-\end{align}
+<blockquote>
+  <p><strong>Filtering Equations: State Space.</strong>
+  The mean and covariance of the filtering distribution can be written as
+  \begin{align}
+  C_{k+1} &= \left(H^\top R^{-1} H + \hat{C}^{-1}_{k+1}\right)^{-1} \tag{3} \newline
+  m_{k+1} &= C_{k+1}\left(H^\top R^{-1}y_{k+1} + \hat{C}^{-1}_{k+1} \hat{m}_{k+1} \right).
+  \end{align}
+  We refer to this as the state space representation due to the fact that the primary
+  linear algebra computations (most notably, the matrix inversion) are performed in
+  $\mathbb{R}^d$.
+  </p>
+</blockquote>
 
-and the mean and covariance for these distributions satisfy the following
-recursions.
+<blockquote>
+  <p><strong>Filtering Equations: Data Space.</strong>
+  The mean and covariance can alternatively be written as
+  \begin{align}
+  C_{k+1} &= \left(I - K_{k+1}H\right)\hat{C}_{k+1} \tag{4} \newline
+  m_{k+1} &= \hat{m}_{k+1} + K_{k+1}(y_{k+1} - H\hat{m}_{k+1}),
+  \end{align}
+  where
+  $$
+  K_{k+1} := \hat{C}_{k+1}H^\top \left(H\hat{C}_{k+1}H^\top + R\right)^{-1}.
+  $$
+  We refer to this as the data space representation since the primary computations
+  are performed in $\mathbb{R}^n$.
+  </p>
+</blockquote>
 
-\begin{align}
-\hat{C}\_{k+1} &= G C_k G^\top + Q \newline \tag{1}
-\hat{m}\_{k+1} &= Gm_k \newline
-C\_{k+1} &= \left(H^\top R^{-1} H + \hat{C}^{-1}\_{k+1}\right)^{-1} \newline
-m\_{k+1} &= C\_{k+1}\left(H^\top R^{-1}y\_{k+1} + \hat{C}^{-1}\_{k+1} \hat{m}\_{k+1} \right)
-\end{align}
 
 ### Investigating the Formulas
 Before diving into the derivations, we note some initial properties on the KF
-formulas (1). We begin by noting that the forecast mean update
+formulas (3). We begin by noting that the forecast mean update
 $m_k \mapsto \hat{m}_{k+1}$ is linear, and the analysis update
 $\hat{m}_{k+1} \mapsto m_{k+1}$ is affine; thus, the composition of the two
 steps defining the map $m_k \mapsto m_{k+1}$ is also affine. We similarly see
@@ -128,14 +154,15 @@ weighted sum.
 
 ## Bayesian Derivation
 We begin with an approach aligns directly with the derivations of the generic
-forecast and analysis updates derived in the previous post. These generic updates
-are typically analytically intractable, but in the current linear Gaussian setting
+forecast and analysis updates derived in the previous
+[post](https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/). These generic updates
+are typically analytically intractable, but in the linear Gaussian setting
 all of the calculations go through neatly in closed-form. The derivation
 proceeds inductively; note that the base case is provided by the initial condition
 $v_0 \sim \mathcal{N}(m_0, C_0)$. The inductive hypothesis assumes that
 $v_k|Y_k \sim \mathcal{N}(m_k, C_k)$ and it remains for us to show that
 $v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})$ with the mean and covariance
-formulas as given in the proposition.
+formulas as given in (1).
 
 ### Forecast
 As an intermediate step we start by obtaining the forecast distribution
@@ -156,7 +183,7 @@ and covariance given by
 \text{Cov}\left[\eta\_{k+1}|Y_k \right] = GC_kG^\top + Q,
 \end{align}
 using the linearity of $G$ and the independence of $v_k$ and $\eta_{k+1}$, conditional
-on $Y_k$.
+on $Y_k$. This verifies the equations in (2).
 
 ### Analysis
 We recall that the analysis step of the filtering update corresponds to an
@@ -191,17 +218,20 @@ m_{k+1}^\top C_{k+1}^{-1} m_{k+1}
 
 and equate like terms. Doing so yields
 \begin{align}
-C_{k+1} &= \left(H^\top R^{-1}H + \hat{C}\_{k+1}^{-1}\right)^{-1} \tag{3} \newline
+C_{k+1} &= \left(H^\top R^{-1}H + \hat{C}\_{k+1}^{-1}\right)^{-1} \newline
 m_{k+1} &= C_{k+1}\left(H^\top R^{-1}y_{k+1} + \hat{C}\_{k+1}^{-1}\hat{m}_{k+1}\right),
 \end{align}
-which completes the derivation.
+which completes the derivation of (3). In another
+[post](https://arob5.github.io/blog/2024/07/03/lin-Gauss/) I derive the posterior
+distribution for generic linear Gaussian inverse problems; we could have skipped
+the above derivations by simply applying this result.
 
 ## A Second Derivation of the Analysis Step: The Joint Gaussian Approach  
 We now explore a second derivation of the KF equations, which yield the second
-form of the equations presented in the proposition. The key observation here
+form of the equations presented in (4). The key observation here
 is that the joint distribution of $(v_{k+1},y_{k+1})|Y_k$ is Gaussian
 \begin{align}
-\begin{pmatrix} v_{k+1} \newline y_{k+1} \end{pmatrix}\bigg|Y_k \tag{2}
+\begin{pmatrix} v_{k+1} \newline y_{k+1} \end{pmatrix}\bigg|Y_k \tag{5}
 \sim \mathcal{N}\left(\begin{pmatrix} \hat{m}\_{k+1} \newline H\hat{m}_{k+1} \end{pmatrix},
   \begin{pmatrix} \hat{C}\_{k+1} & \hat{C}^{vy}\_{k+1} \newline
   \hat{C}^{yv}\_{k+1} & \hat{C}^y\_{k+1} \end{pmatrix} \right),
@@ -233,41 +263,120 @@ and
 &= H \hat{C}_{k+1} H^\top + R.
 \end{align}
 
-With the specification of this distribution complete, we note that the
+With the specification of this joint distribution complete, we note that the
 filtering distribution we care about,
 $v_{k+1}|Y_{k+1} = v_{k+1}|y_{k+1},Y_k$ is a conditional
-distribution of (2); in particular, it is the conditional distribution
+distribution of (5); in particular, it is the conditional distribution
 resulting from conditioning on the final $n$ dimensions. Applying the
 closed-form [equation](https://en.wikipedia.org/wiki/Multivariate_normal_distribution)
 for Gaussian conditionals, we conclude that
 $v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})$, where
 
 \begin{align}
-m_{k+1} &= \hat{m}\_{k+1} + \hat{C}^{vy}\_{k+1}\left[\hat{C}^y\_{k+1}\right]^{-1}(y_{k+1} - H\hat{m}\_{k+1}) \tag{2} \newline
+m_{k+1} &= \hat{m}\_{k+1} + \hat{C}^{vy}\_{k+1}\left[\hat{C}^y\_{k+1}\right]^{-1}(y_{k+1} - H\hat{m}\_{k+1}) \tag{6} \newline
 C_{k+1} &= \hat{C}_{k+1} - \hat{C}^{vy}\_{k+1}\left[\hat{C}^y\_{k+1}\right]^{-1}\hat{C}^{yv}.
 \end{align}
 
 Typically, these equations are written in terms of the $d \times n$
 **Kalman gain** matrix
+
 \begin{align}
-K_{k+1} = \hat{C}^{vy}_{k+1} \left[\hat{C}^y\_{k+1}\right]^{-1}
-= \hat{C}\_{k+1}H^\top \left(H\hat{C}_{k+1}H^\top + R\right), \tag{4}
+K\_{k+1}
+&:= \hat{C}^{vy}\_{k+1} \left[\hat{C}^y\_{k+1}\right]^{-1}
+= \hat{C}\_{k+1}H^\top \left(H\hat{C}\_{k+1}H^\top + R\right)^{-1}, \tag{7}
 \end{align}
+
 which gives
 
 \begin{align}
-m_{k+1} &= \hat{m}\_{k+1} + K_{k+1}(y_{k+1} - H\hat{m}\_{k+1}) \tag{5} \newline
-C_{k+1} &= \hat{C}\_{k+1} - K\_{k+1}\hat{C}^{yv}\_{k+1}
-= \left(I - K\_{k+1}H\right)\hat{C}_{k+1}.
+m\_{k+1} &= \hat{m}\_{k+1} + K\_{k+1}(y\_{k+1} - H\hat{m}\_{k+1}) \tag{8} \newline
+C\_{k+1} &= \hat{C}\_{k+1} - K\_{k+1}\hat{C}^{yv}\_{k+1}
+= \left(I - K\_{k+1}H\right)\hat{C}_{k+1},
 \end{align}
-
-Inserting the formulas for $\hat{m}_{k+1}$ and $\hat{C}_{k+1}$ provides the
+precisely the updates given in (4).
+Note that inserting the formulas for $\hat{m}_{k+1}$ and $\hat{C}_{k+1}$ provides the
 equations defining the complete maps
 $m_k \mapsto m_{k+1}$ and $C_k \mapsto C_{k+1}$.
+{% endkatexmm %}
 
-TODO: re-write the equations in the weighted average form (see Stuart book).
+## The Optimization Perspective
+{% katexmm %}
+The preceding derivations adopt a Bayesian perspective, with $m_k$ and $C_k$
+interpreted as the mean and covariance of the posterior distribution
+$p(v_k | Y_k)$. We now investigate an alternative view in which $m_k$ is
+interpreted as the solution to a regularized optimization problem. In this section
+we will only concern ourselves with point estimates of the states, with the
+covariances playing the role of weights in the objective functions. Throughout
+this section we will utilize the following notation for the inner product and
+norm weighted by a positive definite matrix $C$:
+\begin{align}
+&\langle u, v \rangle_{C} := \langle C^{-1}u, v\rangle,
+&& \lVert u \rVert_{C} := \lVert C^{-1/2}u \rVert_2 \tag{9}
+\end{align}
+with the inner product and norm on the righthand side being of the standard
+Euclidean variety. We will also let $\mathcal{R}(C)$ denote the *range*
+(i.e., *column space*) of a matrix $C$.
+
+<blockquote>
+  <p><strong>Tikhonov Regularized Optimization Perspective.</strong>
+  The filtering mean $m_k$ solves the optimization problem
+  $$
+  m_k
+  := \text{argmin}_{v \in \mathbb{R}^d} \left\{\frac{1}{2} \lVert y_k - Hv \rVert^2_{R} + \frac{1}{2} \lVert v - \hat{m}_k \rVert^2_{\hat{C}_k}\right\}. \tag{10}
+  $$
+  </p>
+</blockquote>
+The first term encourages agreement with the observation, while the second
+promotes agreement with the forecast mean. These two objectives are weighted
+by the observation covariance $R$ and forecast covariance $\hat{C}_k$,
+respectively. These covariances encode the uncertainty in the observations and
+model forecasts. The first term in the objective is a typical $L_2$ regression
+objective, while the second can be viewed as a regularization term of the
+Tikhonov variety (also referred to as ridge regression). The proof of (10)
+is immediate upon noticing that
+(10) defines the maximum a posteriori (MAP) estimate of $\pi_{k}$. We already
+know that $\pi_{k}$ is Gaussian and hence its mean agrees with its mode.
+Therefore, the mean $m_k$ is indeed the optimizer. To make the connection more
+explicit, observe that
+$$
+\pi_k(v)
+\propto \mathcal{N}(y_k|Hv, R)\mathcal{N}(v|\hat{m}_k, \hat{C}_k)
+\propto \exp\left\{-\frac{1}{2}\lVert y_k - Hv\rVert^2_{R} \right\}
+\exp\left\{-\frac{1}{2}\lVert v - \hat{m}_k \rVert^2_{\hat{C}_k} \right\}.
+$$
+Negating the above expression and taking the logarithm gives the objective
+function in (10). Note that the normalizing constants in the two
+Gaussian densities being multiplied do not depend on $v$ and are thus absorbed
+in the proportionality sign. Next, we make a slight modification to (10) in
+order to present a second optimization perspective.
+<blockquote>
+  <p><strong>Constrained Optimization Perspective.</strong>
+  The filtering mean $m_k$ solves the constrained optimization problem
+  $$
+  m_k
+  := \text{argmin}_{v \in \mathcal{V}} \left\{\frac{1}{2} \lVert y_k - Hv \rVert^2_{R} + \frac{1}{2} \langle b, v - \hat{m}_k \rangle \right\}, \tag{11}
+  $$
+  where
+  $$
+  \mathcal{V}
+  := \left\{v \in \mathbb{R}^d : \hat{C}_k b = v - \hat{m}_k \right\},
+  $$
+  and the problem is well-defined even when $\hat{C}_k$ is singular.
+  </p>
+</blockquote>
+This may feel a bit pointless at this stage. Indeed, as we noted above
+$\hat{C}_k$ is guaranteed to be positive definite, hence invertible, so
+$b = \hat{C}_k^{-1} (v - \hat{m}_k)$ and thus
+$$
+\langle b, v - \hat{m}_k \rangle
+= \langle \hat{C}_k^{-1} (v - \hat{m}_k), v - \hat{m}_k \rangle
+= \lVert v - \hat{m}_k \rVert_{\hat{C}_k}^2.
+$$
 
 {% endkatexmm %}
+
+## References
+1. Inverse Problems and Data Assimilation (Stuart, Taeb, and Sanz-Alonso)
 
 ## Appendix
 

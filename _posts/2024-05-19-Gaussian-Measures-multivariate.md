@@ -177,7 +177,7 @@ $C$ is positive definite.
   a Lebesgue density if and only if $C$ is positive definite, in which case
   $$
   \frac{d\mu}{d\lambda}(x)
-  = \text{det}(2\pi C)^{-1/2}\exp\left\{\langle C^{-1}(x-m), x-m\rangle\right\}. \tag{6}
+  = \text{det}(2\pi C)^{-1/2}\exp\left\{-\frac{1}{2} \langle C^{-1}(x-m), x-m\rangle\right\}. \tag{6}
   $$
   </p>
 </blockquote>
@@ -194,7 +194,7 @@ $\mathcal{N}(0,1)$ random variables.
   $m \in \mathbb{R}^n$ and matrix $A \in \mathbb{R}^{n \times n}$, the random
   variable given by
   $$
-  X := m + AZ \tag{6}
+  X := m + AZ \tag{7}
   $$
   has a Gaussian distribution $\mathcal{N}(m, AA^\top)$.
 
@@ -418,6 +418,50 @@ Taking the Fourier transform of $\mu$, we have
 &= \prod_{i=1}^{n} \mathcal{F}\left(\mathcal{N}(\beta_i, \lambda_i) \right)(\alpha_i).
 \end{align}
 
+### Proof of (7): Transformation of Standard Gaussian
+For completeness, we start by proving the following basic fact.
+
+<blockquote>
+  <p><strong>Lemma.</strong>
+  Let $Z_i \overset{iid}{\sim} \mathcal{N}(0, 1)$ and define the random vector
+  $Z := \begin{bmatrix} Z_1, \dots, Z_n \end{bmatrix}^\top$. Then the law of
+  $Z$ is multivariate Gaussian, in particular $\mathcal{N}(0, I)$.
+  </p>
+</blockquote>
+
+**Proof.** Let $\mu$ and $\nu$ denote the law of $Z$ and $Z_i$, respectively.
+Observe that $\mu$ is the product measure constructed from $n$ copies of
+$\nu$; that is, $\mu = \nu \otimes \cdots \otimes \nu$. We will establish the
+Gaussianity of $\mu$ by appealing to the Fourier transform. Let $y \in \mathbb{R}^n$
+and consider
+\begin{align}
+\hat{\mu}(y)
+&= \int e^{i \langle y, x\rangle} \mu(dx) \newline
+&= \int \prod_{i=1}^{n} \exp\left(i y_i x_i\right) (\nu \otimes \cdots \otimes \nu)(dy_1, \dots, dy_n) \newline
+&= \prod_{i=1}^{n} \int \exp\left(iy_i x_i \right) \nu(dy_i) \newline
+&= \prod_{i=1}^{n} \hat{\nu}(y_i) \newline
+&= \prod_{i=1}^{n} \exp\left(-\frac{1}{2}y_i^2\right) \newline
+&= \exp\left(-\frac{1}{2} \sum_{i=1}^{n} y_i^2 \right) \newline
+&= \exp\left(-\frac{1}{2} \langle Iy, y \rangle \right),
+\end{align}
+where we have used the Fourier transform of the univariate Gaussian measure $\nu$.
+We recognize the final expression to be the Fourier transform of a Gaussian measure
+with mean vector $0$ and covariance matrix $I$. $\qquad \blacksquare$
+
+** Proof of (7).** Proceeding with the main result, we first show that the
+random variable $X := m + AZ$ has law $\mathcal{N}(m, AA^\top)$. This follows
+immediately from the above lemma and basic facts about Fourier transforms.
+In particular, recall the following properties of Fourier transforms of some
+random vector $Y$:
+\begin{align}
+\mathbb{E}[e^{iAY}] &=
+\end{align}
+
+
 {% endkatexmm %}
 
 ## References
+
+## TODOs
+- Proof that zeros in covariance matrix imply independence.
+- Proof that zeros in precision matrix imply conditional independence.  
