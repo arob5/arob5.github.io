@@ -1,6 +1,6 @@
 ---
 title: The Kalman Filter - A Few Different Perspectives
-subtitle: I discuss the Kalman filter from both the Bayesian and optimization perspectives.
+subtitle: I discuss the Kalman filter from both the probabilistic and optimization perspectives.
 layout: default
 date: 2024-02-15
 keywords: Bayes, Filtering, Data-Assim
@@ -73,7 +73,7 @@ post. Derivations of these equations are given in the subsequent sections.
 <blockquote>
   <p><strong>Proposition.</strong>
   Given the state space model (1), the forecast and filtering
-  distributions are both Gaussian and are given by
+  distributions are both Gaussian
   \begin{align}
   &v_{k+1}|Y_{k} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1}),
   &&v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})
@@ -299,6 +299,27 @@ equations defining the complete maps
 $m_k \mapsto m_{k+1}$ and $C_k \mapsto C_{k+1}$.
 {% endkatexmm %}
 
+## Understanding the Kalman Gain
+<blockquote>
+  <p><strong>Proposition: Different Expressions for the Kalman Gain.</strong>
+  The Kalman gain
+  $$
+  K_{k+1} := \hat{C}_{k+1}H^\top \left(H\hat{C}_{k+1}H^\top + R\right)^{-1} \tag{9}
+  $$
+  admits the equivalent expressions
+  $$
+  K_{k+1} = \hat{C}^{vy}_{k+1}\left(\hat{C}^{y}_{k+1} \right)^{-1} \tag{10}
+  $$
+  and
+  $$
+  K_{k+1} = C_{k+1}H^\top R^{-1}. \tag{11}
+  $$
+  </p>
+</blockquote>
+The equivalence between (9) and (10) was already established in (7), and the
+equivalence of (11) is proved in the appendix.
+
+
 ## The Optimization Perspective
 {% katexmm %}
 The preceding derivations adopt a Bayesian perspective, with $m_k$ and $C_k$
@@ -432,6 +453,82 @@ of $(v_{k+1}, y_{k+1})$ depends on $2d+n$ sources of independent Gaussian noise.
 All of the interesting correlations and complexities stem from linearly combining
 these Gaussian variables.
 
-### Showing the Equivalence of the Two KF Formulas
+### The Woodbury Matrix Identity
+We state without proof the [Woodbury identity](https://en.wikipedia.org/wiki/Woodbury_matrix_identity)
+here, which is useful in converting between the state space and data space
+KF formulations.
 
+<blockquote>
+  <p><strong>Woodbury Matrix Identity.</strong>
+  Consider matrices $C \in \mathbb{R}^{n \times n}$, $A \in \mathbb{R}^{d \times d}$,
+  $U \in \mathbb{R}^{d \times n}$ and $V \in \mathbb{R}^{n \times d}$ such that
+  $C$, $A$, and $(A^{-1} + VC^{-1}U)$ are invertible. Then
+  $$
+  (C + UAV)^{-1} = C^{-1} - C^{-1}U\left(A^{-1} + VC^{-1}U \right)^{-1} VC^{-1}.
+  $$
+  </p>
+</blockquote>
+
+### Proof: Alternative Formula for the Kalman Gain
+In this section we verify formula (11), which claims that the Kalman gain (7)
+can also be written as
+$$
+K_{k+1} = C_{k+1}H^\top R^{-1}.
+$$
+This fact follows from the identity
+$$
+H^\top R^{-1}\left(H\hat{C}_{k+1}H^\top + R \right)
+= \left(\hat{C}^{-1}_{k+1} + H^\top R^{-1}H \right)\hat{C}_{k+1}H^\top,
+$$
+which can be verified by simply distributing the terms on each side of the
+equality. Under the KF
+assumptions, both terms in parentheses above are invertible; indeed,
+(1) $\left(H\hat{C}_{k+1}H^\top + R \right)$ is positive definite since $R$
+is positive definite; and (2) $\left(\hat{C}^{-1}_{k+1} + H^\top R^{-1}H \right)$
+is positive definite since $\hat{C}_{k+1}$ (and hence its inverse) is positive
+definite. An alternative sufficient condition for the latter expression to be
+positive definite is for $H$ to have full column rank. With the invertibility
+established, we obtain
+$$
+\left(\hat{C}^{-1}_{k+1} + H^\top R^{-1}H \right)^{-1} H^\top R^{-1}
+= \hat{C}_{k+1}H^\top \left(H\hat{C}_{k+1}H^\top + R \right)^{-1},
+$$
+where we recognize the righthand side as $K_{k+1}$. Plugging
+$\hat{C}_{k+1} = \left(\hat{C}^{-1}_{k+1} + H^\top R^{-1}H \right)^{-1}$ into the
+lefthand side completes the proof. $\qquad \blacksquare$
+
+
+### Proof: Equivalence of State Space and Data Space KF Updates
+We showed above that different derivations of the mean and covariance KF recursions
+result in different update formulae, one of which requires a matrix inversion in
+the $d$-dimensional state space and the other requires a matrix inversion in
+the $n$-dimensional data space. In this section, we prove the equivalence of these
+two representations by leveraging the Woodbury matrix identity and the alternative
+expression for the Kalman gain, both stated in the appendix above.
+
+Starting with the state space equations (3), we apply the Woodbury identity
+to the covariance update formula by setting (in the Woodbury notation used
+above) $C := \hat{C}^{-1}_{k+1}$, $A := R^{-1}$, $U := H^\top$, and $V := H$.
+Doing so yields
+$$
+\left(H^\top R^{-1} H + \hat{C}^{-1}_{k+1}\right)^{-1}
+= \hat{C}_{k+1} - \hat{C}_{k+1} H^\top \left(R + H \hat{C}_{k+1}H^\top \right)^{-1} H \hat{C}_{k+1}.
+$$
+Recognizing the Kalman gain $K_{k+1} = \hat{C}_{k+1} H^\top \left(R + H \hat{C}_{k+1}H^\top \right)^{-1}$ we see that the righthand side is equal to
+$(I - K_{k+1}H)\hat{C}_{k+1}$, which is the covariance update given in (8).
+We now proceed with the mean update formula. Again stating with the state space
+formulation (3), we have
+
+\begin{align}
+m\_{k+1}
+&= C\_{k+1}\left(H^\top R^{-1}y\_{k+1} + \hat{C}^{-1}\_{k+1} \hat{m}\_{k+1} \right) \newline
+&= \left(C\_{k+1}H^\top R^{-1}  \right)y\_{k+1} + C\_{k+1}\hat{C}^{-1}\_{k+1} \hat{m}\_{k+1} \newline
+&= K\_{k+1}y\_{k+1} + (I - K\_{k+1}H)\hat{C}\_{k+1} \hat{C}\_{k+1}^{-1}\hat{m}\_{k+1} \newline
+&= K\_{k+1}y\_{k+1} + (I - K\_{k+1}H) \hat{m}\_{k+1} \newline
+&= \hat{m}\_{k+1} + K\_{k+1}(y\_{k+1} - H\hat{m}\_{k+1}),
+\end{align}
+
+where the second equality uses the alternative expression for the Kalman gain
+(11) and the third plugs in the state space expression for $C_{k+1}$. We recognize
+the final expression as the mean update in (4), as desired. $\qquad \blacksquare$
 {% endkatexmm %}

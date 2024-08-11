@@ -4,7 +4,7 @@ subtitle: An introduction to Bregman divergence.
 layout: default
 date: 2024-08-07
 keywords:
-published: true
+published: false
 ---
 
 ## References
