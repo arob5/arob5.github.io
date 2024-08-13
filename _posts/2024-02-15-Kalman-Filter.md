@@ -516,7 +516,7 @@ $$
 $$
 Recognizing the Kalman gain $K_{k+1} = \hat{C}_{k+1} H^\top \left(R + H \hat{C}_{k+1}H^\top \right)^{-1}$ we see that the righthand side is equal to
 $(I - K_{k+1}H)\hat{C}_{k+1}$, which is the covariance update given in (8).
-We now proceed with the mean update formula. Again stating with the state space
+We now proceed with the mean update formula. Again starting with the state space
 formulation (3), we have
 
 \begin{align}

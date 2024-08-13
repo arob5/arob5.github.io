@@ -21,7 +21,7 @@ with such a simulation:
 - Integrate $f$ over some domain of interest [numerical integration]
 - Find input values $x \in \mathbb{R}^d$ to make
 $f(x)$ agree with some observed data [calibration]
-- Assess how the the function outputs $f(x)$ vary as the inputs $x$ change
+- Assess how the function outputs $f(x)$ vary as the inputs $x$ change
 [sensitivity analysis]
 - Fit a cheaper-to-evaluate surrogate model that approximates
 $f$ [emulation/surrogate modeling]
@@ -88,7 +88,7 @@ varies along each coordinate direction, on average. However, it may be the case
 that the function varies most significantly on a subspace not aligned with
 the standard coordinate directions. Thus, the idea of active subspaces
 is to utilize the information in these gradient observations to try to find
-such a subspace; that is, to find *linear combinations* of the the coordinate
+such a subspace; that is, to find *linear combinations* of the coordinate
 directions along which $f$ exhibits the largest variation. At this point,
 the idea here should be sounding quite reminiscent of principal components
 analysis (PCA). Indeed, there are close ties between the two methods. We therefore
@@ -109,7 +109,7 @@ empirical mean has been subtracted from each input.
 We can stack the
 transpose of these vectors row-wise to obtain a matrix $X \in \mathbb{R}^{n \times d}$.
 The data has $d$ features, and the goal of PCA is to construct a new set of
-$r < d$ linear combinations that explain the majority of variation in the data.
+$r \leq d$ linear combinations that explain the majority of variation in the data.
 This is accomplished via an eigendecomposition of the matrix
 $$
 \hat{C} = X^\top X = \sum_{i=1}^{n} x_i x_i^T,
@@ -152,7 +152,7 @@ seeks to capture the variation in $x(\omega)$.
 {% endkatexmm %}
 
 # Motivating Active Subspaces via PCA
-## Doing PCA on the Gradient
+## PCA on the Gradient
 {% katexmm %}
 In seeking active subspaces, we might try to perform PCA directly on $X$ in
 order to capture its dominant directions of variation. However, this approach
@@ -265,7 +265,7 @@ basic properties.
 
 ## Active and Inactive Variables
 Since the active subspace is $r$-dimensional, we can represent vectors
-living in this subspace with $r < d$ coordinates. It is this fact that allows
+living in this subspace with $r \leq d$ coordinates. It is this fact that allows
 for useful dimensionality reduction in downstream applications.
 Given an input $x \in \mathbb{R}^d$ we want to identify the vector in
 the active subspace that provides the best approximation to $x$. The optimal
@@ -326,13 +326,13 @@ to when we vary $z$.
   as functions of $y$ or $z$ only. Then,  
   \begin{align}
   \mathbb{E} \lVert D (f \circ T_{z})(y) \rVert_2^2 &= \lambda_1 + \cdots + \lambda_r \newline
-  \mathbb{E} \lVert D (f \circ S_{y})(z) \rVert_2^2 &= \lambda_{r+1} + \cdots + \lambda_d.
+  \mathbb{E} \lVert D (f \circ T_{y})(z) \rVert_2^2 &= \lambda_{r+1} + \cdots + \lambda_d.
   \end{align}
   </p>
 </blockquote>
 
 **Proof.**
-We only prove the result for $T_z(y)$, as the proof for $S_y(z)$ is nearly
+We only prove the result for $T_z(y)$, as the proof for $T_y(z)$ is nearly
 identical. By the chain rule we have
 \begin{align}
 D (f \circ T_{z})(y)
@@ -419,7 +419,7 @@ of a Gaussian, then we immediately have that
 $$
 u \sim \mathcal{N}(V^\top m, V^\top \Sigma V). \tag{8}
 $$
-Therefore, $\tilde{\rho}(u^\prime) = \mathcal{N}(\tilde{\rho} | V^\top m, V^\top \Sigma V)$.
+Therefore, $\tilde{\rho}(u^\prime) = \mathcal{N}(u^\prime | V^\top m, V^\top \Sigma V)$.
 In this case, the marginals and conditionals of $\tilde{\rho}$ are all
 available in closed-form using standard facts about Gaussians. If we consider
 the case where $\mu$ is standard Gaussian (i.e., $x \sim \mathcal{N}(0,I)$),

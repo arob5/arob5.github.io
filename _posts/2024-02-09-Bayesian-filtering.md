@@ -28,48 +28,55 @@ well as an estimate of the uncertainty. This will be made precise below.
 The stochastic dynamics and observational process are defined below, formulated
 as a Markov state space model (i.e., a hidden Markov model),
 \begin{align}
-v_{k+1} &\sim G(v_k, \cdot) \newline
+v_{k+1} &\sim G(v_k, \cdot) \tag{1} \newline
 y_{k+1} &\sim H(v_{k+1}, \cdot) \newline
 v_0 &\sim \mu_0
 \end{align}
 where $G$ and $H$ are probability kernels defining the stochastic dynamics and
 observation process, respectively, and $v_0$ is the initial condition distributed
-according to distribution $\mu_0$. We also require the crucial independence
+according to distribution $\mu_0$. We will also make the following independence
 assumptions:
 1. For all $j,k$, the distributions $H(v_{k}, \cdot)$ and
 $G(v_j, \cdot)$ are independent.
 2. For all $j \neq k$, the distributions $H(v_{k}, \cdot)$ and $H(v_{j}, \cdot)$
-are independent. Similarly, $G(v_{k}, \cdot)$ and $G(v_{j}, \cdot)$ are
+are independent.
+3. For all $j \neq k$, the distributions $G(v_{k}, \cdot)$ and $G(v_{j}, \cdot)$ are
 independent.
-3. The initial condition $v_0$ is independent of all of these distributions
+4. The initial condition $v_0$ is independent of all of these distributions
 as well.
 
 In words, the first assumption is requiring that the dynamical noise is
-independent of the observation noise. The second assumption assumes a classical
-iid noise model for the observation process, as well as a time-homogenous Markov
-model for the dynamics. This state space model is quite general; it is
-typical to consider the restricted setting of an additive noise model, in which  
+independent of the observation noise. The second assumption assumes the observation
+noise is independent across time. The third assumption implies a time-homogenous Markov
+model for the dynamics. This state space model is quite general; in a series of
+posts on various filtering methods we will focus on special cases of this
+general formulation. We will often restrict our attention to the popular
+case of an additive noise model, in which  
 the dynamics $G(v_k, \cdot)$ are given by some deterministic
 update $g(v_k)$ plus some noise $\eta_{k+1}$, and similarly for
-the observation process. These assumptions
+the observation process. Concretely,
 yield
 \begin{align}
-v_{k+1} &= g(v_k) + \eta_{k+1}  \newline
+v_{k+1} &= g(v_k) + \eta_{k+1} \tag{2} \newline
 y_{k+1} &= h(v_{k+1}) + \epsilon_{k+1}, \newline
-v_0 &\sim \mu_0
+v_0 &\sim \mu_0,
 \end{align}
 {% endkatexmm %}
 where we emphasize that in general the non-random functions $g$ and $h$ may be
 nonlinear and the random variables $\{\eta_k\}$, $\{\epsilon_k\}$ may be
 non-Gaussian. The independence assumptions are easier to state in this special
-case, simply requiring that $\{\eta_k\}$, $\{\epsilon_k\}$, and $v_0$ are all
-pairwise independent. While this additive noise model is quite common, all
-of the calculations later in this post go through under the more general setting.
-
-To wrap up establishing notation, we suppose the states $v_k$
-and observations $y_k$ are $d$-dimensional and $n$-dimensional vectors,
-respectively. Also, let $Y_k := \\{y_1, \dots, y_k\\}$ collect all observations
-up through time $k$ and similarly for the states $V_k := \\{v_1, \dots, v_k\\}$.
+case, reducing to the assumption that
+$\{\eta_k\} \perp \{\epsilon_k\} \perp v_0$; that is, all of these random variables
+are pairwise independent. For example, $\eta_k$ is independent
+of all other $\eta_j$ and all $\epsilon_k$, in addition to $v_0$.
+In future posts, we will consider algorithms that are specialized to the
+additive noise setting, but in this introduction all of the calculations will
+go through under the generic formulation (1).
+To complete our setup, we assume $v_k \in \mathbb{R}^d$ and $y_k \in \mathbb{R}^n$
+and introduce the notation $Y_k := \\{y_1, \dots, y_k\\}$, the
+set of all observations up through time $k$. We similarly write
+$V_k := \\{v_0, v_1, \dots, v_k\\}$ to denote the set of states through time
+$k$.
 
 ### A Pure Probabilistic Modeling Perspective
 Defining the probability kernels $G$ and $H$ is a convenient way to encode
@@ -380,6 +387,4 @@ while the fourth applies Bayes' rule.
 
 
 ## TODOs
-* Add independence assumptions in state space model.
 * Add graphical plot of state space model.
-* Why MCMC is inefficient in this setting.

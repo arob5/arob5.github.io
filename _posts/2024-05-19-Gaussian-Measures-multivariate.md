@@ -274,12 +274,12 @@ We immediately have a variety of equivalent expressions for this operator:
 \mathcal{C}\left(y, y^\prime \right)
 &= \langle Cy, y^\prime\rangle \newline
 &= y^\top \left[\int (x - m)(x - m)^\top \mu(dx)\right] y^\prime \newline
-&= \int \langle y, x - m\rangle \langle y^\prime, x - m \langle \mu(dx).
+&= \int \langle y, x - m\rangle \langle y^\prime, x - m \rangle \mu(dx).
 \end{align}
 In terms of the random variable $X \sim \mu$, we can also write this as
 \begin{align}
 \mathcal{C}\left(y, y^\prime \right)
-&= \int \langle y, x - m\rangle \langle y^\prime, x - m \langle \mu(dx) \newline
+&= \int \langle y, x - m\rangle \langle y^\prime, x - m \rangle \mu(dx) \newline
 &= \int \left[\langle y, x\rangle - \langle y, \mathbb{E}[X]\rangle\right]
 \left[\langle y^\prime, x\rangle - \langle y^\prime, \mathbb{E}[X]\rangle\right] \mu(dx) \newline
 &= \text{Cov}\left[\langle y,X\rangle, \langle y^\prime,X\rangle \right].
@@ -287,7 +287,7 @@ In terms of the random variable $X \sim \mu$, we can also write this as
 In words, the covariance operator $\mathcal{C}\left(y, y^\prime \right)$ outputs
 the covariance between the one dimensional projections of $X$ along the directions
 $y$ and $y^\prime$. Given that the multivariate Gaussian measure is defined in terms
-of its one-dimensional projections, this definitely should feel fairly natural.
+of its one-dimensional projections, this should feel fairly natural.
 In fact, we see that the Fourier transform of $\mu$ can be written as
 $$
 \hat{\mu}(y) = \exp\left\{i\langle y, m\rangle - \frac{1}{2}\mathcal{C}(y,y) \right\}.
@@ -437,8 +437,8 @@ and consider
 \begin{align}
 \hat{\mu}(y)
 &= \int e^{i \langle y, x\rangle} \mu(dx) \newline
-&= \int \prod_{i=1}^{n} \exp\left(i y_i x_i\right) (\nu \otimes \cdots \otimes \nu)(dy_1, \dots, dy_n) \newline
-&= \prod_{i=1}^{n} \int \exp\left(iy_i x_i \right) \nu(dy_i) \newline
+&= \int \prod_{i=1}^{n} \exp\left(i y_i x_i\right) (\nu \otimes \cdots \otimes \nu)(dx_1, \dots, dx_n) \newline
+&= \prod_{i=1}^{n} \int \exp\left(iy_i x_i \right) \nu(dx_i) \newline
 &= \prod_{i=1}^{n} \hat{\nu}(y_i) \newline
 &= \prod_{i=1}^{n} \exp\left(-\frac{1}{2}y_i^2\right) \newline
 &= \exp\left(-\frac{1}{2} \sum_{i=1}^{n} y_i^2 \right) \newline
@@ -448,19 +448,49 @@ where we have used the Fourier transform of the univariate Gaussian measure $\nu
 We recognize the final expression to be the Fourier transform of a Gaussian measure
 with mean vector $0$ and covariance matrix $I$. $\qquad \blacksquare$
 
-** Proof of (7).** Proceeding with the main result, we first show that the
+**Proof of (7).** Proceeding with the main result, we first show that the
 random variable $X := m + AZ$ has law $\mathcal{N}(m, AA^\top)$. This follows
 immediately from the above lemma and basic facts about Fourier transforms.
-In particular, recall the following properties of Fourier transforms of some
-random vector $Y$:
+In particular, recall the following properties of Fourier transforms.
+Recall that we write $\mathcal{L}(Y)$ to denote the law of a random variable
+$Y$, and thus $\hat{\mathcal{L}}(Y)$ is the Fourier transform of this law. We are interested
+in the Fourier transform
+$$
+\hat{\mathcal{L}}(X)
+= \hat{\mathcal{L}}(m + AZ),
+$$
+which is easily derived if one recalls the effect of affine transformations on
+Fourier transforms. To be self-contained, we derive the required results here;
+let $Y$ be an arbitrary $n$-dimensional random vector, and $m$, $A$ be non-random
+as above. Then,  
 \begin{align}
-\mathbb{E}[e^{iAY}] &=
+\hat{\mathcal{L}}(AY)(x)
+&= \mathbb{E}\left[\exp\left(i\langle x, AY\rangle \right) \right]
+= \mathbb{E}\left[\exp\left(i\langle A^\top x, Y\rangle \right) \right]  
+= \hat{\mathcal{L}}(Y)(A^\top x)
 \end{align}
-
+and
+\begin{align}
+\hat{\mathcal{L}}(m + Y)(x)
+&= \mathbb{E}\left[\exp\left(i\langle x, m+Y\rangle \right) \right]  
+= \exp\left(i\langle x, m\rangle \right)\mathbb{E}\left[\exp\left(i\langle x, Y\rangle \right) \right]
+= \exp\left(i\langle x, m\rangle \right) \hat{\mathcal{L}}(Y)(x).
+\end{align}
+We combine these two results to the present problem, obtaining
+\begin{align}
+\hat{\mathcal{L}}(X)(x)
+&= \hat{\mathcal{L}}(m + AZ)(x) \newline
+&= \exp\left(i\langle x, m\rangle \right) \hat{\mathcal{L}}(Z)(A^\top x) \newline
+&= \exp\left(i\langle x, m\rangle \right)\exp\left(-\frac{1}{2}\langle A^\top x, A^\top x\rangle \right) \newline
+&= \exp\left(i\langle x, m\rangle \right)\exp\left(-\frac{1}{2}\langle AA^\top x, x\rangle \right) \newline
+&= \exp\left(i\langle x, m\rangle - \frac{1}{2}\langle AA^\top x, x\rangle \right),
+\end{align}
+where we have used the fact
 
 {% endkatexmm %}
 
 ## References
+1. Gaussian Measures (Vladimir Bogachev)
 
 ## TODOs
 - Proof that zeros in covariance matrix imply independence.
