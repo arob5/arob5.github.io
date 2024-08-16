@@ -77,19 +77,53 @@ probability space the **prediction space**. The below definition
 summarizes this idea, and fills in some of the measure-theoretical details.
 
 <blockquote>
-  <p><strong>Definition.</strong>
-  Let $Y: \Omega^\prime \to (\mathcal{Y}, \mathcal{B})$ be a random variable
-  mapping from some underlying probability space
-  $(\Omega^\prime, \mathcal{B}^\prime, \mathbb{P})$.
+  <p><strong>Definition (Prediction Space).</strong>
+  Let $(\mathcal{Y}, \mathcal{B})$ be some measurable space of possible outcomes.    
   A prediction space is a probability space $(\Omega, \mathcal{A}, \mathbb{Q})$,
   along with a sub-$\sigma$-algebra $\mathcal{A}_1 \subseteq \mathcal{A}$,
-  where $\Omega = \mathcal{M} \times \mathcal{Y}$, where $\mathcal{M}$ is a space
-  of probability measures.
+  where $\Omega = \mathcal{M} \times \mathcal{Y}$ and $\mathcal{M}$ is a space
+  of probability measures over the measurable space $(\mathcal{Y}, \mathcal{B})$.
   </p>
 </blockquote>
 
+The sub-$\sigma$-algebra $\mathcal{A}_1$ can be interpreted as the knowledge,
+or information basis, available to the forecaster. The condition
+$\mathcal{A}_1 \subseteq \mathcal{A}$ thus encodes the natural assumption that
+"nature" has a larger information basis than the forecaster. While the above
+definition focuses on defining a suitable measure space, it will typically be
+convenient to work on the level of random variables (elements).
+
+<blockquote>
+  <p><strong>Prediction Spaces and Random Elements.</strong>
+  Given a prediction space $(\Omega, \mathcal{A}, \mathbb{Q})$, as above, we
+  will write $(\mu, Y)$ to denote a random element taking values in the
+  measurable space $(\Omega, \mathcal{A})$, and distributed according to
+  $\mathbb{Q}$. Formally, this random element is defined with respect to
+  some implicit underlying probability space
+  $(\Omega^\prime, \mathcal{B}^\prime, \mathbb{P}^\prime)$ such that
+  $(\mu, Y)(\cdot): \Omega^\prime \to \Omega$. The measure $\mathbb{Q}$ is
+  thus the distribution of the random element $(\mu, Y)$ given by the
+  push-forward $\mathbb{Q} = \mathbb{P}^\prime \circ (\mu, Y)^{-1}$.
+  </p>
+</blockquote>
+
+Note that I reserve the phrase *random variable* for random quantities assuming
+a finite number of values. Since, in general, $\mu$ lives in an infinite-dimensional
+space of measures I use the term *random element* or *random quantity*.
+The above definition of the random element interprets random outcomes
+$(\mu, Y)$ from the prediction space as a random element that inherits its
+randomness from some underlying probability space. To be clear on notation,
+$\mathcal{L}(\mu, Y) = \mathbb{Q}$ and $(\mu, Y) \sim \mathbb{Q}$ are two
+equivalent ways to express that the random element $(\mu, Y)$ is distributed
+according to $\mathbb{Q}$. 
+
+
 {% endkatexmm %}
 
+
+Let $Y: \Omega^\prime \to (\mathcal{Y}, \mathcal{B})$ be a random variable
+mapping from some underlying probability space
+$(\Omega^\prime, \mathcal{B}^\prime, \mathbb{P})$.
 
 
 
