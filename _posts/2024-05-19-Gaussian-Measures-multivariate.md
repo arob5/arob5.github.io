@@ -262,10 +262,10 @@ definition.
 <blockquote>
   <p><strong>Definition.</strong>
   Let $\mu$ be a Gaussian measure with Fourier transform given by (4). Then
-  the **covariance operator** of $\mu$ is defined as the function
+  the <strong>covariance operator</strong> of $\mu$ is defined as the function
   $\mathcal{C}: \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R}$ given by
   $$
-  \mathcal{C}\left(y, y^\prime \right) = \langle Cy, y^\prime\rangle.
+  \mathcal{C}\left(y, y^\prime \right) = \langle Cy, y^\prime\rangle. \tag{9}
   $$
   </p>
 </blockquote>
@@ -274,14 +274,16 @@ We immediately have a variety of equivalent expressions for this operator:
 \mathcal{C}\left(y, y^\prime \right)
 &= \langle Cy, y^\prime\rangle \newline
 &= y^\top \left[\int (x - m)(x - m)^\top \mu(dx)\right] y^\prime \newline
-&= \int \langle y, x - m\rangle \langle y^\prime, x - m \rangle \mu(dx).
+&= \int \langle y, x - m\rangle \langle y^\prime, x - m \rangle \mu(dx). \tag{10}
 \end{align}
 In terms of the random variable $X \sim \mu$, we can also write this as
 \begin{align}
 \mathcal{C}\left(y, y^\prime \right)
 &= \int \langle y, x - m\rangle \langle y^\prime, x - m \rangle \mu(dx) \newline
-&= \int \left[\langle y, x\rangle - \langle y, \mathbb{E}[X]\rangle\right]
-\left[\langle y^\prime, x\rangle - \langle y^\prime, \mathbb{E}[X]\rangle\right] \mu(dx) \newline
+&= \int \left(\langle y, x\rangle - \langle y, \mathbb{E}[X]\rangle\right)
+\left(\langle y^\prime, x\rangle - \langle y^\prime, \mathbb{E}[X]\rangle\right) \mu(dx) \newline
+&= \mathbb{E}\left[\left(\langle y, x\rangle - \mathbb{E} \langle y,X\rangle\right)
+\left(\langle y^\prime, x\rangle - \mathbb{E} \langle y^\prime,X\rangle\right)\right] \newline
 &= \text{Cov}\left[\langle y,X\rangle, \langle y^\prime,X\rangle \right].
 \end{align}
 In words, the covariance operator $\mathcal{C}\left(y, y^\prime \right)$ outputs
@@ -292,13 +294,120 @@ In fact, we see that the Fourier transform of $\mu$ can be written as
 $$
 \hat{\mu}(y) = \exp\left\{i\langle y, m\rangle - \frac{1}{2}\mathcal{C}(y,y) \right\}.
 $$
-As in the above expression, when the same argument is fed into both slots of
-the covariance operator, the result is seen to correspond to the variance of
+When the same argument is fed into both slots of
+the covariance operator (as is the case in the Fourier transform expression above),
+the result is seen to correspond to the variance of
 the one-dimensional projection:
 $$
 \mathcal{C}(y,y) = \text{Var}\left[\langle y, X\rangle \right].
 $$
 
+### Inner Products
+One feature that makes the covariance operator a convenient
+mathematical object to study is the inner product structure it provides.
+Indeed, the following result states that the covariance operator is
+*almost* an inner product, and is a true inner product when the covariance
+matrix $C$ is positive definite.
+<blockquote>
+  <p><strong>Proposition.</strong>
+  Let $\mu$ be a Gaussian measure with Fourier transform given by (4). Then
+  the covariance operator (9) is symmetric, bilinear, and positive semidefinite.
+  If $C$, the covariance matrix of $\mu$, is positive definite, then the covariance
+  operator is also positive definite and thus defines an inner product.  
+  </p>
+</blockquote>
+
+**Proof.**
+Bilinearity follows immediately from definition (9). Symmetry similarly follows,
+and is more immediately obvious in expression (10). Since $C$ is positive
+semidefinite, then
+$$
+\mathcal{C}(y,y) = \langle Cy, y\rangle \geq 0,
+$$
+so $\mathcal{C}$ is also positive semidefinite. The inequality is strict when
+$C$ is positive definite and $y \new 0$, in which case $\mathcal{C}(\cdot, \cdot)$
+is an inner product. $\qquad \blacksquare$
+
+We can therefore think of $\mathcal{C}$ as defining a new inner product by
+weighting the Euclidean inner product by a positive definite matrix $C$.
+
+### Alternative Definition
+As mentioned above, definitions of the covariance operator very slightly in the
+literature. One basic modification commonly seen is to assume that $\mu$ is
+centered (zero mean) and thus define the covariance operator as
+$$
+\mathcal{C}(y, y^\prime) := \int \langle y, x\rangle \langle y^\prime, x\rangle \mu(dx). \tag{12}
+$$
+This is done primarily for convenience, as one can always center a Gaussian
+measure and then add back the mean when needed. Indeed, assume we are working
+with a Gaussian measure with mean $m$. To apply (12), we center the measure, which
+formally means considering the pushforward $\nu := \mu \circ T^{-1}$ where
+$T(x) := x - m$. Using sub-scripts to indicate the measure associated with
+each operator, we apply the change-of-variables theorem to obtain
+\begin{align}
+\mathcal{C}_{\nu}(y, y^\prime)
+&= \int \langle y, x\rangle \langle y^\prime, x\rangle (\mu \circ T^{-1})(dx) \newline
+&= \int \langle y, T(x)\rangle \langle y^\prime, T(x)\rangle \mu(dx) \newline
+&= \int \langle y, x-m \rangle \langle y^\prime, x-m \rangle \mu(dx),
+\end{align}
+which we see agrees with (10), our (uncentered) definition of $\mathcal{C}$.
+Thus, our original definition (10) can be thought of as first centering the
+measure and then applying (12).
+
+
+### Dual Space Interpretation
+As we have done repeatedly throughout this post, we can identify
+$\mathbb{R}^n$ with its dual $(\mathbb{R}^n)^*$. This may seem needlessly pedantic
+in the present context, but becomes necessary when defining Gaussian measures
+on infinite-dimensional spaces. The expression (10) provides the natural jumping
+off point for reinterpreting the covariance operator as acting on
+linear functionals. To this end, we can consider re-defining the covariance
+operator as
+$\mathcal{C}: (\mathbb{R}^n)^* \times (\mathbb{R}^n)^* \to \mathbb{R}$, where
+$$
+\mathcal{C}(\ell, \ell^\prime)
+:= \int \ell(x-m) \ell^\prime(x-m) \mu(dx). \tag{11}
+$$
+By identifying each $y \in \mathbb{R}^n$ with its dual vector
+$\ell_y \in (\mathbb{R}^n)^*$, this definition is seen to agree with (9).
+Note that $\ell$ and $\ell^\prime$ are linear, so we could have
+equivalently defined $\mathcal{C}$ as
+$$
+\mathcal{C}(\ell, \ell^\prime)
+:= \int (\ell(x)-\ell(m)) (\ell^\prime(x)-\ell(m)) \mu(dx).
+$$
+
+The dual space interpretation also leads naturally to a closely-related operator.  
+<blockquote>
+  <p><strong>Definition.</strong>
+  Let $\mu$ be a Gaussian measure with Fourier transform given by (4) and
+  covariance operator $\mathcal{C}$. We define the linear operator
+  $\mathcal{C}^\prime: \mathbb{R}^n \to (\mathbb{R}^n)^*$ by
+  $$
+  \mathcal{C}^\prime(y)(\cdot) := \mathcal{C}(y, \cdot)
+  = \langle Cy, \cdot\rangle = \ell_{Cy}(\cdot)    \tag{12}
+  $$
+  </p>
+</blockquote>
+While this is sometimes also called the covariance operator, to avoid confusion
+we reserve this term for $\mathcal{C}$. Note that $\mathcal{C}$ maps an input
+$y$ to a *linear functional* $\ell_{Cy}$. Once again, we can think of instead
+defining the domain of $\mathcal{C}^\prime$ to be $(\mathbb{R}^n)^*$, which
+gives
+$$
+\mathcal{C}^\prime(\ell)(\ell^\prime)
+:= \mathcal{C}(\ell, \ell^\prime)
+= \int \ell(x-m) \ell^\prime(x-m) \mu(dx).    \tag{13}
+$$
+Notice that in this case $\mathcal{C}^\prime$ maps a dual vector $\ell$ to
+a *double* dual vector $\ell^\prime \mapsto \mathcal{C}(\ell, \ell^\prime)$;
+that is,
+$$
+\mathcal{C}^\prime: (\mathbb{R}^n)^* \to (\mathbb{R}^n)^{**}.
+$$
+Since $(\mathbb{R}^n)^{**}$ is isomorphic to $\mathbb{R}^n$, this change of
+perspective is not very consequential in the finite-dimensional setting, but
+such subtleties become more important in infinite dimensions.  
 {% endkatexmm %}
 
 
@@ -491,6 +600,7 @@ where we have used the fact
 
 ## References
 1. Gaussian Measures (Vladimir Bogachev)
+2. An Introduction to Stochastic PDEs (Martin Hairer)
 
 ## TODOs
 - Proof that zeros in covariance matrix imply independence.
