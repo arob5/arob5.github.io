@@ -332,3 +332,7 @@ $\frac{d\mu^y}{d\mu_U}(u)$ is given by the term in brackets.
 #### Verifying that the normalizing constant is well-defined  
 
 {% endkatexmm %}
+
+## References
+1. Gradient Flows: in Metric Spaces and in the Space of Probability Measures
+(results on disintigration of measures). 

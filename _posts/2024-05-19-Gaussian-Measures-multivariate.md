@@ -13,9 +13,11 @@ published: true
 Let $x, y \in \mathbb{R}^n$. Throughout this post,
 we write $\langle x, y \rangle = x^\top y$ for the standard
 inner product on $\mathbb{R}^n$, and $\lVert x \rVert_2 = \sqrt{\langle x, x \rangle}$
-the norm induced by this inner product. We will frequently consider linear
+the norm induced by this inner product. We write $L(\mathcal{X}, \mathcal{Y})$
+to denote the set of linear maps from $\mathcal{X}$ to $\mathcal{Y}$.
+We will frequently consider linear
 functions of the form $\ell: \mathbb{R}^n \to \mathbb{R}$, and denote the set
-of all such functions as $(\mathbb{R}^n)^*$. Every
+of all such functions as $(\mathbb{R}^n)^* := L(\mathbb{R}^n, \mathbb{R})$. Every
 $\ell \in (\mathbb{R}^n)^*$ can be uniquely represented as an inner product
 with some vector $y \in \mathbb{R}^n$. When we wish to make this identification
 explicit, we will write $\ell_y$ to denote the linear map given by
@@ -325,24 +327,71 @@ $$
 \mathcal{C}(y,y) = \langle Cy, y\rangle \geq 0,
 $$
 so $\mathcal{C}$ is also positive semidefinite. The inequality is strict when
-$C$ is positive definite and $y \new 0$, in which case $\mathcal{C}(\cdot, \cdot)$
+$C$ is positive definite and $y \neq 0$, in which case $\mathcal{C}(\cdot, \cdot)$
 is an inner product. $\qquad \blacksquare$
 
 We can therefore think of $\mathcal{C}$ as defining a new inner product by
 weighting the Euclidean inner product by a positive definite matrix $C$.
+
+### A Closely Related Operator
+Our definition for the covariance operator $\mathcal{C}$ arises form a
+looking at the quadratic form $\langle Cy, y\rangle$ (the expression that
+appears in the Fourier transform) in a new way. In particular, we viewed
+this as a function of two arguments, such that the above quadratic form
+is the value the function takes when both arguments happen to be $y$.
+We could look at this from yet another perspective by considering the
+quadratic form as a function of only one of its arguments, say, the left one.
+This gives another useful operator that is closely related to $\mathcal{C}$.
+
+<blockquote>
+  <p><strong>Definition.</strong>
+  Let $\mu$ be a Gaussian measure with mean $m$ and covariance matrix $C$. We
+  define the operator $\mathcal{C}^\prime: \mathbb{R}^n \to \mathbb{R}^n$ by
+  $$
+  \mathcal{C}^\prime(y) := Cy. \tag{12}
+  $$
+  </p>
+</blockquote>
+
+By plugging in the definition of the covariance matrix, we see that this is
+equivalent to
+$$
+\mathcal{C}^\prime(y) = Cy
+= \left(\int (x-m)(x-m)^\top \mu(dx)\right)y
+= \int (x-m) \langle x-m, y\rangle \mu(dx). \tag{13}
+$$
+We thus have the connection between $C$, $\mathcal{C}$, and $\mathcal{C}^\prime$:
+$$
+\langle Cy, y^\prime \rangle = \mathcal{C}(y, y^\prime) = \langle \mathcal{C}^\prime(y), y^\prime\rangle.
+$$
+While some sources also refer to $\mathcal{C}^\prime$ as the covariance operator,
+we will reserve this term for $\mathcal{C}$. The following result is immediate,
+since $\mathcal{C}^\prime$ inherits the claimed properties from $C$.
+<blockquote>
+  <p><strong>Proposition.</strong>
+  The linear operator $\mathcal{C}^\prime$ is self-adjoint and positive semidefinite.
+  </p>
+</blockquote>
+At this point, the definition of $\mathcal{C}^\prime$ seems rather unnecessary
+given its similarity to $C$. These are, after all, essentially the same objects
+aside from the fact that we view $C$ as an element of $\mathbb{R}^{n \times n}$
+and $\mathcal{C}^\prime$ as an element of $L(\mathbb{R}^n, \mathbb{R}^n)$, the
+set of linear maps from $\mathbb{R}^n$ to $\mathbb{R}^n$. These distinctions
+will become more consequential when we start considering Gaussian measures in
+more abstract settings.
 
 ### Alternative Definition
 As mentioned above, definitions of the covariance operator very slightly in the
 literature. One basic modification commonly seen is to assume that $\mu$ is
 centered (zero mean) and thus define the covariance operator as
 $$
-\mathcal{C}(y, y^\prime) := \int \langle y, x\rangle \langle y^\prime, x\rangle \mu(dx). \tag{12}
+\mathcal{C}(y, y^\prime) := \int \langle y, x\rangle \langle y^\prime, x\rangle \mu(dx). \tag{14}
 $$
 This is done primarily for convenience, as one can always center a Gaussian
 measure and then add back the mean when needed. Indeed, assume we are working
-with a Gaussian measure with mean $m$. To apply (12), we center the measure, which
+with a Gaussian measure with mean $m$. To apply (14), we center the measure, which
 formally means considering the pushforward $\nu := \mu \circ T^{-1}$ where
-$T(x) := x - m$. Using sub-scripts to indicate the measure associated with
+$T(x) := x - m$. Using subscripts to indicate the measure associated with
 each operator, we apply the change-of-variables theorem to obtain
 \begin{align}
 \mathcal{C}_{\nu}(y, y^\prime)
@@ -352,8 +401,12 @@ each operator, we apply the change-of-variables theorem to obtain
 \end{align}
 which we see agrees with (10), our (uncentered) definition of $\mathcal{C}$.
 Thus, our original definition (10) can be thought of as first centering the
-measure and then applying (12).
-
+measure and then applying (14). We could similarly have defined $\mathcal{C}^\prime$
+in this way, via
+$$
+\mathcal{C}^\prime(y) := \int x \langle y,x\rangle \mu(dx).
+$$
+This is simply (13) with $m=0$.
 
 ### Dual Space Interpretation
 As we have done repeatedly throughout this post, we can identify
@@ -366,7 +419,7 @@ operator as
 $\mathcal{C}: (\mathbb{R}^n)^* \times (\mathbb{R}^n)^* \to \mathbb{R}$, where
 $$
 \mathcal{C}(\ell, \ell^\prime)
-:= \int \ell(x-m) \ell^\prime(x-m) \mu(dx). \tag{11}
+:= \int \ell(x-m) \ell^\prime(x-m) \mu(dx). \tag{15}
 $$
 By identifying each $y \in \mathbb{R}^n$ with its dual vector
 $\ell_y \in (\mathbb{R}^n)^*$, this definition is seen to agree with (9).
@@ -377,37 +430,41 @@ $$
 := \int (\ell(x)-\ell(m)) (\ell^\prime(x)-\ell(m)) \mu(dx).
 $$
 
-The dual space interpretation also leads naturally to a closely-related operator.  
-<blockquote>
-  <p><strong>Definition.</strong>
-  Let $\mu$ be a Gaussian measure with Fourier transform given by (4) and
-  covariance operator $\mathcal{C}$. We define the linear operator
-  $\mathcal{C}^\prime: \mathbb{R}^n \to (\mathbb{R}^n)^*$ by
-  $$
-  \mathcal{C}^\prime(y)(\cdot) := \mathcal{C}(y, \cdot)
-  = \langle Cy, \cdot\rangle = \ell_{Cy}(\cdot)    \tag{12}
-  $$
-  </p>
-</blockquote>
-While this is sometimes also called the covariance operator, to avoid confusion
-we reserve this term for $\mathcal{C}$. Note that $\mathcal{C}$ maps an input
-$y$ to a *linear functional* $\ell_{Cy}$. Once again, we can think of instead
-defining the domain of $\mathcal{C}^\prime$ to be $(\mathbb{R}^n)^*$, which
-gives
+We can similarly apply the dual space interpretation to $\mathcal{C}^\prime$.
+There are a view different ways we can think about this. Let's start by identifying
+the codomain of $\mathcal{C}^\prime$ with its dual and hence re-define this operator
+as $\mathcal{C}^\prime: \mathbb{R}^n \to (\mathbb{R}^n)^*$, where
+$$
+\mathcal{C}^\prime(y)(\cdot) := \mathcal{C}(y, \cdot)
+= \langle Cy, \cdot\rangle = \ell_{Cy}(\cdot) \tag{16}
+$$
+Under this definition, $\mathcal{C}$ maps an input
+$y \in \mathbb{R}^n$ to a *linear functional* $\ell_{Cy} \in (\mathbb{R}^n)^*$.
+Alternatively, we could identify the domain with its dual, and instead consider
+the operator $\mathcal{C}^\prime: (\mathbb{R}^n)^* \to \mathbb{R}^n$, where
+$$
+\mathcal{C}^\prime(\ell) := \int (x-m) \ell(x-m) \mu(dx). \tag{17}
+$$
+We can of course combine these two ideas and consider the map
+$\mathcal{C}^\prime: (\mathbb{R}^n)^* \to (\mathbb{R}^n)^*$. However, thinking
+ahead to more abstract settings, it is actually a bit more interesting to
+consider $\mathcal{C}^\prime: (\mathbb{R}^n)^* \to (\mathbb{R}^n)^{**}$ by
+identifying $\mathbb{R}^n$ with its *double dual*. From this perspective,
+the operator is defined by
 $$
 \mathcal{C}^\prime(\ell)(\ell^\prime)
 := \mathcal{C}(\ell, \ell^\prime)
-= \int \ell(x-m) \ell^\prime(x-m) \mu(dx).    \tag{13}
+= \int \ell(x-m) \ell^\prime(x-m) \mu(dx). \tag{18}
 $$
 Notice that in this case $\mathcal{C}^\prime$ maps a dual vector $\ell$ to
-a *double* dual vector $\ell^\prime \mapsto \mathcal{C}(\ell, \ell^\prime)$;
-that is,
-$$
-\mathcal{C}^\prime: (\mathbb{R}^n)^* \to (\mathbb{R}^n)^{**}.
-$$
-Since $(\mathbb{R}^n)^{**}$ is isomorphic to $\mathbb{R}^n$, this change of
-perspective is not very consequential in the finite-dimensional setting, but
-such subtleties become more important in infinite dimensions.  
+a *double* dual vector $\ell^\prime \mapsto \mathcal{C}(\ell, \ell^\prime)$
+(i.e., the output is itself a function that accepts a linear functional
+as input). Since, $\mathbb{R}^n$, $(\mathbb{R}^n)^*$, and $(\mathbb{R}^n)^{**}$
+are all isomorphic, in the present setting these various perspectives are
+interesting but perhaps a bit overkill. When we consider the infinite-dimensional
+setting in the subsequent post, not all of these perspectives will generalize.
+The key will be identifying the perspective that does actually generalize to
+infinite dimensional settings. 
 {% endkatexmm %}
 
 
