@@ -48,7 +48,7 @@ the variation in the outputs.
 
 ## A Basis Representation of the Output Space
 Let's start by considering approximately representing vectors in the range of $G$,
-denoted $\mathcal{R}(G)$, with respect to a set of orthonormal basis vectors
+denoted $\mathcal{R}(G)$, with respect to a set of $r \ll p$ orthonormal basis vectors
 $\{b_1, \dots, b_r\} \subset \mathbb{R}^p$. Given such a set of vectors, we can
 approximate $g \in \mathcal{R}(G)$ by its approximation onto the subspace
 $\text{span}(b_1, \dots, b_r)$:
@@ -65,7 +65,7 @@ $$
 $$
 We see that $B^\top B$ is the projection matrix that projects onto the span of the
 basis vectors. With regards to dimensionality reduction, the benefit here is that
-the simulator output can now be (approximately) represented using $r < p$ numbers
+the simulator output can now be (approximately) represented using $r \ll p$ numbers
 $B^\top g$. We can now ask the question: how do we find the basis vectors $B$?
 If we are given a set of vectors $g_1, \dots, g_n \in \mathcal{R}(G)$, we can take
 an empirical approach and try to use these examples to determine a $B$ that is
@@ -127,8 +127,35 @@ $\hat{G}^*_r(u)$ just requires (1) computing the GP prediction at $u$; and
 In this section, we take a step back and define the general emulation model utilizing
 both GPs and a basis representation of the model outputs. We then discuss the general
 procedure for learning the basis vectors $B$ from training data, and provide some
-specific details on fitting the GP emulators. 
+specific details on fitting the GP emulators. Given a set of vectors
+$\{b_1, \dots, b_r\} \subset \mathbb{R}^{p}$, we refer to
+\begin{align}
+\mathcal{G}(u) &= \sum_{j=1}^{r} w^*_j(u) b_j + \epsilon(u), \tag{3} \newline
+w^*_j &\sim \mathcal{GP}(\mu_j, k_j)
+\end{align}
+as the *basis function GP emulation model*. This decomposes the computer model
+output $\mathcal{G}(u)$ into (1) a piece that can be explained by a linear
+combination of $r$ basis functions;
+and (2) the residual $\epsilon(u)$, representing everything leftover. The
+basis functions are independent of the input $u$; the effect of the inputs
+is restricted to the coefficients $w_j(u)$, with unaccounted for $u$-dependence
+absorbed by the residual term $\epsilon(u)$. In the previous section, we considered
+the common setting where the basis decomposition was given by a standard application
+of PCA. In this case, the true weights are given by the projection coefficients  
+$$
+w_j(u) = \langle G(u), b_j \rangle. \tag{4}
+$$
+The GP emulator $w^*_j(u)$ thus seeks to approximate the
+inner product between $G(u)$ and $b_j$. It is worth noting that under this approch,
+we have therefore substituted the typical GP emulation strategy of directly
+approximating $G(u)$ with that of approximating inner products of $G(u)$ with a
+small number of basis vectors.
 
+It is important to emphasize that the model (3) extends beyond this PCA/orthogonal
+projection setting. Under different decomposition strategies, the true weights may
+not be given by the inner products (4). Nonetheless, we can still consider
+GP models to approximate the underlying weight maps $u \mapsto w_j(u)$, regardless of
+what form these maps may take.  
 
 
 The now classic 2008 Higdon et al paper proposes a solution that assumes a model
@@ -136,9 +163,7 @@ of the form
 \begin{align}
 \mathcal{G}(u) = \sum_{j=1}^{r} w_j(u) b_j + \epsilon(u), \tag{2}
 \end{align}
-where ideally $r \ll p$. This decomposes the computer model output $\mathcal{G}(u)$ into
-(1) a piece that can be explained by a linear combination of $r$ basis functions;
-and (2) the residual $\epsilon(u)$, representing everything leftover. The basis
+where ideally $r \ll p$.  The basis
 functions $b_1, \dots, b_r \in \mathbb{R}^d$ are fixed in that they are not a
 function of the simulator inputs $u$. The dependence on $u$ is captured entirely
 by the basis function weights $w_j(u)$ and of course by the residual $\epsilon(u)$.
