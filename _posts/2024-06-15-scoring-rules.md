@@ -15,3 +15,7 @@ published: false
 - From Proper Scoring Rules to Max-Min Optimal Forecast Aggregation
 - Incentives in Computer Science Lecture #17: Scoring Rules and Peer Prediction (Incentivizing Honest Forecasts and Feedback) (Roughgarden)
 - Probabilistic forecasts, calibration and sharpness
+- Decomposition of the Continuous Ranked Probability Score for Ensemble Prediction Systems.
+- Scoring Rules for Continuous Probability Distributions.
+- On the effect of ensemble size on the discrete and continuous ranked probability scores.
+- Weighted scoringRules: Emphasising Particular Outcomes when Evaluating Probabilistic Forecasts

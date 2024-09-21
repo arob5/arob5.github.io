@@ -768,3 +768,6 @@ We finally arrive at the expression for the concentrated log marginal likelihood
 - Statistics or geostatistics? Sampling error or nugget effect? (Clark)
 - Michael Betencourt's very nice [post](https://betanalpha.github.io/assets/case_studies/gp_part3/part3.html#4_adding_an_informative_prior_for_the_length_scale) on setting
 priors on GP hyperparameters.
+- Large-Scale Spatial Modeling via Local Approximate Gaussian Processes in R.
+(nice discussion of setting ranges for hyperparameters in the appendix; see
+laGP function `darg`). 

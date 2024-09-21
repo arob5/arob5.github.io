@@ -49,3 +49,4 @@ published: false
 - Bayesian nonparametric generative modeling of large multivariate non-Gaussian spatial fields
 - http://www.birs.ca/events/2017/5-day-workshops/17w5072/videos/watch/201710121040-Marzouk.html
 - Flow-based Deep Generative Models (blog): https://lilianweng.github.io/posts/2018-10-13-flow-models/
+- Generative Modeling by Estimating Gradients of the Data Distribution (Yang Song blog post)
