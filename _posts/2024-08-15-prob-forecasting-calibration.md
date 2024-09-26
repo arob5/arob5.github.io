@@ -17,7 +17,7 @@ distributions. This immediately leads to many challenging questions; perhaps
 the most obvious being *how do you evaluate the quality of a probabilistic forecast?*
 If I predict that there is a 90% chance it will rain tomorrow but it doesn't rain,
 did I do a bad job? Or was my probabilistic forecast reasonable but the
-realized event just happened to fall in that 10% "no rain" tail? As we will see,
+realized outcome just happened to fall in that 10% "no rain" tail? As we will see,
 trying to answer questions like these by intuition alone can lead to sub-optimal
 strategies and counterintuitive results. A mathematical theory of forecasting
 provides the foundation to rigorously study such questions.
@@ -59,7 +59,7 @@ main quantities of interest here are the forecast $\mu$ and the observation
 $Y$: the forecaster issues a forecast and then observes the realization.
 
 While modeling $Y$ as a random quantity is a straightforward choice, we will
-also make the, perhaps less obvious, decision to treat the forecast $\mu$
+also make the (perhaps less intuitive) decision to treat the forecast $\mu$
 itself as a random element. That is, we model the forecast as a
 *random (probability) measure*. Think about how forecasts might be obtained
 in practice, via a combination of data, models, assumptions, expert options, etc.
@@ -121,7 +121,7 @@ according to $\mathbb{Q}$. As mentioned above, we interpret $\mathcal{A}_1$
 as the knowledge available to the forecaster; hence, we should require that
 the random measure $\mu$ be measurable with respect to $\mathcal{A}_1$. It need
 not be measurable with respect to nature's knowledge $\mathcal{A}$, as the
-forecasters knowledge base may be more limited.
+forecaster's knowledge base may be more limited.
 
 <blockquote>
   <p><strong>Assumption.</strong>
@@ -159,7 +159,7 @@ previous definition to this special case.
 <blockquote>
   <p><strong>Definition (Prediction Space in the Scalar Setting).</strong>
   Let $\mathcal{M}$ denote a space of probability measures over
-  $(\mathbb{R}, \mathcal{B})$, where $\mathbb{B}$ is the Borel $\sigma$-algebra
+  $(\mathbb{R}, \mathcal{B})$, where $\mathcal{B}$ is the Borel $\sigma$-algebra
   on the real line. In this setting, a prediction space is a probability space
   $(\Omega, \mathcal{A}, \mathbb{Q})$, where
   $\Omega = \mathcal{M} \times \mathbb{R}$, along with a sub-$\sigma$-algebra

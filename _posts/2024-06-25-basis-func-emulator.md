@@ -42,8 +42,9 @@ structure. The method discussed in this post seeks to take advantage of such
 structure by finding a small set of basis vectors that explain the majority of
 the variation in the outputs.
 {% endkatexmm %}
-{% katexmm %}
 
+
+{% katexmm %}
 # Basis Representation
 
 ## A Basis Representation of the Output Space
@@ -129,10 +130,12 @@ both GPs and a basis representation of the model outputs. We then discuss the ge
 procedure for learning the basis vectors $B$ from training data, and provide some
 specific details on fitting the GP emulators. Given a set of vectors
 $\{b_1, \dots, b_r\} \subset \mathbb{R}^{p}$, we refer to
-\begin{align}
-\mathcal{G}(u) &= \sum_{j=1}^{r} w^*_j(u) b_j + \epsilon(u), \tag{3} \newline
-w^*_j &\sim \mathcal{GP}(\mu_j, k_j)
-\end{align}
+
+$$
+G(u) = \sum_{j=1}^{r} w^*_j(u) b_j + \epsilon(u),
+\qquad w^*_j \sim \mathcal{GP}(\mu_j, k_j) \tag{3}
+$$
+
 as the *basis function GP emulation model*. This decomposes the computer model
 output $\mathcal{G}(u)$ into (1) a piece that can be explained by a linear
 combination of $r$ basis functions;
@@ -146,42 +149,41 @@ $$
 w_j(u) = \langle G(u), b_j \rangle. \tag{4}
 $$
 The GP emulator $w^*_j(u)$ thus seeks to approximate the
-inner product between $G(u)$ and $b_j$. It is worth noting that under this approch,
+inner product between $G(u)$ and $b_j$. It is worth noting that under this approach,
 we have therefore substituted the typical GP emulation strategy of directly
 approximating $G(u)$ with that of approximating inner products of $G(u)$ with a
-small number of basis vectors.
+small number of basis vectors. The hope is that $r$ can be chosen sufficiently
+small enough so that we don't have to fit too many univariate GPs, while also
+ensuring that the $r$ basis functions explain the majority of the variation in
+the output; i.e., that $\epsilon(u)$ is not too large.
 
 It is important to emphasize that the model (3) extends beyond this PCA/orthogonal
 projection setting. Under different decomposition strategies, the true weights may
 not be given by the inner products (4). Nonetheless, we can still consider
 GP models to approximate the underlying weight maps $u \mapsto w_j(u)$, regardless of
-what form these maps may take.  
-
-
-The now classic 2008 Higdon et al paper proposes a solution that assumes a model
-of the form
-\begin{align}
-\mathcal{G}(u) = \sum_{j=1}^{r} w_j(u) b_j + \epsilon(u), \tag{2}
-\end{align}
-where ideally $r \ll p$.  The basis
-functions $b_1, \dots, b_r \in \mathbb{R}^d$ are fixed in that they are not a
-function of the simulator inputs $u$. The dependence on $u$ is captured entirely
-by the basis function weights $w_j(u)$ and of course by the residual $\epsilon(u)$.
-The emulation problem has thus been decomposed into $r$ easier univariate
-emulation problems; that is, the task is now to emulate the maps
-\begin{align}
-&w_j: \mathcal{U} \to \mathbb{R}, &&j = 1, \dots, r.
-\end{align}
-The hope is that $r$ can be chosen sufficiently small enough so that we don't
-have to fit too many univariate GPs, while also ensuring that the $r$ basis
-functions explain the majority of the variation in the output; i.e., that
-$\epsilon(u)$ is not too large. The following sections describe these concepts
-in greater detail.
+what form these maps may take. The basis function GP emulation model (3) was first
+proposed in Higdon et al (2008).
 {% endkatexmm %}
 
 {% katexmm %}
-# Finding the Basis Functions
-The natural question is how to actually identify and compute the $b_j$. The
+## Finding the Basis Functions
+The natural question is how to actually identify and compute the $b_j$. In the
+absence of prior knowledge, the only recourse is to run the simulation $G(u)$
+at a variety of different input points $u$ in order to understand the
+patterns of variability in model outputs. We refer to the resulting input-output  
+pairs
+$$
+\{u_i, G(u_i)\}, \qquad i = 1, \dots, n
+$$
+as the *design*. It practice, the availability of parallel computing resources
+typically means that model simulations can be run in parallel, thus
+reducing the computational cost of generating the design. The input design points
+$u_i$ are often chosen to vary "uniformly" over the input space $\mathcal{U}$
+in some sense. This means that the set of corresponding outputs $G(u_i)$ can be
+thought of as representative of variation in the simulator output under typical
+use cases.  
+
+The
 general idea is to learn the basis vectors from the design
 $\{u_i, \mathcal{G}(u_i)\}_{i=1}^{n}$.
 Let us suppose that we have collected the outputs these $n$ simulations into a
@@ -200,9 +202,12 @@ value decomposition (SVD). I have a whole in-depth
 [post](https://arob5.github.io/blog/2023/12/15/PCA/) on principal components
 analysis (PCA), so I will assume general background knowledge on this topic.
 In typical PCA fashion, we start by centering $G$ so that
-
 {% endkatexmm %}
 
 
 # References
 - Computer Model Calibration using High Dimensional Output (Higdon et al., 2008)
+- JMS&Williamson D. B. (2020). ”Efficient calibration for high-dimensional computer model output using basis methods”. arXiv preprint arXiv:1906.05758
+- JMS, Dodwell T.J., et al. (2021) ”A History Matching Approach to Building Full-Field Emulators in Composite Analysis”.
+- JMS, Williamson D. B., Scinocca J., and Kharin V. (2019). ”Uncertainty quantification for computer models with spatial output using calibration-optimal bases”. Journal of the American Statistical Association, 114.528, 1800-1814.
+- Chang, Won, et al. ”Probabilistic calibration of a Greenland Ice Sheet model using spatially resolved synthetic observations: toward projections of ice mass loss with uncertainties.” Geoscientific Model Development 7.5 (2014): 1933-1943.
