@@ -532,3 +532,6 @@ where the second equality uses the alternative expression for the Kalman gain
 (11) and the third plugs in the state space expression for $C_{k+1}$. We recognize
 the final expression as the mean update in (4), as desired. $\qquad \blacksquare$
 {% endkatexmm %}
+
+# References
+1. B. M. Bell and F. W. Cathey. The iterated Kalman filter update as a Gauss- Newton method. IEEE Transactions on Automatic Control, 38(2):294–297, 1993.
