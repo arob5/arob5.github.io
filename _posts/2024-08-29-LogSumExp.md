@@ -4,7 +4,7 @@ subtitle: Derivation of some variations of the LogSumExp trick for numerically s
 layout: default
 date: 2024-08-29
 keywords:
-published: true
+published: false
 ---
 
 {% katexmm %}
