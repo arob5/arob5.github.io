@@ -1,5 +1,5 @@
 ---
-title: Emulating Computer Models with many Outputs - The Basis Function Approach
+title: Basis Expansions for Black-Box Function Emulation
 subtitle: A discussion of the popular output dimensionality strategy for emulating multi-output functions.
 layout: default
 date: 2024-06-25
@@ -182,7 +182,7 @@ the basis functions.
 We emphasize that the basis functions are independent of the input $u$; the
 effect of the inputs is restricted to the coefficients $w_j(u)$, with unaccounted
 for $u$-dependence absorbed by the residual term $\epsilon(u)$. As noted in the
-previous section, if we opt for a PCA decomposition of the output space, then
+previous section, if we opt for an orthogonal projection approach, then
 the true weights assume the form
 $$
 w_j(u) = \langle \mathcal{G}(u), b_j \rangle, \tag{8}
@@ -285,7 +285,7 @@ all $j$. We summarize these ideas below.
   \hat{\mathcal{G}}_r(u)
   := \overline{g} + \sum_{j=1}^{r} \langle \mathcal{G}(u)-\overline{g}, v_j\rangle v_j + \epsilon(u), \tag{15}
   $$
-  where \overline{g} is defined in (10) and $v_1, \dots, v_p$ denote the
+  where $\overline{g}$ is defined in (10) and $v_1, \dots, v_p$ denote the
   normalized eigenvectors of the matrix defined in (11).
   The residual term is given by
   $$
