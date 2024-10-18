@@ -60,13 +60,12 @@ Throughout most of this post,
 we restrict to the choice of a Gaussian likelihood (as in (1)), in which case
 \begin{align}
 -\log p(y|u)
-&= -\log \mathcal{N}(y|\mathcal{G}(u),\Sigma)
-= -\frac{1}{2}\log\det(2\pi \Sigma) - \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma} \tag{4}
+&= -\log \mathcal{N}(y|\mathcal{G}(u),\Sigma) \newline
+&= \frac{1}{2}\log\det(2\pi \Sigma) + \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2\_{\Sigma} \tag{4}
 \end{align}
 and
 \begin{align}
-&\Phi(u) = \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma},
-&&C = -\frac{1}{2}\log\det(2\pi \Sigma).  \tag{5}
+&\Phi(u) = \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2\_{\Sigma}, &&C = \frac{1}{2}\log\det(2\pi \Sigma). \tag{5}
 \end{align}
 As above, we will use the notation
 $$
@@ -189,7 +188,7 @@ Up to this point, we have not discussed the choice of the moments defining the
 joint Gaussian approximation (6). We now provide these definitions, leading to
 concrete algorithms for posterior approximation. We will adopt a Monte Carlo
 strategy by sampling independently from the *true* joint distribution $(u,y)$
-defined by (1); i.e., $(u^{(j)}, y^{(j)}) \sim p(u,y)$. We will compute the
+defined by (1); i.e., $(u^{(j)}, y^{(j)}) \sim p(u,y)$. We next compute the
 empirical means and covariances of these random draws and insert them into
 the joint Gaussian approximation (6). This subsection focuses on the estimation
 of these moments, which we will then follow by utilizing the above Gaussian
@@ -212,8 +211,8 @@ Starting with the $u$ marginal, we define the sample estimates
 \end{align}
 Alternatively, if the prior $\pi_0$ takes the form of a well-known distribution,
 then we can simply set $\overline{u}$ and/or $\hat{C}$ to the known moments
-of this distribution. We could likewise consider such estimates for the
-$\hat{y}$ portion of (6), defined with respect to the ensemble
+of this distribution. We can likewise consider such mean and covariance estimates
+for the $\hat{y}$ portion of (6), defined with respect to the ensemble
 $$
 \{y^{(j)}\}_{j=1}^{J}, \qquad\qquad y^{(j)} := \mathcal{G}(u^{(j)}) + \epsilon^{(j)}. \tag{17}
 $$
@@ -248,50 +247,75 @@ $$
 $$
 
 ## Gaussian Approximations of the Posterior
+At this point, we have obtained the joint approximation (6) derived by computing
+the sample moments as described in the previous subsection. The question is now
+how best to use this joint approximation in approximating the true posterior.
+The most straightforward approach is to simply define our approximate posterior
+to be $\hat{u}|[\hat{y}=y]$, the Gaussian conditional. This conditional is
+available in closed-form and is defined in equations (7), (8), and (9). Suppose,
+for whatever reason, we are only interested in a sample-based representation
+of this Gaussian conditional. In this case, we can apply the algorithm summarized
+in (11) and (12) based on Matheron's Rule. Explicitly, we construct an
+approximate posterior ensemble $\{\hat{u}_*^{(j)}\}_{j=1}^{J^\prime}$ via the
+update equation in (12),
+$$
+\hat{u}^{(j)}_* := \hat{u}^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}^{(j)}), \tag{24}
+$$
+for $j = 1, \dots, J^\prime$. At this point we should be quite clear about the
+definition of each term in (24). The mean and covariance estimates appearing in
+this expression are all derived from the ensemble
+$\{(u^{(j)}, \epsilon^{(j)})\}_{j=1}^{J}$ sampled from the *true* joint distribution
+implied by (1). On the other hand, $\{\hat{u}^{(j)}, \hat{y}^{(j)}\}_{j=1}^{J^\prime}$
+are samples from the *approximate* joint distribution defined in (6). This
+is simply an exact implementation of Matheron's rule under the joint distribution
+(6); i.e., the resulting ensemble $\{\hat{u}^{(j)}_*\}_{j=1}^{J^\prime}$ are
+iid samples from $\hat{u}|[\hat{y}=y]$. If it seems odd to dwell on this point,
+we note that we are primarily doing so to provide motivation for the alternative
+method discussed below.
 
 ## A Slight Tweak to Matheron's Rule: Beyond Gaussianity
-With these quantities defined, we are now ready to state the full algorithm.
-The method revolves around generating the initial ensembles, computing the
-sample estimates just discussed to define the joint approximation (6), and then
-applying update (12) to transform the prior samples into approximate posterior
-samples.
-
+As discussed above, a direct application of Matheron's rule to (6) results in
+an ensemble of samples from a Gaussian distribution, which we interpret as
+a sample-based approximation to the true posterior. We now consider constructing
+the ensemble $\{\hat{u}_*^{(j)}\}_{j=1}^{J}$ via the slightly different
+update rule
+$$
+\hat{u}^{(j)}_* := u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-y^{(j)}), \tag{25}
+$$
+for $j = 1, \dots, J$. This is precisely the update equation used in the analysis
+(i.e., update) step of the EnKF, so we refer to (25) as the *EnKF update*.
+The only difference from (24) is that we have replaced
+the samples $(\hat{u}^{(j)},\hat{y}^{(j)})$ from (6) with the samples
+$(u^{(j)}, y^{(j)})$ from the true joint distribution, as defined in (14) and
+(17). In other words, we now utilize the samples from the initial ensemble (the
+same samples used to compute the mean and covariance estimates). Thus, equation
+(25) can be viewed as an update to the initial ensemble,
+$$
+\{u^{(j)}\}_{j=1}^{J} \mapsto \{\hat{u}^{(j)}_*\}_{j=1}^{J}. \tag{26}
+$$
+The update (25) is somewhat heuristic, and it is difficult to assess the properties
+of the updated ensemble. Given that the initial ensemble will not in general
+constitute samples from a Gaussian (since $p(u,y)$ is in general non-Gaussian),
+then the updated ensemble will also generally be non-Gaussian distributed.
+If the inverse problem (1) is linear Gaussian, then the updates (24) and (25)
+are essentially equivalent. Beyond this special case, the hope is that the use
+of the true prior samples in the (25) will better approximate
+non-Gaussianity in the posterior distribution, as opposed to the Gaussian
+approximation implied by (24). The EnKF update can alternatively be justified
+from an optimization perspective, which we won't discuss here; see my
+[post](https://arob5.github.io/blog/2024/07/30/enkf/) on the EnKF for details.
+We conclude this section by summarizing the final algorithm.
 <blockquote>
-  <p><strong>Approximating Posterior with Gaussian Conditioning.</strong> <br><br>
+  <p><strong>Posterior Approximation via EnKF Update.</strong> <br><br>
   1. Generate the initial ensembles $\{u^{(j)}\}_{j=1}^{J}$ and $\{\mathcal{G}(u^{(j)})\}_{j=1}^{J}$, where $u^{(j)} \sim \pi_0$. <br>
   2. Compute the sample estimates $\overline{u}$, $\overline{y}$,
   $\hat{C}$, $\hat{C}^y$, and $\hat{C}^{uy}$ as defined in (20)-(23). <br>
-  3. Returned the updated ensemble $\{\hat{u}_*\}_{j=1}^{J}$ by applying the
-  update  
+  3. Return the updated ensemble $\{\hat{u}^{(j)}_*\}_{j=1}^{J}$ by applying the
+  EnKF update  
   $$
-  \hat{u}^{(j)}_* := u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}^{(j)}). \tag{24}
+  \hat{u}^{(j)}_* := u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}^{(j)}). \tag{27}
   $$
   </p>
 </blockquote>
-
-Before concluding this section, we make a few clarifying notes.
-1. While we have motivated the update (24) as a means to simulate from the
-conditional $\hat{u}|[\hat{y}=y]$, (24) makes a crucial deviation from this
-idea. Exact simulation from this approximate conditional would
-require first drawing marginal samples $\hat{u}^{(j)}$ distributed according
-to $\hat{u}$ in (6) and replacing $u^{(j)}$ by $\hat{u}^{(j)}$ in (24).
-If $\pi_0$ is Gaussian and the ensemble size is large enough so that the
-sample estimates are accurate, then these two approaches will coincide.
-Otherwise, we can think of (24) as a sort of hybrid version of Matheron's
-update, where the update formula is still based on the joint Gaussian (6), but
-the prior samples $u^{(j)}$, $y^{(j)}$ are based on the true prior $\pi_0$.
-2. We have defined the joint approximation (6) so that the first
-two moments of $(\hat{u},\hat{y})$ agree with the first two moments of $(u,y)$.
-When $(u,y)$ is non-Gaussian, the first two moments alone are not enough to
-characterize the full distribution.
-3. I concede that the notation $\overline{y}$ in (20) might seem a bit misleading,
-given that the average is over the $\mathcal{G}(u^{(j)})$, not the $y^{(j)}$.
-However, the a priori expectations of $\mathcal{G}(u)$ and $y$ agree (since the
-errors are assumed mean zero), and furthermore the notation stems from (6), as
-our current conditional simulation viewpoint revolves around approximating the
-distribution of $(u,y)$.
-
-# TODO: need to change notation in light of the fact that the update step is not actually just an application of Matheron's rule.
-
 
 {% endkatexmm %}
