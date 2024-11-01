@@ -15,9 +15,11 @@ norms weighted by a positive definite matrix $C$:
 \lVert v \rVert_C^2 &:= \langle v, v\rangle_C.
 \end{align}
 We will also require consideration of generalizing these expressions when $C$
-is strictly positive semidefinite. For a matrix $C$, we will denote by
-$\mathcal{R}(C)$ and $\mathcal{N}(C)$ its range (column space) and kernel (null
-space), respectively.
+is strictly positive semidefinite. The notation
+$\lVert \cdot \rVert$ and $\langle \cdot, \cdot \rangle$ denotes
+the standard Euclidean norm and inner product, respectively. For a matrix $C$,
+we will denote by $\mathcal{R}(C)$ and $\mathcal{N}(C)$ its range (column space) and
+kernel (null space), respectively.
 {% endkatexmm %}
 
 # Setup
@@ -86,8 +88,8 @@ Our goal is now to extend (1) to the case where $C$ need not be strictly
 positive definite. To start, note that when $C$ *is* positive definite, we have
 $$
 \lVert v - \hat{v}\rVert^2_C
-= \lVert C^{-1}(v-\hat{v}), v-\hat{v}\rVert
-= \lVert b, v-\hat{v} \rVert, \tag{8}
+= \langle C^{-1}(v-\hat{v}), v-\hat{v}\rangle
+= \langle b, v-\hat{v} \rangle, \tag{8}
 $$
 where $b \in \mathbb{R}^d$ solves
 $$
@@ -95,11 +97,13 @@ Cb = v - \hat{v}. \tag{9}
 $$
 When $C$ is invertible, the unique $b$ solving (9) is simply found by multiplying
 both sides by $C^{-1}$. When $C$ is not invertible, then there may be zero or
-infinitely many such solutions.
+infinitely many such solutions. As long as there is at least one solution to (9)
+we will see that we can give meaning to the expression
+$\lVert v - \hat{v}\rVert^2_C$ even when $C$ is only positive semidefinite.
 
 ### Joint optimization over $(v,b)$
 Let's consider the case where there is at least
-one solution to (9); i.e., $v - \hat{v} \in \mathcal{C}$. We define
+one solution to (9); i.e., $v - \hat{v} \in \mathcal{R}(C)$. We define
 $$
 \mathcal{B}(v) := \left\{b \in \mathbb{R}^d : Cb = v - \hat{v} \right\}, \tag{10}
 $$
@@ -107,7 +111,7 @@ the set of all solutions with respect to the input vector $v$. We therefore
 might consider generalizing (1) to
 $$
 \text{argmin}_{v \in \mathbb{R}^d} \text{argmin}_{b \in \mathcal{B}(v)}
-\frac{1}{2} \lVert y - h(v)\rVert_R^2 + \frac{1}{2} \langle b, v - \hat{v}\rangle, \tag{11}
+\left(\frac{1}{2} \lVert y - h(v)\rVert_R^2 + \frac{1}{2} \langle b, v - \hat{v}\rangle\right), \tag{11}
 $$
 where we are implicitly restricting the solution space to $v$ such that
 $\mathcal{B}(v)$ is not empty. To encode this constraint more explicitly, we
@@ -157,14 +161,14 @@ dependence on $b$, it follows that $\tilde{J}(v,b) = \tilde{J}(v,b^\prime)$.
 $\qquad \blacksquare$
 
 Thus, for each $v$ with $\mathcal{B}(v)$ non-empty, we can simply pick any element
-from $\mathcal{B}(v)$ to insert into $\langle b, v-\hat{v}\rangle$. The objective
+from $b \in \mathcal{B}(v)$ to insert into $\langle b, v-\hat{v}\rangle$. The objective
 will be well-defined since the above result verifies that the specific choice of
 $b$ is inconsequential. A natural choice is to choose the $b$ of minimal norm. That is,
 for $\mathcal{B}(v)$ non-empty, set
 $$
-b^{\dagger} := \text{argmin}_{b \in \mathcal{B}(v)} \lVert b \rVert_2. \tag{15}
+b^{\dagger} := \text{argmin}_{b \in \mathcal{B}(v)} \lVert b \rVert. \tag{15}
 $$
-This minimal norm solution is guaranteed to exist and is conveniently given
+This unique minimal norm solution is guaranteed to exist and is conveniently given
 by the Moore-Penrose pseudoinverse
 $$
 b^{\dagger} = C^{\dagger}(v - \hat{v}) = (AA^\top)^{\dagger}(v - \hat{v}). \tag{16}
@@ -207,7 +211,7 @@ v = \hat{v} + \sum_{j=1}^{J} w_j a_j = \hat{v} + Aw, \tag{20}
 $$
 for some weight vector $w := (w_1, \dots, w_J)^\top \in \mathbb{R}^J$. We
 have denoted the $j^{th}$ column of $A$ by $a_j \in \mathbb{R}^d$. If the
-columns of $A$ are linearly dependent, then $a_1, \dots, a_J$ provide a basis
+columns of $A$ are linearly independent, then $a_1, \dots, a_J$ provide a basis
 for $\mathcal{R}(A)$. If not, then there will be some redundancy in the weights
 and the representation (20) will not be unique. We can now substitute
 $\hat{v} + Aw$ for $v$ in (18) and thus formulate the optimization over the
@@ -223,7 +227,7 @@ We can simplify this even further using the following properties of the
 
 1. By definition, the pseudoinverse satisfies  $A = A(A^{\dagger}A)$.
 2. The matrix $A^{\dagger}A$ is a projection onto the rowspace of $A$; in
-particular it is idempotent (i.e., $(A^{\dagger}A)^2 = A^{\dagger}A$ and
+particular it is idempotent (i.e., $(A^{\dagger}A)^2 = A^{\dagger}A$) and
 symmetric.
 3. The following identity holds: $A^{\dagger} = A^\top (AA^\top)^{\dagger}$.
 
@@ -234,7 +238,7 @@ We can thus simplify the second term in (21) as
 = \langle (A^{\dagger}A)w, w\rangle
 &= \langle (A^{\dagger}A)^2w, w\rangle \newline
 &= \langle (A^{\dagger}A)w, (A^{\dagger}A)w\rangle \newline
-&= \lVert (A^{\dagger}A)w \rVert_2^2, \tag{22}
+&= \lVert (A^{\dagger}A)w \rVert^2, \tag{22}
 \end{align}
 where the second equality uses the third pseudinverse property above.
 The third and fourth equalities follow from the fact that $A^{\dagger}A$
@@ -247,11 +251,11 @@ $$
 Aw = A(A^{\dagger}A)w = A\tilde{w}, \tag{24}
 $$
 which allows us to replace $Aw$ by $A\tilde{w}$ in the first term in
-$21$. We obtain
+(21). We obtain
 $$
 \tilde{J}(\tilde{w})
 := \frac{1}{2} \lVert y - h(\hat{v} + A\tilde{w})\rVert_R^2 +
-\frac{1}{2} \lVert \tilde{w} \rVert_2^2 . \tag{25}
+\frac{1}{2} \lVert \tilde{w} \rVert^2 . \tag{25}
 $$
 We see that (25) is the sum of a model-data fit term plus a simple $L^2$ penalty
 on the weights. This final formulation is summarized below, where we have
@@ -266,7 +270,7 @@ re-labelled $\tilde{w}$ as $w$ to lighten notation.
   with objective function
   $$
   \tilde{J}(w) := \frac{1}{2} \lVert y - h(\hat{v} + Aw)\rVert_R^2 +
-  \frac{1}{2} \lVert w \rVert_2^2. \tag{27}
+  \frac{1}{2} \lVert w \rVert^2. \tag{27}
   $$
   </p>
 </blockquote>
@@ -277,8 +281,8 @@ weights to lie in the range of $A^{\dagger}A$. However, recalling that
 $A^{\dagger}A$ is an orthogonal projection, we have the following projection
 property:
 $$
-\lVert \tilde{w} \rVert_2^2
-= \lVert (A^{\dagger}A)w \rVert_2^2 \leq \lVert w \rVert_2^2. \tag{28}
+\lVert \tilde{w} \rVert^2
+= \lVert (A^{\dagger}A)w \rVert^2 \leq \lVert w \rVert^2. \tag{28}
 $$
 In other words, allowing the weights to be unconstrained can only increase the
 objective function (since switching $w$ and $\tilde{w}$ has no effect on the
