@@ -182,7 +182,7 @@ distribution $\hat{u}|[\hat{y}=y]$.
 </blockquote>
 {% endkatexmm %}
 
-## A Monte Carlo Approach
+## The Main Algorithm: Posterior Approximation
 {% katexmm %}
 Up to this point, we have not discussed the choice of the moments defining the
 joint Gaussian approximation (6). We now provide these definitions, leading to
@@ -190,11 +190,12 @@ concrete algorithms for posterior approximation. We will adopt a Monte Carlo
 strategy by sampling independently from the *true* joint distribution $(u,y)$
 defined by (1); i.e., $(u^{(j)}, y^{(j)}) \sim p(u,y)$. We next compute the
 empirical means and covariances of these random draws and insert them into
-the joint Gaussian approximation (6). This subsection focuses on the estimation
-of these moments, which we will then follow by utilizing the above Gaussian
-conditioning results to derive various approximations of $u|y$.
+the joint Gaussian approximation (6). The below subsection focuses on the
+estimation of these moments, which we will then follow by utilizing the above
+Gaussian conditioning results to derive various approximations of $u|y$.
 
-To be explicit, the first step in our approach requires generating the prior
+### Estimating the Gaussian Moments
+The first step in our approach requires generating the prior
 *ensemble*
 $$
 \{(u^{(j)}, \epsilon^{(j)})\}, \qquad j = 1, \dots, J \tag{13}
@@ -268,7 +269,7 @@ $\{(u^{(j)}, \epsilon^{(j)})\}_{j=1}^{J}$ sampled from the *true* joint distribu
 implied by (1). On the other hand, $\{\hat{u}^{(j)}, \hat{y}^{(j)}\}_{j=1}^{J^\prime}$
 are samples from the *approximate* joint distribution defined in (6). This
 is simply an exact implementation of Matheron's rule under the joint distribution
-(6); i.e., the resulting ensemble $\{\hat{u}^{(j)}_*\}_{j=1}^{J^\prime}$ are
+(6); i.e., the resulting ensemble $\{\hat{u}^{(j)}_*\}_{j=1}^{J^\prime}$ contains
 iid samples from $\hat{u}|[\hat{y}=y]$. If it seems odd to dwell on this point,
 we note that we are primarily doing so to provide motivation for the alternative
 method discussed below.
@@ -289,7 +290,7 @@ the samples $(\hat{u}^{(j)},\hat{y}^{(j)})$ from (6) with the samples
 $(u^{(j)}, y^{(j)})$ from the true joint distribution, as defined in (14) and
 (17). In other words, we now utilize the samples from the initial ensemble (the
 same samples used to compute the mean and covariance estimates). Thus, equation
-(25) can be viewed as an update to the initial ensemble,
+(25) can be viewed as a particle-by-particle update to the initial ensemble,
 $$
 \{u^{(j)}\}_{j=1}^{J} \mapsto \{\hat{u}^{(j)}_*\}_{j=1}^{J}. \tag{26}
 $$
@@ -299,7 +300,7 @@ constitute samples from a Gaussian (since $p(u,y)$ is in general non-Gaussian),
 then the updated ensemble will also generally be non-Gaussian distributed.
 If the inverse problem (1) is linear Gaussian, then the updates (24) and (25)
 are essentially equivalent. Beyond this special case, the hope is that the use
-of the true prior samples in the (25) will better approximate
+of the true prior samples in (25) will better approximate
 non-Gaussianity in the posterior distribution, as opposed to the Gaussian
 approximation implied by (24). The EnKF update can alternatively be justified
 from an optimization perspective, which we won't discuss here; see my
