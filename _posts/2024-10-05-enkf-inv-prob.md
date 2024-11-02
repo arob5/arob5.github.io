@@ -81,7 +81,7 @@ can be generalized to settings where $\mathcal{U}$ may be a function space; e.g.
 the prior distribution may be given by a Gaussian process.  
 {% endkatexmm %}
 
-# Joint Gaussian Conditioning
+# Background: Joint Gaussian Conditioning
 {% katexmm %}
 
 ## Joint Gaussian Assumption
@@ -182,7 +182,7 @@ distribution $\hat{u}|[\hat{y}=y]$.
 </blockquote>
 {% endkatexmm %}
 
-## The Main Algorithm: Posterior Approximation
+# Posterior Approximation Algorithm
 {% katexmm %}
 Up to this point, we have not discussed the choice of the moments defining the
 joint Gaussian approximation (6). We now provide these definitions, leading to
@@ -194,7 +194,7 @@ the joint Gaussian approximation (6). The below subsection focuses on the
 estimation of these moments, which we will then follow by utilizing the above
 Gaussian conditioning results to derive various approximations of $u|y$.
 
-### Estimating the Gaussian Moments
+## Estimating the Gaussian Moments
 The first step in our approach requires generating the prior
 *ensemble*
 $$
@@ -247,7 +247,7 @@ $$
 \hat{C}^{uy} := \frac{1}{J-1} \sum_{j=1}^{J} (u^{(j)}-\overline{u})(\mathcal{G}(u^{(j)})-\overline{y})^\top. \tag{23}
 $$
 
-## Gaussian Approximations of the Posterior
+## Gaussian Approximations
 At this point, we have obtained the joint approximation (6) derived by computing
 the sample moments as described in the previous subsection. The question is now
 how best to use this joint approximation in approximating the true posterior.
@@ -274,7 +274,7 @@ iid samples from $\hat{u}|[\hat{y}=y]$. If it seems odd to dwell on this point,
 we note that we are primarily doing so to provide motivation for the alternative
 method discussed below.
 
-## A Slight Tweak to Matheron's Rule: Beyond Gaussianity
+## Non-Gaussian Approximation via EnKF Update
 As discussed above, a direct application of Matheron's rule to (6) results in
 an ensemble of samples from a Gaussian distribution, which we interpret as
 a sample-based approximation to the true posterior. We now consider constructing
@@ -318,5 +318,134 @@ We conclude this section by summarizing the final algorithm.
   $$
   </p>
 </blockquote>
+{% endkatexmm %}
+
+# Artificial Dynamics
+As noted above, the approximation algorithm summarized in (27) can be viewed as
+performing an iteration of the EnKF algorithm. In this section, we take this idea
+further by encoding the structure of the inverse problem (1) in a dynamical
+system. Once these artificial dynamics are introduced, we can then consider
+applying standard algorithms for Bayesian estimation of time-evolving systems
+(e.g., the EnKF) to solve the inverse problem. We emphasize that (1),
+the original problem we are trying to solve, is static. The dynamics we
+introduce here are purely artificial, introduced for the purpose of making
+a mathematical connection with the vast field of time-varying systems. This
+allows us to port methods that have demonstrated success in the time-varying
+domain to our current problem of interest.
+
+{% katexmm %}
+## Prior-to-Posterior Map in Finite Time
+We start by generically considering how to construct a sequence of probability
+distributions that maps from the prior $\pi_0$ to the posterior $\pi$ in
+a finite number of steps. We will find it convenient to write the likelihood
+with respect to the potential $\Phi(u)$ defined in (3), such that the
+posterior distribution solving (1) is given by
+
+\begin{align}
+\pi(u) &= \frac{1}{Z} \pi_0(u)\exp(-\Phi(u)), &&Z = \int \pi_0(u)\exp(-\Phi(u)) du. \tag{28}
+\end{align}
+
+The following result describes a likelihood tempering approach to constructing
+the desired sequence of densities.
+
+<blockquote>
+  <p><strong>Prior-to-Posterior Sequence of Densities.</strong> <br><br>
+  For a positive integer $K$, define the sequence of densities
+  $\pi_0, \pi_1, \dots, \pi_K$ recursively by
+  \begin{align}
+  \pi_{k+1}(u) &:= \frac{1}{Z_{k+1}}\pi_k(u)\exp\left(-\frac{1}{K}\Phi(u)\right),
+  &&Z_{k+1} := \int \pi_k(u)\exp\left(-\frac{1}{K}\Phi(u)\right) du, \tag{29}
+  \end{align}
+  for $k = 0, \dots, K-1$. Then the final density satisfies $\pi_K = \pi$,
+  where $\pi$ is defined in (28).
+  </p>
+</blockquote>
+
+**Proof.** We first consider the normalizing constant at the final iteration:
+\begin{align}
+Z_K
+&= \int \pi_{K-1}(u)\exp\left(-\frac{1}{K}\Phi(u)\right) du \newline
+&= \int \pi_{0}(u)\frac{1}{Z_{K-1} \cdots Z_1}\exp\left(-\frac{1}{K}\Phi(u)\right)^K du \newline
+&= \frac{1}{Z_{K-1} \cdots Z_1} \int \pi_{0}(u)\exp\left(-\Phi(u)\right) du \newline
+&= \frac{Z}{Z_1 \cdots Z_{K-1}},
+\end{align}
+where the second equality simply iterates the recursion (29). Rearranging, we
+see that
+$$
+Z = \prod_{k=1}^{K} Z_k. \tag{30}
+$$
+
+We similarly
+iterate the recursion for $\pi_K$:
+\begin{align}
+\pi_K(u)
+&= \frac{1}{Z_K} \pi_{K-1}(u) \exp\left(-\frac{1}{K}\Phi(u)\right) \newline
+&= \frac{1}{Z_K Z_{K-1} \cdots Z_1} \pi_{0}(u) \exp\left(-\frac{1}{K}\Phi(u)\right)^K \newline
+&= \frac{1}{Z} \pi_{0}(u) \exp\left(-\Phi(u)\right) \newline
+&= \pi(u) \qquad\qquad\qquad\qquad\qquad \blacksquare
+\end{align}
+
+The sequence defined by (29) essentially splits the single Bayesian inverse problem
+(1) into a sequence of $K$ inverse problems. In particular, the update
+$\pi_k \mapsto \pi_{k+1}$ implies solving the inverse problem
+\begin{align}
+y|u &\sim \tilde{p}(y|u) \tag{31} \newline
+u &\sim \pi_k(u),
+\end{align}
+with the tempered likelihood
+$$
+\tilde{p}(y|u) \propto \exp\left(-\frac{1}{K}\Phi(u)\right). \tag{32}
+$$
+Each update thus encodes the action of conditioning on the data $y$, but under
+the modified likelihood $\tilde{p}(y|u)$ which "spreads out" the information in
+the data over the $K$ time steps. If we were to consider using the true
+likelihood $p(y|u)$ in each time step, this would artificially inflate the
+information content in $y$, as if we had $K$ independent data vectors instead
+of just one.
+
+### Gaussian Special Case
+Suppose the likelihood is Gaussian $\mathcal{N}(\mathcal{G}(u), \Sigma)$, with
+associated potential $\Phi(u) = \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma}$.
+The tempered likelihood is thus
+$$
+\exp\left(-\frac{1}{K}\Phi(u)\right)
+= \exp\left(-\frac{1}{2K}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma}\right)
+= \exp\left(-\frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{K\Sigma}\right)
+\propto \mathcal{N}(\mathcal{G}(u), K\Sigma). \tag{32}
+$$
+The modified likelihood remains Gaussian, and is simply the original likelihood
+with the variance inflated by a factor of $K$. This matches the intuition from
+above; to variance is increased to account for the fact that we are conditioning
+on the same data vector $K$ times.
+
+If, in addition to the Gaussian likelihood, the prior $\pi_0$ is Gaussian
+and the map $\mathcal{G}$ is linear then the final posterior $\pi$ and each
+intermediate distribution $\pi_k$ will also be Gaussian. In this case, the
+recursion (29) defines a sequence of $K$ linear Gaussian Bayesian inverse
+problems.
+
+## Introducing Artificial Dynamics
+The previous section considered a discrete process on the level of densities;
+i.e., the dynamics (29) describe the evolution of $\pi_k$. Our goal is now
+to design an artificial dynamical system that treats $u$ as the state variable,
+such that $\pi_k$ describes the distribution of the state at iteration $k$.
+In theory, we can then draw samples from $\pi$ by simulating trajectories of
+the dynamical system.
+
+There are many approaches we could take here, but let us start with the simplest.
+We know that the update $\pi_k \mapsto \pi_{k+1}$ should encode the action of
+conditioning on $y$ with respect to the tempered likelihood. Thus, let's
+consider the following dynamics and observation model:
+\begin{align}
+u_{k+1} &= u_k \tag{33} \newline
+y_{k+1} &= \mathcal{G}(u_{k+1}) + \epsilon_{k+1}, &&\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{34} \newline
+u_0 &\sim \pi_0 \tag{35}
+\end{align}
+The lines (33) and (35) define our artificial dynamics in $u$, with the former providing
+the evolution equation and the latter the initial condition. These dynamics are rather
+uninteresting; the evolution operator is the identity, meaning that the state remains
+fixed at its initial condition. All of the interesting bits here come into play in
+the observation model (34).  
+
 
 {% endkatexmm %}
