@@ -428,9 +428,9 @@ problems.
 The previous section considered a discrete process on the level of densities;
 i.e., the dynamics (29) describe the evolution of $\pi_k$. Our goal is now
 to design an artificial dynamical system that treats $u$ as the state variable,
-such that $\pi_k$ describes the distribution of the state at iteration $k$.
-In theory, we can then draw samples from $\pi$ by simulating trajectories of
-the dynamical system.
+such that $\pi_k$ describes the filtering distribution of the state at iteration
+$k$. In theory, we can then draw samples from $\pi$ by applying standard
+filtering algorithms to this artificial dynamical system.
 
 There are many approaches we could take here, but let us start with the simplest.
 We know that the update $\pi_k \mapsto \pi_{k+1}$ should encode the action of
@@ -445,7 +445,50 @@ The lines (33) and (35) define our artificial dynamics in $u$, with the former p
 the evolution equation and the latter the initial condition. These dynamics are rather
 uninteresting; the evolution operator is the identity, meaning that the state remains
 fixed at its initial condition. All of the interesting bits here come into play in
-the observation model (34).  
+the observation model (34). We observe that, by construction, the filtering
+distribution of this dynamical system at time step $k$ is given by $\pi_k$:
+$$
+\pi_k(u_k) = p(u_k | y_1 = y, \dots, y_k = y). \tag{36}
+$$
+To be clear, we emphasize that the quantities $y_1, \dots, y_K$ in the observation
+model (34) are random variables, but the conditioning at every time step is with
+respect to the fixed data realization $y$.  
 
+### Extending the State Space
+We now provide an alternative, but equivalent, formulation that gives another
+useful perspective. Observe that the observation model (34) can be written
+as
+$$
+y_k
+= \mathcal{G}(u_k) + \epsilon_{k}
+= \begin{bmatrix} 0 & I \end{bmatrix} \begin{bmatrix} u_k \\ \mathcal{G}(u_k) \end{bmatrix} + \epsilon_{k}
+=: Hv_k + \epsilon_k, \tag{37}
+$$
+where we have defined
+\begin{align}
+H &:= \begin{bmatrix} 0 & I \end{bmatrix} \in \mathbb{R}^{p \times (d+p)},
+&&v_k := \begin{bmatrix} u_k & \mathcal{G}(u_k) \end{bmatrix}^\top \in \mathbb{R}^{d+p}. \tag{38}
+\end{align}
+We will now adjust the dynamical system to describe the dynamics with respect
+to the state vector $v_k$:
+\begin{align}
+v_{k+1} &= v_k \tag{39} \newline
+y_{k+1} &= Hv_{k+1} + \epsilon_{k+1}, &&\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{40} \newline
+u_0 &\sim \pi_0. \tag{41}
+\end{align}
+Note that we continue to write the initial condition (41) with respect to $u$
+but this induces an initial distribution for $v_0$. Why extend the state space
+in this way? For one, the observation operator in (40) is now linear. Linearity
+of the observation operator is a common assumption in the data assimilation
+literature, so satisfying this assumption allows us more flexibility in
+choosing a filtering algorithm. Also, notice that the extended state vector $v$
+couples together the parameter $u$ with its associated forward model output
+$\mathcal{G}(u)$. This is very reminiscent of the joint vector (e.g., (6)) we
+considered when deriving a posterior approximation algorithm (27).
+
+This extended state space formulation still gives rise to the sequence
+$\pi_0, \dots, \pi_K$ as before. However, the distribution $\pi_k$ is now
+a *marginal* of filtering distribution for $v_k$ (the marginal corresponding
+to the first $d$ entries of $v_k$).
 
 {% endkatexmm %}
