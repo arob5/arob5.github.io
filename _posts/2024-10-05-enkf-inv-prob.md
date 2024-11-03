@@ -404,18 +404,18 @@ information content in $y$, as if we had $K$ independent data vectors instead
 of just one.
 
 ### Gaussian Special Case
-Suppose the likelihood is Gaussian $\mathcal{N}(\mathcal{G}(u), \Sigma)$, with
+Suppose the likelihood is Gaussian $\mathcal{N}(y|\mathcal{G}(u), \Sigma)$, with
 associated potential $\Phi(u) = \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma}$.
-The tempered likelihood is thus
+The tempered likelihood in this case is
 $$
 \exp\left(-\frac{1}{K}\Phi(u)\right)
 = \exp\left(-\frac{1}{2K}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma}\right)
 = \exp\left(-\frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{K\Sigma}\right)
-\propto \mathcal{N}(\mathcal{G}(u), K\Sigma). \tag{32}
+\propto \mathcal{N}(y|\mathcal{G}(u), K\Sigma). \tag{32}
 $$
 The modified likelihood remains Gaussian, and is simply the original likelihood
 with the variance inflated by a factor of $K$. This matches the intuition from
-above; to variance is increased to account for the fact that we are conditioning
+above; the variance is increased to account for the fact that we are conditioning
 on the same data vector $K$ times.
 
 If, in addition to the Gaussian likelihood, the prior $\pi_0$ is Gaussian
@@ -451,8 +451,8 @@ $$
 \pi_k(u_k) = p(u_k | y_1 = y, \dots, y_k = y). \tag{36}
 $$
 To be clear, we emphasize that the quantities $y_1, \dots, y_K$ in the observation
-model (34) are random variables, but the conditioning at every time step is with
-respect to the fixed data realization $y$.  
+model (34) are random variables, and $y_k = y$ indicates that the condition that
+the random variable $y_k$ is equal to the fixed data realizaton $y$.  
 
 ### Extending the State Space
 We now provide an alternative, but equivalent, formulation that gives another
@@ -467,18 +467,19 @@ $$
 where we have defined
 \begin{align}
 H &:= \begin{bmatrix} 0 & I \end{bmatrix} \in \mathbb{R}^{p \times (d+p)},
-&&v_k := \begin{bmatrix} u_k & \mathcal{G}(u_k) \end{bmatrix}^\top \in \mathbb{R}^{d+p}. \tag{38}
+&&v_k := \begin{bmatrix} u_k \newline \mathcal{G}(u_k) \end{bmatrix} \in \mathbb{R}^{d+p}. \tag{38}
 \end{align}
-We will now adjust the dynamical system to describe the dynamics with respect
+We will now adjust the dynamical system (33) to describe the dynamics with respect
 to the state vector $v_k$:
 \begin{align}
 v_{k+1} &= v_k \tag{39} \newline
 y_{k+1} &= Hv_{k+1} + \epsilon_{k+1}, &&\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{40} \newline
 u_0 &\sim \pi_0. \tag{41}
 \end{align}
-Note that we continue to write the initial condition (41) with respect to $u$
-but this induces an initial distribution for $v_0$. Why extend the state space
-in this way? For one, the observation operator in (40) is now linear. Linearity
+We continue to write the initial condition (41) with respect to $u$
+but note that the distribtion on $u_0$ induces an initial distribution for $v_0$.
+Why extend the state space in this way?
+For one, the observation operator in (40) is now linear. Linearity
 of the observation operator is a common assumption in the data assimilation
 literature, so satisfying this assumption allows us more flexibility in
 choosing a filtering algorithm. Also, notice that the extended state vector $v$
