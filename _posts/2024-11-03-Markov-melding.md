@@ -144,34 +144,107 @@ begs the question of how to choose $p_{\text{pool}}(\phi)$. Naturally, we would
 hope this distribution adequately summarizes the original marginals
 $p_1(\phi), \dots, p_M(\phi)$ in some sense. We put aside this question for the
 time being, and assume that we have fixed some pooled prior $p_{\text{pool}}(\phi)$.
+Given that a common prior $p_{\text{pool}}(\phi)$ has been chosen, Goudie et
+al (2019) provides some justification for the definition (9):
+$$
+p_{\text{repl},m}(\phi, \psi_m, Y_m)
+= \text{argmin}_{q \in \mathcal{Q}} \text{D}_{\text{KL}}(q || p_m),
+$$
+where
+$$
+\mathcal{Q} = \left\{q(\phi, \psi_m, Y_m) | q(\phi) = p_{\text{pool}}(\phi) \ \forall \phi \right\}.
+$$
+In words, the marginally replaced distribution minimizes the KL-divergence with
+respect to $p_m$ over all distributions with $\phi$-marginals equal to
+$p_{\text{pool}}(\phi)$.
 
 ## Markov Combination with respect to the modified submodels
 We can now apply Markov combination with respect to the modified submodels
 $p_{\text{repl},1}, \dots, p_{\text{repl},M}$. Following (5), define
+\begin{align}
+p_{\text{meld}}(\phi, \psi_1, \dots, \psi_M, Y_1, \dots, Y_M)
+&:= p_{\text{pool}}(\phi) \prod_{m=1}^{M} p_{\text{repl},m}(\psi_m, Y_m|\phi) \newline
+&= p_{\text{pool}}(\phi) \prod_{m=1}^{M} p_{m}(\psi_m, Y_m|\phi), \tag{10}
+\end{align}
+where the second equality uses the fact that marginal replacement preserves
+the conditionals (see (9)).
+We can alternatively expand (10) as
 $$
 p_{\text{meld}}(\phi, \psi_1, \dots, \psi_M, Y_1, \dots, Y_M)
-&:= p_{\text{pool}}(\phi) \prod_{m=1}^{M} p_{\text{repl},m}(\psi_m, Y_m|\phi). \tag{10}
+= p_{\text{pool}}(\phi) \prod_{m=1}^{M} \frac{p_{m}(\phi, \psi_m, Y_m)}{p_m(\phi)}, \tag{11}
 $$
-All of the facts noted for Markov combination still apply here, but now with respect
-to the marginally replaced models $p_{\text{repl},m}$, not the original submodels.
-In particular, we have that
+which provides a direct comparison to (7). All of the facts noted for Markov
+combination still apply here, but now with respect to the marginally replaced
+models $p_{\text{repl},m}$, not the original submodels. In particular, we have that
 $$
 p_{\text{meld}}(\phi, \psi_m, Y_m) = p_{\text{repl},m}(\phi, \psi_m, Y_m), \qquad m = 1, \dots, M,
-\tag{11}
+\tag{12}
 $$
 but in general
 $$
-p_{\text{repl},m}(\phi, \psi_m, Y_m) \neq p_{m}(\phi, \psi_m, Y_m), \tag{12}
+p_{\text{repl},m}(\phi, \psi_m, Y_m) \neq p_{m}(\phi, \psi_m, Y_m), \tag{13}
 $$
 meaning that $p(\text{meld})$ does not preserve the submodel joint distributions.
 However, $p(\text{meld})$ still does enjoy the *conditional* preservation
 property:
 $$
-p_{\text{meld}}(\psi_m, Y_m|\phi) = p_{m}(\psi_m, Y_m|\phi), \qquad m = 1, \dots, M, \tag{13}
+p_{\text{meld}}(\psi_m, Y_m|\phi) = p_{m}(\psi_m, Y_m|\phi), \qquad m = 1, \dots, M, \tag{14}
 $$
 which should be somewhat intuitive given that the marginal replacement method
-did not modify the conditionals (see (8)).
+does not modify the conditionals (see (8)). To verify this, apply (11) to see that
+\begin{align}
+p_{\text{meld}}(\psi_1, \dots, \psi_M, Y_1, \dots, Y_M|\phi)
+&= \frac{p_{\text{meld}}(\phi, \psi_1, \dots, \psi_M, Y_1, \dots, Y_M)}{p_{\text{pool}}(\phi)} \newline
+&= \frac{1}{p_{\text{pool}}(\phi)} p_{\text{pool}}(\phi) \prod_{m=1}^{M} \frac{p_{m}(\phi, \psi_m, Y_m)}{p_m(\phi)} \newline
+&= \prod_{m=1}^{M} p_{m}(\psi_m, Y_m|\phi). \tag{15}
+\end{align}
+We see from (15) that $p_{\text{meld}}$ still preserved the conditional
+independence structure summarized in (3), and that (14) falls out as a result.
 
+## Deterministic Variables
+Goudie et al (2019) also consider the scenario where the link variable $\phi$
+may appear in a submodel as a deterministic function of the other submodel
+variables, rather than being explicitly defined by the joint distribution
+$p_m$. In particular, suppose one of the submodels takes the form
+\begin{align}
+&p_{\theta}(\theta, \psi, Y), &&\phi = f(\theta), \tag{16}
+\end{align}
+for some deterministic, differentiable map
+$f: \mathbb{R}^{\ell} \to \mathbb{R}^k$ with
+$k \leq \ell$. If $k=\ell$ and $f$ is invertible, then the density of $\phi$
+is given by the change-of-variables formula
+$$
+p_{\phi}(\phi) = |Df^{-1}(\phi)| p_{\theta}(f^{-1}(\phi)), \tag{17}
+$$
+where $|Df^{-1}(\phi)|$ denotes the determinant of the Jacobian $Df^{-1}$
+evaluated at $\phi$; $Df^{-1}(\phi) \in \mathbb{R}^{\ell \times k}$.
+Next, consider the case where $k < \ell$. Here, we assume that $f$ can be
+extended to an invertible function $\tilde{f}: \mathbb{R}^{\ell} \to \mathbb{R}^{\ell}$
+of the form
+\begin{align}
+\tilde{f}(\theta) &= \begin{bmatrix} f(\theta) \newline g(\theta) \end{bmatrix},
+&&g: \mathbb{R}^{\ell} \to \mathbb{R}^{\ell-k}. \tag{18}
+\end{align}
+The density of $(\phi, \tilde{\phi})$ induced by the distribution on $\theta$
+is then given by
+$$
+p_{\phi}(\phi,\tilde{\phi}) = |D\tilde{f}^{-1}(\phi, \tilde{\phi})| p_{\theta}(\tilde{f}^{-1}(\phi, \tilde{\phi})). \tag{19}
+$$
+Similarly, we can consider the change-of-variables for the complete joint
+distribution
+$$
+p_{\phi}(\phi, \tilde{\phi}, \psi, Y)
+= |D\tilde{f}^{-1}(\phi, \tilde{\phi})|
+p_{\theta}(\tilde{f}^{-1}(\phi, \tilde{\phi}), \psi, Y). \tag{20}
+$$
+We can then obtain the desired submodel distribution over $(\phi,\psi,Y)$
+by marginalizing the nuisance parameter $\tilde{\phi}$:
+$$
+p(\phi, \psi, Y) := \int p_{\phi}(\phi, \tilde{\phi}, \psi, Y) d\tilde{\phi}. \tag{21}
+$$
+One concern here is that this procedure will produce difference results for
+different choices of the extension function $g(\cdot)$. Goudie et al (2019)
+show that this is not the case. 
 {% endkatexmm %}
 
 # References
