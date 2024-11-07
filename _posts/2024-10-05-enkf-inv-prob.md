@@ -313,9 +313,10 @@ We conclude this section by summarizing the final algorithm.
   $\hat{C}$, $\hat{C}^y$, and $\hat{C}^{uy}$ as defined in (20)-(23). <br>
   3. Return the updated ensemble $\{\hat{u}^{(j)}_*\}_{j=1}^{J}$ by applying the
   EnKF update  
-  $$
-  \hat{u}^{(j)}_* := u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}^{(j)}). \tag{27}
-  $$
+  \begin{align}
+  \hat{u}^{(j)}_* &:= u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-y^{(j)}),
+  &&y^{(j)} \sim \mathcal{N}(\mathcal{G}(u^{(j)}), \Sigma). \tag{27}
+  \end{align}
   </p>
 </blockquote>
 {% endkatexmm %}
@@ -508,9 +509,39 @@ post we consider approximate methods rooted in Kalman methodology. Specifically,
 let's consider applying the EnKF to the model given in (40). We could also
 consider (34) and get the same result, but I'll follow Iglesias et al (2012)
 in using the extended state space formulation to generalize the linear
-observation operator EnKF to nonlinear operators. 
+observation operator EnKF to nonlinear operators. A direct application of the
+EnKF to the system (40) gives the following recursive algorithm.
+<blockquote>
+  <p><strong>Posterior Approximation via EnKF Update in Finite Time.</strong> <br><br>
+  <strong> Time k=0:</strong> <br><br>
+  Generate the initial ensemble $\{v_0^{(j)}\}_{j=1}^{J}$, where
+  \begin{align}
+  &v^{(j)}_0 := \begin{bmatrix} u^{(j)}_0, \mathcal{G}(u^{(j)}_0) \end{bmatrix}^\top,
+  &&u^{(j)}_0 \overset{iid}{\sim} \pi_0. \tag{43}
+  \end{align}
+
+  <strong> Time k+1:</strong> <br><br>
+  1. Perform the forecast step:
+  $$
+  \hat{v}^{(j)}_{k+1} := v^{(j)}_{k}, \qquad j = 1, \dots, J \tag{44}
+  $$
+  <br>
+  2. Compute the sample estimates:
+  \begin{align}
+  \overline{v}_{k+1} &:= \frac{1}{J} \sum_{j=1}^{J} \hat{v}^{(j)}_{k+1} \tag{45} \newline
+  \hat{C}^v_{k+1} &:= \frac{1}{J-1} \sum_{j=1}^{J} (\hat{v}^{(j)}_{k+1} - \overline{v}_{k+1}) (\hat{v}^{(j)}_{k+1} - \overline{v}_{k+1})^\top.   
+  \end{align}
+  3. Perform the analysis step:
+  \begin{align}
+  v^{(j)}_{k+1} &:=
+  \hat{v}^{(j)}_{k+1} + \hat{C}^{v}_{k+1}H^\top[H\hat{C}^{v}_{k+1}H^\top + K\Sigma]^{-1}(y-y^{(j)}),
+  &&y^{(j)} \sim \mathcal{N}(H\hat{v}_{k+1}^{(j)}, K\Sigma). \tag{46}
+  \end{align}
+  </p>
+</blockquote>
 
 {% endkatexmm %}
+
 
 # References
 1. The Ensemble Kalman Filter for Inverse Problems (Iglesias et al, 2012)
