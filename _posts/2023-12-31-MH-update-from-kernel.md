@@ -184,7 +184,7 @@ Once we condition on $\mathbf{X}_k$ and $\mathbf{Y}$, the only remaining randomn
 the probability above is coming from the selection of one of the two kernels.
 
 ## Conclusion
-While all of this might appear to be overcomplicating the very simply MH algorithm,
+While all of this might appear to be overcomplicating the very simple MH algorithm,
 I have found it a quite worthwhile exercise to contemplate some different perspectives
 on the method, as well as to get some practice manipulating expressions involving
 probability kernels and thinking through sampling schemes. The MH transition kernel

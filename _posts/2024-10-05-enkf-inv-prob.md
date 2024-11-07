@@ -410,8 +410,7 @@ The tempered likelihood in this case is
 $$
 \exp\left(-\frac{1}{K}\Phi(u)\right)
 = \exp\left(-\frac{1}{2K}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma}\right)
-= \exp\left(-\frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{K\Sigma}\right)
-\propto \mathcal{N}(y|\mathcal{G}(u), K\Sigma). \tag{32}
+\propto \mathcal{N}(y|\mathcal{G}(u), K\Sigma). \tag{33}
 $$
 The modified likelihood remains Gaussian, and is simply the original likelihood
 with the variance inflated by a factor of $K$. This matches the intuition from
@@ -437,21 +436,21 @@ We know that the update $\pi_k \mapsto \pi_{k+1}$ should encode the action of
 conditioning on $y$ with respect to the tempered likelihood. Thus, let's
 consider the following dynamics and observation model:
 \begin{align}
-u_{k+1} &= u_k \tag{33} \newline
-y_{k+1} &= \mathcal{G}(u_{k+1}) + \epsilon_{k+1}, &&\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{34} \newline
-u_0 &\sim \pi_0 \tag{35}
+u_{k+1} &= u_k \tag{34} \newline
+y_{k+1} &= \mathcal{G}(u_{k+1}) + \epsilon_{k+1}, &&\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{35} \newline
+u_0 &\sim \pi_0 \tag{36}
 \end{align}
-The lines (33) and (35) define our artificial dynamics in $u$, with the former providing
+The lines (34) and (36) define our artificial dynamics in $u$, with the former providing
 the evolution equation and the latter the initial condition. These dynamics are rather
 uninteresting; the evolution operator is the identity, meaning that the state remains
 fixed at its initial condition. All of the interesting bits here come into play in
 the observation model (34). We observe that, by construction, the filtering
 distribution of this dynamical system at time step $k$ is given by $\pi_k$:
 $$
-\pi_k(u_k) = p(u_k | y_1 = y, \dots, y_k = y). \tag{36}
+\pi_k(u_k) = p(u_k | y_1 = y, \dots, y_k = y). \tag{37}
 $$
 To be clear, we emphasize that the quantities $y_1, \dots, y_K$ in the observation
-model (34) are random variables, and $y_k = y$ indicates that the condition that
+model (35) are random variables, and $y_k = y$ indicates that the condition that
 the random variable $y_k$ is equal to the fixed data realizaton $y$.  
 
 ### Extending the State Space
@@ -462,7 +461,7 @@ $$
 y_k
 = \mathcal{G}(u_k) + \epsilon_{k}
 = \begin{bmatrix} 0 & I \end{bmatrix} \begin{bmatrix} u_k \\ \mathcal{G}(u_k) \end{bmatrix} + \epsilon_{k}
-=: Hv_k + \epsilon_k, \tag{37}
+=: Hv_k + \epsilon_k, \tag{38}
 $$
 where we have defined
 \begin{align}
@@ -472,24 +471,46 @@ H &:= \begin{bmatrix} 0 & I \end{bmatrix} \in \mathbb{R}^{p \times (d+p)},
 We will now adjust the dynamical system (33) to describe the dynamics with respect
 to the state vector $v_k$:
 \begin{align}
-v_{k+1} &= v_k \tag{39} \newline
-y_{k+1} &= Hv_{k+1} + \epsilon_{k+1}, &&\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{40} \newline
-u_0 &\sim \pi_0. \tag{41}
+v_{k+1} &= v_k \tag{40} \newline
+y_{k+1} &= Hv_{k+1} + \epsilon_{k+1}, &&\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{41} \newline
+u_0 &\sim \pi_0. \tag{42}
 \end{align}
-We continue to write the initial condition (41) with respect to $u$
-but note that the distribtion on $u_0$ induces an initial distribution for $v_0$.
-Why extend the state space in this way?
-For one, the observation operator in (40) is now linear. Linearity
-of the observation operator is a common assumption in the data assimilation
-literature, so satisfying this assumption allows us more flexibility in
-choosing a filtering algorithm. Also, notice that the extended state vector $v$
-couples together the parameter $u$ with its associated forward model output
-$\mathcal{G}(u)$. This is very reminiscent of the joint vector (e.g., (6)) we
-considered when deriving a posterior approximation algorithm (27).
+We continue to write the initial condition (42) with respect to $u$
+but note that the distribution on $u_0$ induces an initial distribution for $v_0$.
+Why extend the state space in this way? For one, the observation operator in
+(41) is now linear. Linearity of the observation operator is a common assumption
+in the data assimilation literature, so satisfying this assumption allows us more flexibility in choosing a filtering algorithm. The main reason I opt to include
+the state space extension here is that this is the approach taken in
+Iglesias et al (2012), which is the first paper to systematically propose
+and analyze the application of the EnKF to inverse problems. In effect, if you
+have defined the EnKF with respect to a linear observation operator (as is
+commonly done), then the extended state space formulation allows you to extend
+the algorithm to the nonlinear case. As we will see, what you ultimately get
+is identical to the joint Gaussian approximation viewpoint used in deriving
+(27).
 
 This extended state space formulation still gives rise to the sequence
 $\pi_0, \dots, \pi_K$ as before. However, the distribution $\pi_k$ is now
 a *marginal* of filtering distribution for $v_k$ (the marginal corresponding
 to the first $d$ entries of $v_k$).
 
+## Applying Filtering Algorithms
+We have now considered a couple options to formulate the Bayesian inverse
+problem (1) as a discrete dynamical system, such that the filtering
+distributions of the artificial system are given by $\pi_1, \dots, \pi_K$,
+as defined in (29). The distribution at the final time step satisfies
+$\pi_K = \pi$. This points to a possible algorithmic approach to posterior
+inference. If we can propagate an ensemble of particles such that they are
+distributed according to $\pi_k$ at time step $k$, then the ensemble will
+represent the posterior at time step $K$. Particle filtering methods might
+be considered to exactly implement this Monte Carlo scheme. However, in this
+post we consider approximate methods rooted in Kalman methodology. Specifically,
+let's consider applying the EnKF to the model given in (40). We could also
+consider (34) and get the same result, but I'll follow Iglesias et al (2012)
+in using the extended state space formulation to generalize the linear
+observation operator EnKF to nonlinear operators. 
+
 {% endkatexmm %}
+
+# References
+1. The Ensemble Kalman Filter for Inverse Problems (Iglesias et al, 2012)

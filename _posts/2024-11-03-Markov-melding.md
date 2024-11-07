@@ -244,7 +244,77 @@ p(\phi, \psi, Y) := \int p_{\phi}(\phi, \tilde{\phi}, \psi, Y) d\tilde{\phi}. \t
 $$
 One concern here is that this procedure will produce difference results for
 different choices of the extension function $g(\cdot)$. Goudie et al (2019)
-show that this is not the case. 
+show that this is not the case.
+{% endkatexmm %}
+
+# Inference
+{% katexmm %}
+We now consider algorithmic methods for characterizing the posterior
+distribution
+$$
+p_{\text{meld}}(\phi, \psi_1, \dots, \psi_M|Y_1, \dots, Y_M) \propto
+p_{\text{pool}}(\phi) \prod_{m=1}^{M} \frac{p_{m}(\phi, \psi_m, Y_m)}{p_m(\phi)}. \tag{22}
+$$
+So long as the joint density $p_{\text{meld}}$ can be evaluated pointwise, then
+one can consider applying a general-purpose inference algorithm (e.g.,
+Metropolis-Hastings) in the typical fashion. Goudie et al (2019) consider some
+specific MCMC algorithms that are tailored to the specific structure in the
+density (22). Throughout this section we will utilize the shorthand
+$\psi_{1:\ell} := (\psi_1, \dots, \psi_\ell)$ and
+$y_{1:\ell} := (y_1, \dots, y_\ell)$ for brevity. Here, $y_m$ denotes a particular
+fixed realization of the data random variable $Y_m$. In considering
+Metropolis-Hastings (MH) algorithms, we will write $\psi_m^*$ and $\psi_m$ to indicate
+the proposed and current values, respectively, of the $m^{\text{th}}$ submodel
+parameter (and likewise for $\phi^*$).
+
+## Metropolis-within-Gibbs
+The structure of (22) suggests updating the component-specific parameters $\psi_m$
+one at a time, and hence a Metropolis-within-Gibbs (MwG) scheme.
+
+### $\psi_m$ update
+We first consider updating $\psi_m$ conditional on all other parameters. This
+implies a MH update with respect to the target density
+$p_{\text{meld}}(\psi_m|Y_{1:M}, \phi, \psi_{-m})$. The standard MH update
+consists of the following steps:
+1. Propose a new value: $\psi_m^* \sim q(\psi_m^*|\psi_m)$.
+2. Accept the new value with probability:
+
+$$
+\alpha(\psi_m^* |\psi_m) := \min\left(1, r(\psi_m^*|\psi_m) \right), \tag{22}
+$$
+where
+$$
+r(\psi_m^*|\psi_m) := \frac{p_{\text{meld}}(\psi_m^*|Y_{1:M}, \phi, \psi_{-m})}{p_{\text{meld}}(\psi_m|Y_{1:M}, \phi, \psi_{-m})} \cdot
+\frac{q(\psi_m|\psi_m^*)}{q(\psi_m^*|\psi_m)}. \tag{23}
+$$
+Here, $q$ is the proposal density, with $q(\psi_m^*|\psi_m)$ denoting the
+density of proposing $\psi_m^*$. The acceptance ratio $r(\psi_m^*|\psi_m)$
+simplifies considerably in this case, since:
+
+\begin{align}
+\frac{p_{\text{meld}}(\psi_m^*|y\_{1:M}, \phi, \psi_{-m})}{p_{\text{meld}}(\psi_m|y\_{1:M}, \phi, \psi_{-m})}
+&\propto \frac{p_{\text{meld}}(\psi_m^*, y\_{1:M}, \phi, \psi_{-m})}{p_{\text{meld}}(\psi_m, y\_{1:M}, \phi, \psi_{-m})}
+\end{align}
+
+where we have simply plugged in expression (11) and cancelled terms. Notice that
+the resulting expression, (24), only contains terms related to the the
+$m^{\text{th}}$ submodel. In other words, (24) is the exact density ratio
+we would obtain if considering a MwG scheme applied only to the $m^{\text{th}}$
+submodel in isolation.
+
+### $\phi$ update
+We next consider updating the link parameter, conditional on all
+component-specific parameters. We similarly consider some proposal
+$\phi^* \sim q(\phi^*|\phi)$, in which case the density ratio becomes
+$$
+\frac{p_{\text{meld}}(\phi^*|y_{1:M}, \psi_{1:M})}{p_{\text{meld}}(\phi|y_{1:M}, \psi_{1:M})}
+= \frac{p_{\text{pool}}(\phi^*)}{p_{\text{pool}}(\phi)}
+\prod_{m=1}^{M} \frac{p_m(\phi^*, \psi_m, y_m)}{p_m(\phi, \psi_m, y_m)}
+\frac{q(\phi|\phi^*)}{q(\phi^*|\phi)}. \tag{25}
+$$
+
+
+
 {% endkatexmm %}
 
 # References

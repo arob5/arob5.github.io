@@ -25,10 +25,14 @@ kernel (null space), respectively.
 # Setup
 {% katexmm %}
 We start by considering the following optimization problem
-\begin{align}
-v_{\star} &:= \text{argmin}_{v \in \mathbb{R}^d} J(v) \tag{1} \newline
-J(v) &= \frac{1}{2} \lVert y - h(v)\rVert_R^2 + \frac{1}{2} \lVert v - \hat{v}\rVert_C, \tag{2}
-\end{align}
+<blockquote>
+  <p><strong>Optimization Formulation with Positive Definite $C$.</strong> <br>
+  \begin{align}
+  v_{\star} &:= \text{argmin}_{v \in \mathbb{R}^d} J(v) \tag{1} \newline
+  J(v) &= \frac{1}{2} \lVert y - h(v)\rVert_R^2 + \frac{1}{2} \lVert v - \hat{v}\rVert_C, \tag{2}
+  \end{align}
+  </p>
+</blockquote>
 where the objective $J(v)$ is defined with respect to a map
 $h: \mathbb{R}^d \to \mathbb{R}^p$, fixed vectors $\hat{v} \in \mathbb{R}^d$
 and $y \in \mathbb{R}^p$, and positive definite matrices
@@ -67,7 +71,12 @@ $C$ using a sample covariance estimator, whose rank cannot exceed the number of
 samples used in the estimator. Thus, if the state dimension $d$ exceeds the
 number of samples, then this matrix will fail to be positive definite. We will
 discuss specifics regarding the EnKF later on, but for the time being keep the
-discussion generic. Let $A \in \mathbb{R}^{d \times J}$ be a matrix such that
+discussion generic. Throughout this section, we will consider a few different
+optimization formulations that are valid when $C$ is positive semidefinite;
+in the following section, we will pursue solutions of the problems formulated
+here.
+
+Let $A \in \mathbb{R}^{d \times J}$ be a matrix such that
 $$
 C = AA^\top. \tag{5}
 $$
@@ -101,7 +110,7 @@ infinitely many such solutions. As long as there is at least one solution to (9)
 we will see that we can give meaning to the expression
 $\lVert v - \hat{v}\rVert^2_C$ even when $C$ is only positive semidefinite.
 
-### Joint optimization over $(v,b)$
+### Constrained optimization over $(v,b)$
 Let's consider the case where there is at least
 one solution to (9); i.e., $v - \hat{v} \in \mathcal{R}(C)$. We define
 $$
@@ -126,9 +135,21 @@ $$
 $$
 and
 $$
-\mathcal{V} := \left\{(v,b) : Cb = v - \hat{v} \right\}. \tag{14}
+\mathcal{V} := \left\{(v,b) : Cb = v - \hat{v} \right\}.
 $$
-Note that if $C$ is positive definite, then (12) reduces to (1).
+Note that if $C$ is positive definite, then (12) reduces to (1). We can
+encode this constraint in an unconstrained optimization problem by
+leveraging the method of Lagrange multipliers. Introducing the
+Lagrange multiplier $\lambda \in \mathbb{R}^d$ yields the following
+formulation.
+<blockquote>
+  <p><strong>Lagrange Multiplier Formulation.</strong> <br>
+  \tilde{J}(v,b,\lambda)
+  = \frac{1}{2} \lVert y - h(v)\rVert_R^2 +
+  \frac{1}{2} \langle b, v-\hat{v}\rangle +
+  \langle \lambda, Cb - v + \hat{v} \rangle. \tag{14}
+  </p>
+</blockquote>
 
 ### Removing dependence on $b$
 In the previous section, we extended the optimization problem to consider
@@ -175,14 +196,18 @@ b^{\dagger} = C^{\dagger}(v - \hat{v}) = (AA^\top)^{\dagger}(v - \hat{v}). \tag{
 $$
 Note that when $C$ is positive definite, $C^{\dagger} = C^{-1}$. We can now eliminate
 the requirement to optimize over $b$ in (12), (13), and (14). The optimization problem
-now assumes the form
-\begin{align}
-v_{\star}
-&:= \text{argmin}_{v \in \mathcal{V}} \tilde{J}(v) \tag{17} \newline
-\tilde{J}(v)
-&:= \frac{1}{2} \lVert y - h(v)\rVert_R^2 + \frac{1}{2} \langle (AA^\top)^{\dagger}(v - \hat{v}), v-\hat{v}\rangle \tag{18} \newline
-\mathcal{V} &:= \\{v \in \mathbb{R}^d : v-\hat{v} \in \mathcal{R}(A)\\}. \tag{19}
-\end{align}
+now assumes the following form.
+<blockquote>
+  <p><strong>Constrained Optimization using Pseudoinverse</strong> <br>
+  \begin{align}
+  v_{\star}
+  &:= \text{argmin}_{v \in \mathcal{V}} \tilde{J}(v) \tag{17} \newline
+  \tilde{J}(v)
+  &:= \frac{1}{2} \lVert y - h(v)\rVert_R^2 + \frac{1}{2} \langle (AA^\top)^{\dagger}(v - \hat{v}), v-\hat{v}\rangle \tag{18} \newline
+  \mathcal{V} &:= \\{v \in \mathbb{R}^d : v-\hat{v} \in \mathcal{R}(A)\\}. \tag{19}
+  \end{align}
+  </p>
+</blockquote>
 
 An important consequence of this formulation is that any solution
 $v_{\star}$ must lie in the affine space $\hat{v} + \mathcal{R}(A)$; this is
@@ -291,7 +316,6 @@ unconstrained in (26). In fact, we could have jumped right to this conclusion
 from (22) and avoided needing to define $\tilde{w}$ at all.
 {% endkatexmm %}
 
-
 # Solving the Optimization Problem.
 {% katexmm %}
 With the optimization problem (17) defined, we now consider the characterization
@@ -309,3 +333,6 @@ of a linear observation operator.
 1. Data Assimilation Fundamentals (Vossepoel, Evensen, and van Leeuwen; 2022)
 2. Inverse Problems and Data Assimilation (Stuart, Taeb, and Sanz-Alonso)
 3. Ensemble Kalman Methods with Constraints (Albers et al, 2019)
+
+# TODOs
+Introduce the EnKF optimization by extending the state space. 
