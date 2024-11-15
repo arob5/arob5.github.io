@@ -6,7 +6,13 @@ MathJax.Hub.Config({
     displayMath: [ ['$$', '$$']],
     processEscapes: true,
     skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-    extensions: ['color.js']
+    extensions: ['color.js'],
+    macros: {
+              "\\R": "\\mathbb{R}",
+              "\\Prob": "\\mathbb{P}",
+              "\E": "\\mathbb{E}",
+              "\given": "\\mid"
+    }
   },
   messageStyle: 'none',
   'HTML-CSS': { preferredFont: 'TeX', availableFonts: ['STIX','TeX'] }

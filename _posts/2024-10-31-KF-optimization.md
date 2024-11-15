@@ -335,4 +335,4 @@ of a linear observation operator.
 3. Ensemble Kalman Methods with Constraints (Albers et al, 2019)
 
 # TODOs
-Introduce the EnKF optimization by extending the state space. 
+Introduce the EnKF optimization by extending the state space.

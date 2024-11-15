@@ -13,7 +13,7 @@ In short, the problem we are trying to solve is as follows: suppose we are tryin
 to predict the state of a dynamical process which evolves over time. For example,
 the process could be the global climate system and the state could be the
 temperature at some fixed locations. Suppose we have a model for the system of
-interest, which is stochastic in nature; the randomness might be inherant to the
+interest, which is stochastic in nature; the randomness might be inherent to the
 system under study or might come from uncertainties stemming from our lack of
 understanding of the dynamics. We could thus step our model forward in time to
 try to predict the true state of the system. However, suppose we have a second
@@ -21,7 +21,10 @@ source of information: measurements of the process. Just like the dynamics, the
 observations are subject to noise, which in this case typically represents some
 sort of measurement error. The filtering problem seeks to combine these two
 imperfect sources of information to produce an estimate of the true state, as
-well as an estimate of the uncertainty. This will be made precise below.
+well as an estimate of the uncertainty - this will be made precise below. For
+other references on this topic, I recommend {% cite InvProbDA %},
+{% cite SaarkaTimeVaryingSystems %}, {% cite DAFundamentals %}, and
+{% cite ReichCotterDA %}.
 
 ## The Probabilistic State Space Model
 {% katexmm %}
@@ -45,17 +48,16 @@ independent.
 4. The initial condition $v_0$ is independent of all of these distributions
 as well.
 
-In words, the first assumption is requiring that the dynamical noise is
-independent of the observation noise. The second assumption assumes the observation
-noise is independent across time. The third assumption implies a time-homogenous Markov
+In words, the first assumption is requiring that the dynamical noise be
+independent of the observation noise, the second assumes the observation
+noise is independent across time, and the third implies a time-homogenous Markov
 model for the dynamics. This state space model is quite general; in a series of
 posts on various filtering methods we will focus on special cases of this
 general formulation. We will often restrict our attention to the popular
 case of an additive noise model, in which  
-the dynamics $G(v_k, \cdot)$ are given by some deterministic
+the dynamics $G(v_k, \cdot)$ are given by a deterministic
 update $g(v_k)$ plus some noise $\eta_{k+1}$, and similarly for
-the observation process. Concretely,
-yield
+the observation process; concretely,
 \begin{align}
 v_{k+1} &= g(v_k) + \eta_{k+1} \tag{2} \newline
 y_{k+1} &= h(v_{k+1}) + \epsilon_{k+1}, \newline
@@ -66,7 +68,7 @@ where we emphasize that in general the non-random functions $g$ and $h$ may be
 nonlinear and the random variables $\{\eta_k\}$, $\{\epsilon_k\}$ may be
 non-Gaussian. The independence assumptions are easier to state in this special
 case, reducing to the assumption that
-$\{\eta_k\} \perp \{\epsilon_k\} \perp v_0$; that is, all of these random variables
+$\\{\eta_k\\} \perp \\{\epsilon_k\\} \perp v_0$; that is, all of these random variables
 are pairwise independent. For example, $\eta_k$ is independent
 of all other $\eta_j$ and all $\epsilon_k$, in addition to $v_0$.
 In future posts, we will consider algorithms that are specialized to the
@@ -76,7 +78,9 @@ To complete our setup, we assume $v_k \in \mathbb{R}^d$ and $y_k \in \mathbb{R}^
 and introduce the notation $Y_k := \\{y_1, \dots, y_k\\}$, the
 set of all observations up through time $k$. We similarly write
 $V_k := \\{v_0, v_1, \dots, v_k\\}$ to denote the set of states through time
-$k$.
+$k$. For $\ell \leq k$, we will also occasionally make use of the shorthand
+$V_{\ell:k} := \\{v_{\ell}, v_{\ell+1}, \dots, v_{k}\\}$ and likewise for
+$Y_{\ell:k}$.
 
 ### A Pure Probabilistic Modeling Perspective
 Defining the probability kernels $G$ and $H$ is a convenient way to encode
@@ -89,8 +93,8 @@ p(V_K, Y_K) = p(v_1, \dots, v_K, y_1, \dots, y_K).
 \end{align}
 In general, we could define this distribution however we want and make it
 quite complicated. The Markovian and independence assumptions vastly simplify
-things, making the distribution much easier to work with. These assumptions
-are as follows:
+things, making the distribution much easier to work with.
+These assumptions are as follows:
 1. The Markov property for state transitions.
 \begin{align}
 p(v_k|V_{k-1}, Y_{k-1}) &= p(v_k|v_{k-1}) \newline
@@ -101,8 +105,8 @@ p(v_{k-1}|V_{k:K}, Y_{k:K}) &= p(v_{k-1}|v_k)
 p(y_k|V_k, Y_{k-1}) &= p(y_k|v_k)
 \end{align}
 
-View this as simply defining a joint distribution on all quantities, subject
-to some assumptions that simplify the joint distributions (see Saarka pg 52).
+It is this perspective that is taken in {% cite SaarkaTimeVaryingSystems %}
+(see page 52).
 
 ## The Filtering and Smoothing Problems
 We are now ready to define the two primary problems of interest in this s
@@ -384,7 +388,3 @@ The third and fifth lines follow from the conditional independence assumptions,
 while the fourth applies Bayes' rule.
 
 {% endkatexmm %}
-
-
-## TODOs
-* Add graphical plot of state space model.
