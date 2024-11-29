@@ -1,10 +1,10 @@
 ---
 title: Nonlinear Least Squares
-subtitle: Gauss-Newton, Levenberg-Marquardt
+subtitle: Gauss-Newton, Levenberg-Marquardt, Randomized Likelihood Sampling
 layout: default
 date: 2024-11-26
 keywords: statistics
-published: true
+published: false
 ---
 
 # Notation
@@ -69,5 +69,17 @@ present formulation in (1).
 {% endkatexmm %}
 
 # Examples
+{% katexmm %}
+
+{% endkatexmm %}
 
 # Gradient and Hessian
+
+# Gauss-Newton
+
+# Levenberg-Marquardt
+
+# Randomized Likelihood Sampling
+
+# References
+- Nonlinear Least Squares (neos Guide)

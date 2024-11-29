@@ -20,7 +20,20 @@ MathJax.Hub.Config({
     displayMath: [ ['$$', '$$']],
     processEscapes: true,
     skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-    extensions: ['color.js']
+    extensions: ['color.js'],
+    macros: {
+              "\\R": "\\mathbb{R}",
+              "\\Prob": "\\mathbb{P}",
+              "\\E": "\\mathbb{E}",
+              "\\given": "\\mid",
+              "\\Cov": "\\mathrm{Cov}",
+              "\\Var": "\\mathrm{Var}",
+              "\\Gaussian": "\\mathcal{N}",
+              "\\Def": "\\coloneqq",
+              "\\argmin": "\\text{argmin}",
+              "\\argmax": "\\text{argmax}",
+              "\\fwd": "\\mathcal{G}"
+    }
   },
   messageStyle: 'none',
   'HTML-CSS': { preferredFont: 'TeX', availableFonts: ['STIX','TeX'] }
@@ -29,6 +42,7 @@ MathJax.Hub.Config({
 
 <script src='//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML' type='text/javascript'></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+
 </head>
 <body>
 <div class='content'>
@@ -60,7 +74,7 @@ In short, the problem we are trying to solve is as follows: suppose we are tryin
 to predict the state of a dynamical process which evolves over time. For example,
 the process could be the global climate system and the state could be the
 temperature at some fixed locations. Suppose we have a model for the system of
-interest, which is stochastic in nature; the randomness might be inherant to the
+interest, which is stochastic in nature; the randomness might be inherent to the
 system under study or might come from uncertainties stemming from our lack of
 understanding of the dynamics. We could thus step our model forward in time to
 try to predict the true state of the system. However, suppose we have a second
@@ -68,7 +82,10 @@ source of information: measurements of the process. Just like the dynamics, the
 observations are subject to noise, which in this case typically represents some
 sort of measurement error. The filtering problem seeks to combine these two
 imperfect sources of information to produce an estimate of the true state, as
-well as an estimate of the uncertainty. This will be made precise below.</p>
+well as an estimate of the uncertainty - this will be made precise below. For
+other references on this topic, I recommend <a class="citation" href="#InvProbDA">(Sanz-Alonso et al., 2023)</a>,
+<a class="citation" href="#SaarkaTimeVaryingSystems">(Särkkä, 2009)</a>, <a class="citation" href="#DAFundamentals">(Evensen et al., 2022)</a>, and
+<a class="citation" href="#ReichCotterDA">(Reich &amp; Cotter, 2015)</a>.</p>
 
 <h2 id="the-probabilistic-state-space-model">The Probabilistic State Space Model</h2>
 
@@ -94,17 +111,16 @@ independent.</li>
 as well.</li>
 </ol>
 
-<p>In words, the first assumption is requiring that the dynamical noise is
-independent of the observation noise. The second assumption assumes the observation
-noise is independent across time. The third assumption implies a time-homogenous Markov
+<p>In words, the first assumption is requiring that the dynamical noise be
+independent of the observation noise, the second assumes the observation
+noise is independent across time, and the third implies a time-homogenous Markov
 model for the dynamics. This state space model is quite general; in a series of
 posts on various filtering methods we will focus on special cases of this
 general formulation. We will often restrict our attention to the popular
 case of an additive noise model, in which<br />
-the dynamics <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false">(</mo><msub><mi>v</mi><mi>k</mi></msub><mo separator="true">,</mo><mo>⋅</mo><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">G(v_k, \cdot)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">G</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">⋅</span><span class="mclose">)</span></span></span></span> are given by some deterministic
+the dynamics <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false">(</mo><msub><mi>v</mi><mi>k</mi></msub><mo separator="true">,</mo><mo>⋅</mo><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">G(v_k, \cdot)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">G</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">⋅</span><span class="mclose">)</span></span></span></span> are given by a deterministic
 update <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo stretchy="false">(</mo><msub><mi>v</mi><mi>k</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">g(v_k)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">g</span><span class="mopen">(</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span> plus some noise <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">\eta_{k+1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.638891em;vertical-align:-0.208331em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">η</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361079999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span><span class="mbin mtight">+</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.208331em;"><span></span></span></span></span></span></span></span></span></span>, and similarly for
-the observation process. Concretely,
-yield
+the observation process; concretely,
 \begin{align}
 v_{k+1} &amp;= g(v_k) + \eta_{k+1} \tag{2} \newline
 y_{k+1} &amp;= h(v_{k+1}) + \epsilon_{k+1}, \newline
@@ -115,7 +131,7 @@ v_0 &amp;\sim \mu_0,
 nonlinear and the random variables ${\eta_k}$, ${\epsilon_k}$ may be
 non-Gaussian. The independence assumptions are easier to state in this special
 case, reducing to the assumption that
-${\eta_k} \perp {\epsilon_k} \perp v_0$; that is, all of these random variables
+$\{\eta_k\} \perp \{\epsilon_k\} \perp v_0$; that is, all of these random variables
 are pairwise independent. For example, $\eta_k$ is independent
 of all other $\eta_j$ and all $\epsilon_k$, in addition to $v_0$.
 In future posts, we will consider algorithms that are specialized to the
@@ -125,7 +141,9 @@ To complete our setup, we assume $v_k \in \mathbb{R}^d$ and $y_k \in \mathbb{R}^
 and introduce the notation $Y_k := \{y_1, \dots, y_k\}$, the
 set of all observations up through time $k$. We similarly write
 $V_k := \{v_0, v_1, \dots, v_k\}$ to denote the set of states through time
-$k$.</p>
+$k$. For $\ell \leq k$, we will also occasionally make use of the shorthand
+$V_{\ell:k} := \{v_{\ell}, v_{\ell+1}, \dots, v_{k}\}$ and likewise for
+$Y_{\ell:k}$.</p>
 
 <h3 id="a-pure-probabilistic-modeling-perspective">A Pure Probabilistic Modeling Perspective</h3>
 <p>Defining the probability kernels $G$ and $H$ is a convenient way to encode
@@ -138,8 +156,8 @@ p(V_K, Y_K) = p(v_1, \dots, v_K, y_1, \dots, y_K).
 \end{align}
 In general, we could define this distribution however we want and make it
 quite complicated. The Markovian and independence assumptions vastly simplify
-things, making the distribution much easier to work with. These assumptions
-are as follows:</p>
+things, making the distribution much easier to work with.
+These assumptions are as follows:</p>
 <ol>
   <li>The Markov property for state transitions.
 \begin{align}
@@ -152,8 +170,8 @@ p(y_k|V_k, Y_{k-1}) &amp;= p(y_k|v_k)
 \end{align}</li>
 </ol>
 
-<p>View this as simply defining a joint distribution on all quantities, subject
-to some assumptions that simplify the joint distributions (see Saarka pg 52).</p>
+<p>It is this perspective that is taken in <a class="citation" href="#SaarkaTimeVaryingSystems">(Särkkä, 2009)</a>
+(see page 52).</p>
 
 <h2 id="the-filtering-and-smoothing-problems">The Filtering and Smoothing Problems</h2>
 <p>We are now ready to define the two primary problems of interest in this s
@@ -432,15 +450,14 @@ p(v_k|Y_K)
 The third and fifth lines follow from the conditional independence assumptions,
 while the fourth applies Bayes’ rule.</p>
 
-<h2 id="todos">TODOs</h2>
-<ul>
-  <li>Add graphical plot of state space model.</li>
-</ul>
 
     </div>
     <div id='bibliography'>
         <div class='wrap'>
-            <ol class="bibliography"></ol>
+            <ol class="bibliography"><li><span id="InvProbDA">Sanz-Alonso, D., Stuart, A. M., &amp; Taeb, A. (2023). <i>Inverse Problems and Data Assimilation</i>. https://arxiv.org/abs/1810.06191</span></li>
+<li><span id="SaarkaTimeVaryingSystems">Särkkä, S. (2009). <i>Bayesian Estimation of Time-Varying Systems: Discrete-Time Systems</i>. https://api.semanticscholar.org/CorpusID:5616218</span></li>
+<li><span id="DAFundamentals">Evensen, G., Vossepoel, F. C., &amp; van Leeuwen, P. J. (2022). <i>Data Assimilation Fundamentals: A Unified Formulation of the State and Parameter Estimation Problem</i>. https://library.oapen.org/handle/20.500.12657/54434</span></li>
+<li><span id="ReichCotterDA">Reich, S., &amp; Cotter, C. (2015). <i>Probabilistic Forecasting and Bayesian Data Assimilation</i>. Cambridge University Press.</span></li></ol>
         </div>
     </div>
 </div>
