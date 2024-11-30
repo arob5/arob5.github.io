@@ -4,7 +4,7 @@ subtitle:
 layout: default
 date: 2024-08-15
 keywords: probability, statistics
-published: false
+published: true
 ---
 
 In this post, I provide an overview of a theory of probabilistic forecasting.
@@ -94,9 +94,9 @@ $\mathcal{A}_1 \subseteq \mathcal{A}$ thus encodes the natural assumption that
 "nature" has a larger information basis than the forecaster. While the above
 definition focuses on defining a suitable measure space, it will typically be
 convenient to work on the level of random variables (elements).
-Note that I reserve the phrase *random variable* for random quantities assuming
+Note that we reserve the phrase *random variable* for random quantities assuming
 a finite number of values. Since, in general, $\mu$ lives in an infinite-dimensional
-space of measures I use the term *random element* or *random quantity*.
+space of measures we use the term *random element* or *random quantity*.
 
 <blockquote>
   <p><strong>Prediction Spaces and Random Elements.</strong>
@@ -180,7 +180,6 @@ previous definition to this special case.
 
 ### Generalization: Multiple Forecasts  
 
-
 {% endkatexmm %}
 
 
@@ -195,3 +194,6 @@ previous definition to this special case.
 3. A General Framework for Forecast Verification (Murphy and Winkler, 1987)
 4. Coherant Combination of Experts' Opinions (Dawid, 1995)
 5. CS269I: Incentives in Computer Science Lecture #17: Scoring Rules and Peer Prediction (Incentivizing Honest Forecasts and Feedback)
+6. The comparison and evaluation of forecasters (DeGroot et al)
+7. The Well-Calibrated Bayesian (Philip)
+8. Interval Estimation for a Binomial Proportion (Brown et al)

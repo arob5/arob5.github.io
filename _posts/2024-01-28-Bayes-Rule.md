@@ -88,7 +88,7 @@ Intuitively,
 in order to re-weight $\nu$ to obtain $P_u$, $\nu$ better not be zero where
 $P_u$ is positive. In applications, the most common choices
 for $\nu$ are the Lebesgue or counting measure, which lead to the standard
-presentation of Bayes' rule for continous and discrete random variables,
+presentation of Bayes' rule for continuous and discrete random variables,
 respectively.
 
 ### The Statistical Interpretation
@@ -97,9 +97,10 @@ concerns the joint and conditional distributions between two random
 variables $U$ and $Y$. However, the result is most commonly seen applied in
 the field of Bayesian statistics, so I take a moment to map the above definitions
 onto their common Bayesian interpretations. In a Bayesian context, the random
-variable $Y$ is the data, while $U$ is the parameter in the statistical model
-being considered. The measure $\mu_U$ thus represents the prior distribution
-on the parameter. The probability kernel $P$ formalizes the notion of a parametric
+variable $Y$ encodes the data, while $U$ represents the parameter in the
+statistical model being considered. The measure $\mu_U$ thus represents the
+prior distribution on the parameter. The probability kernel $P$ formalizes the
+notion of a parametric
 statistical model. Indeed, in a standard parametric statistical setting each
 fixed value $u$ for the parameter $U$ yields a different data-generating process;
 this data-generating process is encoded by $P_u$. The Radon-Nikodym
@@ -162,7 +163,7 @@ likelihood, and then normalizing the result.
 {% katexmm %}
 One last lingering question might be how to provide a more formal justification
 for (1), your everyday statement of Bayes' rule. We have seen that the
-rigorous formulation concerns, $\frac{d\mu^y}{d\mu_U}(u)$,
+rigorous formulation concerns $\frac{d\mu^y}{d\mu_U}(u)$,
 the Radon-Nikodym derivative of the posterior with respect to the prior,
 which is expressed in terms of some base dominating measure $\nu$. In the
 informal presentation of Bayes' rule for continuous random variables
@@ -180,7 +181,7 @@ informal formula, we require all integrals to be with respect to the Lebesgue
 density, which requires the additional assumption $\mu_U \ll \lambda$. Under this
 assumption, the Lebesgue density of $\mu_U$ exists and we will write it as
 \begin{align}
-p(u) := \frac{d\mu_U}{d\lambda}(y).
+p(u) := \frac{d\mu_U}{d\lambda}(u).
 \end{align}
 Note that there are technically two different Lebesgue
 measures being considered here: the first one is defined on the measurable space
