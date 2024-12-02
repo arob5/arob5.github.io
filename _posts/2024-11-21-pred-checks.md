@@ -37,8 +37,7 @@ where $\pi_0(\theta)$ is the *prior* density describing the marginal distributio
 of $\theta$. For each fixed value of $\theta$, $p(\cdot|\theta)$ is a density
 function over the data space. Viewed as a function of $\theta$ with $y$ fixed, we refer
 to the map $\theta \mapsto p(y|\theta)$ as the likelihood. The marginal
-distribution of $y$ under model (1) is referred to as the *prior predictive
-distribution*, and its density is obtained by marginalizing $\theta$ with
+distribution of $y$ under model (1) is referred to as the *prior predictive distribution*, and its density is obtained by marginalizing $\theta$ with
 respect to its prior:
 $$
 p(y)
@@ -76,9 +75,78 @@ where the final two equalities use (4) and (3), respectively.
 
 # Predictive Checks
 {% katexmm %}
+Predictive checks target model inadequacy in certain quantities of interest
+specified by the modeler, which is encoded by some function of the data
+(i.e., statistic) $T(y_{\text{obs}})$. Thus, instead of tackling the daunting
+problem of assessing the entire probabilistic model, we interrogate the model
+adequacy in the "direction" given by $T$. The idea of a Bayesian predictive
+check is to compare $T(y_{\text{obs}})$ to the distribution of
+$T(y_{\text{rep}})$, where $y_{\text{rep}} \sim q$ for some
+*reference distribution* $q$. The subscript here stands for "replicated",
+since $y_{\text{rep}}$ can be thought of as replicated, or simulated, data;
+it is the probabilistic model's representation of the data. If this
+representation deviates wildly from the observed quantity $T(y_{\text{obs}})$,
+then this provides evidence of model misspecification. This may imply
+misspecification in the prior, likelihood, or both. The following section
+summarizes popular choices for the reference distribution $q$. We then
+make precise what we mean by "comparing" $T(y_{\text{obs}})$ and
+$T(y_{\text{rep}})$.
+
+## Reference Distributions
+### Prior Predictive Checks
+A *prior predictive check* is defined by choosing the reference distribution
+$q$ to be the marginal distribution of $y$ under model (1); i.e.,
+$$
+q(y_{\text{rep}})
+:= \int p(\theta,y_{\text{rep}}) d\theta
+= \int \pi_0(\theta)p(y_{\text{rep}}|\theta) d\theta, \tag{6}
+$$
+which is precisely the prior predictive distribution given in (2).
+
+### Posterior Predictive Checks
+A *posterior predictive check* instead chooses the reference distribution
+$q$ to be the marginal distribution of $\tilde{y}$ under the joint
+model $(\theta, y, \tilde{y})$, conditional on $y = y_{\text{obs}}$;
+i.e.,
+$$
+q(y_{\text{rep}})
+:= p(y_{\text{rep}}|y = y_{\text{obs}})
+= \int p(y_{\text{rep}}|\theta) \pi(\theta) d\theta, \tag{7}
+$$
+which is precisely the posterior predictive distribution given in (5).
+Note a potential concern with this approach: the data $y_{\text{obs}}$
+is used twice. It is first used to construct the posterior distribution
+$\pi(\theta)$, then again when comparing to $T(y_\text{obs})$. We will
+discuss the consequences of such "double-dipping" below in more depth.
+For the time being, let's intuitively consider the potential concerns.
+Since the posterior is influenced by the observed data, then it would
+seem that by design $T(y_{\text{obs}})$ ought to be close to
+$T(y_{\text{rep}})$. Thus, we expect posterior predictive checks to be
+overly optimistic, potentially failing to diagnose cases of model
+misspecification.
+
+On the other hand, there is still reason to think
+that such checks may be of some value, especially given a well-chosen
+test statistic $T$. For example, suppose our model assumes a simple
+Gaussian likelihood $y|\theta \sim \Gaussian(\theta, \sigma^2 I)$. In this
+case, the posterior essentially balances the model fit term
+$\lVert y_{\text{obs}} - \theta \rVert^2$ with the prior $\pi_0(\theta)$.
+Thus, the posterior only incorporates the information in the data
+via the quadratic error between $y_{\text{obs}}$ and $\theta$. It would
+therefore be unsurprising that a posterior predictive check with respect
+to $T(y) := \lVert y_{\text{obs}} - \theta \rVert^2$ would look quite
+optimistic. However, we might consider choosing $T$ to capture some other
+aspect of the model fit.
+
+TODO: issue is that $T$ as defined above depends on $T(y,\theta)$.
+
+## Comparing to the Reference
+### Simulating Data
+### Graphical Checks
+### Bayesian p-values  
 {% endkatexmm %}
 
-
+# Frequentist Interpretation: Calibration
 
 References to add:
 - Posterior predictive checks (David M. Blei, Princeton)
