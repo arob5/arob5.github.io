@@ -4,7 +4,7 @@ subtitle: Gauss-Newton, Levenberg-Marquardt, Randomized Likelihood Sampling
 layout: default
 date: 2024-11-26
 keywords: statistics
-published: false
+published: true
 ---
 
 # Notation
@@ -83,3 +83,4 @@ present formulation in (1).
 
 # References
 - Nonlinear Least Squares (neos Guide)
+- A multispectrum nonlinear least-squares fitting technique

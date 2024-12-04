@@ -494,7 +494,7 @@ $$
 = \hat{C}_{k+1}H^\top \left(H\hat{C}_{k+1}H^\top + R \right)^{-1},
 $$
 where we recognize the righthand side as $K_{k+1}$. Plugging
-$\hat{C}_{k+1} = \left(\hat{C}^{-1}_{k+1} + H^\top R^{-1}H \right)^{-1}$ into the
+$C_{k+1} = \left(\hat{C}^{-1}_{k+1} + H^\top R^{-1}H \right)^{-1}$ into the
 lefthand side completes the proof. $\qquad \blacksquare$
 
 
