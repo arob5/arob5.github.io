@@ -497,7 +497,6 @@ where we recognize the righthand side as $K_{k+1}$. Plugging
 $C_{k+1} = \left(\hat{C}^{-1}_{k+1} + H^\top R^{-1}H \right)^{-1}$ into the
 lefthand side completes the proof. $\qquad \blacksquare$
 
-
 ### Proof: Equivalence of State Space and Data Space KF Updates
 We showed above that different derivations of the mean and covariance KF recursions
 result in different update formulae, one of which requires a matrix inversion in
