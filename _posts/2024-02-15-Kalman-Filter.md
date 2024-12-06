@@ -1,6 +1,6 @@
 ---
-title: The Kalman Filter - A Few Different Perspectives
-subtitle: I discuss the Kalman filter from both the probabilistic and optimization perspectives.
+title: The Kalman Filter
+subtitle: I discuss the Kalman filter from both the probabilistic and optimization perspectives, and provide multiple derivations of the Kalman update.
 layout: default
 date: 2024-02-15
 keywords: Bayes, Filtering, Data-Assim
@@ -368,32 +368,11 @@ $$
 Negating the above expression and taking the logarithm gives the objective
 function in (10). Note that the normalizing constants in the two
 Gaussian densities being multiplied do not depend on $v$ and are thus absorbed
-in the proportionality sign. Next, we make a slight modification to (10) in
-order to present a second optimization perspective.
-<blockquote>
-  <p><strong>Constrained Optimization Perspective.</strong>
-  The filtering mean $m_k$ solves the constrained optimization problem
-  $$
-  m_k
-  := \text{argmin}_{v \in \mathcal{V}} \left\{\frac{1}{2} \lVert y_k - Hv \rVert^2_{R} + \frac{1}{2} \langle b, v - \hat{m}_k \rangle \right\}, \tag{11}
-  $$
-  where
-  $$
-  \mathcal{V}
-  := \left\{v \in \mathbb{R}^d : \hat{C}_k b = v - \hat{m}_k \right\},
-  $$
-  and the problem is well-defined even when $\hat{C}_k$ is singular.
-  </p>
-</blockquote>
-This may feel a bit pointless at this stage. Indeed, as we noted above
-$\hat{C}_k$ is guaranteed to be positive definite, hence invertible, so
-$b = \hat{C}_k^{-1} (v - \hat{m}_k)$ and thus
-$$
-\langle b, v - \hat{m}_k \rangle
-= \langle \hat{C}_k^{-1} (v - \hat{m}_k), v - \hat{m}_k \rangle
-= \lVert v - \hat{m}_k \rVert_{\hat{C}_k}^2.
-$$
-
+in the proportionality sign. For more details on this perspective, see my
+(post)[https://arob5.github.io/blog/2024/07/03/lin-Gauss/] on linear Gaussian
+inverse problems. For a more sophisticated optimization perspective that allows
+$\hat{C}_{k+1}$ to be singular,
+see (this)[https://arob5.github.io/blog/2024/12/03/ls-psd-cov/] post.
 {% endkatexmm %}
 
 ## References
