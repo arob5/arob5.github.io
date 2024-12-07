@@ -116,8 +116,8 @@ $u_1, u_2, \dots$ with the goal of converging to an optimum of $J(u)$.
 ## Newton's Method
 Given a current iterate $u_k$, Newton's method constructs a quadratic
 approximation of $J(u)$ centered at the point $u_k$, then minimizes this
-quadratic function to select the next iterate $u_{k+1}$. Specifically,
-Newton's method considers the second order Taylor expansion
+quadratic function to select the next iterate $u_{k+1}$. The specific
+quadratic approximation considered is the second order Taylor expansion
 $$
 J_k(u) := J(u_k) + DJ(u_k)[u-u_k] + \frac{1}{2}(u-u_k)^\top [\nabla^2 J(u_k)] (u-u_k). \tag{5}
 $$
@@ -127,9 +127,9 @@ $$
 $$
 which yields
 $$
-\nabla J_k(u_{k_1}) = \nabla J(u_k) + [\nabla^2 J(u_k)] (u_{k+1}-u_k) = 0. \tag{7}
+\nabla J_k(u_k) = \nabla J(u_k) + [\nabla^2 J(u_k)] (u_{k+1}-u_k) = 0. \tag{7}
 $$
-At this point, note that it may be the case that $J_k$ doesn't even have a minimum,
+At this point, note that it is possible $J_k$ doesn't even have a minimum,
 in which case $\nabla^2 J(u_k)$ is not positive definite. We will not get into this
 issue here, and instead simply assume that $\nabla^2 J(u_k)$ is invertible. Then
 we can solve for $u_{k+1}$ in (7) as
@@ -139,9 +139,9 @@ $$
 Working with the Hessian here can be difficult in certain settings; note in
 (5) that computing the Hessian of $J$ requires computing the Hessian of
 $\mathcal{G}$ for each output dimension. Since $\mathcal{G}$ can be a very
-complicated and computationally function, this presents challenges. The below
-methods maintain the spirit of the Newton update (8), but replace the Hessian
-with something that is easier to compute.
+complicated and computationally-expensive function, this presents challenges.
+The below methods maintain the spirit of the Newton update (8), but replace
+the Hessian with something that is easier to compute.
 
 ## Gauss-Newton
 We introduce the Gauss-Newton update from two different perspectives. The
@@ -156,9 +156,9 @@ $$
 \hat{H}_k := G_k^\top \Sigma^{-1}G_k + C^{-1}, \tag{9}
 $$
 where we have introduced the shorthand for the Jacobian of $\mathcal{G}$
-evaluated at $u_k$:
+evaluated at $u_k$,
 $$
-G_k := D\mathcal{G}(u_k) \tag{10}
+G_k := D\mathcal{G}(u_k). \tag{10}
 $$
 Notice that (9) no longer requires extracting second order derivative
 information from $\mathcal{G}$. The resulting Gauss-Newton update takes the form
@@ -180,6 +180,20 @@ definite. The invertibility of $\hat{H}_k$ is thus guaranteed, and the local qua
 function that Gauss-Newton is implicitly minimizing is guaranteed to have a minimum.  
 
 ### Local Least Squares Perspective
+The Gauss-Newton update can alternatively be viewed as minimizing the following
+linear least squares cost function:
+$$
+J_k(u) := \frac{1}{2}\lVert y - [\mathcal{G}(u_k)+G_k(u-u_k)] \rVert^2_{\Sigma} + \frac{1}{2}\lVert u - m\rVert_C^2. \tag{13}
+$$
+In other words, the NLS objective $J(u)$ is approximated by replacing the
+true forward model $\mathcal{G}(u)$ with its linearization, centered at
+the current iterate $u_k$. In other words, we can view Gauss-Newton as picking
+the next iterate to be the MAP estimate of the "local" linear Gaussian model
+\begin{align}
+y_k|u &\sim \mathcal{N}(G_k u, \Sigma) \tag{14} \newline
+u &\sim \mathcal{N}(m, C),
+\end{align}
+where $y_k := y - \mathcal{G}(u_k) + G_k u_k$.
 
 ## Levenberg-Marquardt
 
