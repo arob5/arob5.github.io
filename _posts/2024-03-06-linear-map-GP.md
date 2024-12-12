@@ -1,6 +1,6 @@
 ---
-title: Linearly Transforming Gaussian Process Priors
-subtitle: I derive how a linear transformation of a Gaussian process prior influences the Gaussian process posterior, and consider some special cases.
+title: Gaussian Conditioning under Linear Transformations
+subtitle: I derive generalizations of the standard Gaussian conditioning identities whereby components of the Gaussian vector are subject to linear maps, and highlight applications to Gaussian processes.
 layout: default
 date: 2024-03-06
 keywords: GP
@@ -267,7 +267,7 @@ In other words, we have shown
 meaning that transforming the prior $f(\cdot)$ in (13)
 is equivalent to applying the same transformation to the
 posterior $\hat{f}$.
- 
+
 
 {% endkatexmm %}
 

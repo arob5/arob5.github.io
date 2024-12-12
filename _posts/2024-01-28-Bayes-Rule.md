@@ -338,3 +338,4 @@ $\frac{d\mu^y}{d\mu_U}(u)$ is given by the term in brackets.
 1. Gradient Flows: in Metric Spaces and in the Space of Probability Measures
 (results on disintegration of measures).
 2. Random Measures: Theory and Applications (Kallenberg)
+3. Lauritzen Graphical Models Lectures (see corollary 1.21)

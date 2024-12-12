@@ -36,7 +36,7 @@ $u$; that is,
 where $P(u,\cdot)$ is a probability measure on the sample space $[0, \infty)$
 for each $u \in \mathcal{U}$ (formally, we can think of $P$ as a Markov kernel).
 It turns out that this is sufficient to define an MCMC algorithm with target
-distribution equal $u$'s posterior. The algorithm that accomplishes
+distribution equal to $u$'s posterior. The algorithm that accomplishes
 this is referred as *pseudo-marginal MCMC*. A single step of this algorithm
 is detailed below.
 
@@ -70,7 +70,7 @@ $\pi$. To see why this is true, the trick is to view the above algorithm as
 a Metropolis-Hastings scheme operating on the extended state vector
 $(u, \ell)$. In showing this, I will assume $P(u,\cdot)$ and $Q(u,\cdot)$
 admit densities $p(u,\cdot)$ and $q(u,\cdot)$ with respect to the same base
-measure for which $\pi$ is a density (typically, the Lebesgue or counting measure.)
+measure for which $\pi$ is a density (typically, the Lebesgue or counting measure).
 Now, to view the above algorithm with respect to the extended state space,
 start by noticing that (3) and (4) can be interpreted as a joint proposal
 $$
@@ -89,7 +89,7 @@ interpreted with respect to the extended state space. To this end, consider
 &= \frac{\pi_0(\tilde{u})\tilde{\ell}}{\pi_0(u)\ell}
 \cdot \frac{q(\tilde{u},u)p(u,\ell)}{q(u,\tilde{u})p(\tilde{u},\tilde{\ell})}
 \cdot \frac{p(\tilde{u},\tilde{\ell})}{p(u,\ell)} \newline
-&= \frac{\pi_0(\tilde{u})\tilde{\ell}p(\tilde{u},\tilde{\ell})}{\pi_0(u)\ell p(\tilde{u},\tilde{\ell})}
+&= \frac{\pi_0(\tilde{u})\tilde{\ell}p(\tilde{u},\tilde{\ell})}{\pi_0(u)\ell p(u,\ell)}
 \cdot \frac{\overline{q}(\tilde{u},\tilde{\ell};u,\ell)}{\overline{q}(u,\ell;\tilde{u},\tilde{\ell})}. \tag{8}
 \end{align}
 The second term is the proposal density ratio with respect to extended proposal
@@ -136,7 +136,7 @@ As before, we consider $\pi(u)$ intractable, but assume we can draw samples from
 an unbiased estimator. We could define $P(u,\cdot)$ as before such that samples
 drawn from $P(u,\cdot)$ are unbiased with respect to $\pi(u)$. However, note that
 this is equivalent to considering samples $w \sim P(u,\cdot)$ with expectation
-$1$, such that $w \cdot \pi(u)$ is unbiased for $\pi(u)$. This seems to be
+one, such that $w \cdot \pi(u)$ is unbiased for $\pi(u)$. This seems to be
 a roundabout way to go around this, but for the purposes of analysis it turns
 out to be convenient. This is the definition used in some of the "noisy MCMC"
 literature (see, e.g., Medina-Aguayo et al, 2018). Thus, let's go with this
@@ -169,8 +169,8 @@ it again below to emphasize the new notation.
   set the new state to $\tilde{u}$. Else set it to the current state $u$.
   </p>
 </blockquote>
-Of course, we can't evaluate $\pi(u)$ in (14), but we have just defined
-things this was for its theoretical benefits. In practice, we can think of drawing
+Of course, we can't evaluate $\pi(u)$ in (14), but stating the algorithm this
+way is useful to study its properties. In practice, we can think of drawing
 a sample to directly approximate $\pi(u)$. Similar to before, we can think about this
 algorithm as targeting an invariant distribution on the product space
 $(\mathcal{U} \times \mathcal{W}, \mathcal{B}(\mathcal{U}) \times \mathcal{B}(\mathcal{W}))$.

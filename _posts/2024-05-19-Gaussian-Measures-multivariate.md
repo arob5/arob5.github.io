@@ -237,7 +237,7 @@ procedure is summarized in the below corollary.
 </blockquote>
 As for the factorization, the [Cholesky decomposition](https://en.wikipedia.org/wiki/Cholesky_decomposition)
 is a standard choice when $C$ is positive definite.
-When $C$ is only positive semidefinite,
+When $C$ is merely positive semidefinite,
 the eigendecomposition provides another option, since
 $$
 C = UDU^\top = UD^{1/2} D^{1/2} U^\top = (UD^{1/2})(UD^{1/2})^\top
@@ -245,8 +245,104 @@ $$
 so setting $A := UD^{1/2}$ does the trick. Note that $C$ is positive semidefinite
 so $D$ is just a diagonal matrix with nonnegative values on the diagonal.
 
+Finally, note that we can expand (7) as  
+\begin{equation}
+X = m + \sum_{i=1}^{n} Z_i A_i,
+\end{equation}
+where the $A_i$ are the columns of $A$. This shows that we are representing
+the random vector $X$ as "randomized summation"; that is, a linear combination
+of nonrandom vectors $A_i$ where the coefficients $Z_i$ are random. In the
+case of the eigendecomposition, this summation assumes the form
+\begin{equation}
+X = m + \sum_{i=1}^{n} \sqrt{\lambda}_i Z_i U_i,
+\end{equation}
+where the $\lambda_i$ are the diagonal values of $D$. This expression can
+be viewed as a special case of the Karhunen-Loeve expansion
+{% cite alexanderianKLExpansion %}.
+
 {% endkatexmm %}
 
+## Conditional Distributions
+{% katexmm %}
+Throughout this section, let $(X,Y)$ denote a Gaussian vector in $\R^{d+n}$,
+such that $X \in \R^d$ and $Y \in \R^n$. We are interested in the conditional
+distribution of $X$ given $Y$. We start by characterizing the distribution
+of the conditional expectation $\mathbb{E}(X|Y)$, which we recall is a $Y$-measurable
+random vector in $\R^d$. The first part of the below result, which does not
+require any of the covariances involved to be positive definite, is theorem
+1.2.8 in {% cite BogachevGaussian %}.
+<blockquote>
+  <p><strong>Theorem.</strong>
+  The conditional expectation $\mathbb{E}(X|Y)$ is a Gaussian vector, and can be written
+  as
+  $$
+  \mathbb{E}(X|Y) = \mathbb{E}X + K(Y - \mathbb{E}Y),
+  $$
+  for a nonrandom linear operator $K: \R^n \to \R^d$. If $\text{Cov}[y]$ is
+  positive definite, then
+  $$
+  K = \text{Cov}[X,Y]\text{Cov}[Y]^{-1}.
+  $$
+  </p>
+</blockquote>
+
+**Proof.**
+We consider the zero mean case $\mathbb{E}X = \mathbb{E}Y = 0$, since we can
+simply subtract off the means in the non-centered case.
+Since Gaussian random variables are square integrable, then the conditional
+expectation can be characterized as an $L^2$ projection
+$$
+\mathbb{E}(X|Y) = \text{argmin}_{g} \mathbb{E}\lVert X - g(Y) \rVert^2,
+$$
+where the minimum is considered over all $Y$-measurable functions
+$g: \R^n \to \R^d$. The Hilbert projection theorem provides the orthogonality
+condition $\langle x - \mathbb{E}(X|Y), g(Y) \rangle_{L^2} = 0$ for the optimum.
+We thus seek to show that an operator $K$ can be constructed satisfying
+$\langle X - KY, g(Y) \rangle_{L^2} = 0$ for all measurable functions $g$.
+However, note that $(X-KY,Y)$ are jointly Gaussian, as this vector results from
+a linear map applied to $(X,Y)$. Consequently, the condition $\text{Cov}[X-KY,Y]=0$
+implies the independence of $X-KY$ and $Y$, which in turn implies the
+$L^2$ orthogonality condition holds for all $g$. Thus, we must show that $K$
+can be defined to satisfy
+$$
+\text{Cov}[X-KY,Y]=0,
+$$
+or equivalently
+$$
+\text{Cov}[X,Y] = K\text{Cov}[Y].
+$$
+If $\text{Cov}[Y]$ is positive definite, then it is invertible so
+$K = \text{Cov}[X,Y]\text{Cov}[Y]^{-1}$.
+We now deal with the positive semidefinite case. Consider
+the eigendecomposition
+$\text{Cov}[Y] = U \Lambda U^\top + V \Gamma V^\top$,
+partitioned so that $\Lambda$ contains the nonzero eigenvalues,
+while $\Gamma$ is the zero matrix (and hence the second term vanishes).
+Plugging in this expression we now have the condition
+$\text{Cov}[X,Y] = KU\Lambda U^\top$. Right multiplying both sides by $U$
+yields
+$$
+\text{Cov}[X,Y] U = KU\Lambda.
+$$
+Treating this condition column-by-column, we require
+$\text{Cov}[X,Y] u_j = \lambda_j Ku_j$. We can thus define $K$ on the range of
+$U$ by
+$$
+Ku_j := \frac{1}{\lambda_j}\text{Cov}[X,Y]u_j,
+$$
+which we note is valid since $\lambda_j > 0$. To extend the definition to all of
+$\R^n$, note that any $y \in \R^n$ can be written as $y = \tilde{y} + y^\perp$,
+where $\tilde{y}$ is in the range of $U$ and $y^\perp$ in the orthogonal
+complement, given by the range of $V$. We then define
+$$
+Ky := K\tilde{y} + Ky^\perp = K\tilde{y}.
+$$
+Note that the above derivations show that $\text{Cov}[X-KY,Y]$ is not a function
+of $Y^\perp$. We have thus defined a linear operator $K: \R^n \to \R^d$ that
+satisfies $\text{Cov}[X-KY,Y]=0$. Since $\mathbb{E}[X|Y] = KY$ is a linear
+function of the Gaussian random variable $Y$, then $\mathbb{E}[X|Y]$ is itself
+Gaussian. $\qquad \blacksquare$
+{% endkatexmm %}
 
 ## Covariance Operator
 {% katexmm %}
@@ -303,6 +399,7 @@ the one-dimensional projection:
 $$
 \mathcal{C}(y,y) = \text{Var}\left[\langle y, X\rangle \right].
 $$
+
 
 ### Inner Products
 One feature that makes the covariance operator a convenient
@@ -381,7 +478,7 @@ will become more consequential when we start considering Gaussian measures in
 more abstract settings.
 
 ### Alternative Definition
-As mentioned above, definitions of the covariance operator very slightly in the
+As mentioned above, definitions of the covariance operator vary slightly in the
 literature. One basic modification commonly seen is to assume that $\mu$ is
 centered (zero mean) and thus define the covariance operator as
 $$
@@ -464,11 +561,9 @@ are all isomorphic, in the present setting these various perspectives are
 interesting but perhaps a bit overkill. When we consider the infinite-dimensional
 setting in the subsequent post, not all of these perspectives will generalize.
 The key will be identifying the perspective that does actually generalize to
-infinite dimensional settings. 
+infinite dimensional settings.
 {% endkatexmm %}
 
-
-## Conditional Distributions
 
 ## Appendix
 
@@ -658,6 +753,10 @@ where we have used the fact
 ## References
 1. Gaussian Measures (Vladimir Bogachev)
 2. An Introduction to Stochastic PDEs (Martin Hairer)
+3. S. Janson, Gaussian Hilbert spaces,
+4. M.A. Lifshits, Gaussian random functions
+5. R. Durrett, Probability: theory and examples
+6. CONDITIONAL MEANS AND COVARIANCES OF NORMAL VARIABLES WITH SINGULAR COVARIANGE MATRIX (George Marsaglia)
 
 ## TODOs
 - Proof that zeros in covariance matrix imply independence.
