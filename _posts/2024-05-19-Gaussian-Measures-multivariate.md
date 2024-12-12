@@ -296,7 +296,7 @@ $$
 $$
 where the minimum is considered over all $Y$-measurable functions
 $g: \R^n \to \R^d$. The Hilbert projection theorem provides the orthogonality
-condition $\langle x - \mathbb{E}(X|Y), g(Y) \rangle_{L^2} = 0$ for the optimum.
+condition $\langle X - \mathbb{E}(X|Y), g(Y) \rangle_{L^2} = 0$ for the optimum.
 We thus seek to show that an operator $K$ can be constructed satisfying
 $\langle X - KY, g(Y) \rangle_{L^2} = 0$ for all measurable functions $g$.
 However, note that $(X-KY,Y)$ are jointly Gaussian, as this vector results from
@@ -342,6 +342,36 @@ of $Y^\perp$. We have thus defined a linear operator $K: \R^n \to \R^d$ that
 satisfies $\text{Cov}[X-KY,Y]=0$. Since $\mathbb{E}[X|Y] = KY$ is a linear
 function of the Gaussian random variable $Y$, then $\mathbb{E}[X|Y]$ is itself
 Gaussian. $\qquad \blacksquare$
+
+Notice that the above result implies that the conditional expectation satisfies
+$$
+\mathbb{E}[X|Y] \sim \mathcal{N}\left(\mathbb{E}X, K\text{Cov}[Y]K^\top \right).
+$$
+The fact that the expectation is $\mathbb{E}X$ can be seen from direct
+calculation or as a consequence of the law of iterated expectation. A very useful
+perspective is to view $X$ as a sum of $\mathbb{E}[X|Y]$ and some residual term
+$\epsilon$.
+
+<blockquote>
+  <p><strong>Corollary.</strong>
+  The random vector $X$ can be decomposed as
+  \begin{align}
+  &X = \mathbb{E}[X|Y] + \epsilon, &&\epsilon := X - \mathbb{E}[X|Y],
+  \end{align}
+  where $\mathbb{E}[X|Y]$ and $\epsilon$ are independent.
+  </p>
+</blockquote>
+
+**Proof.** Observe that $(\mathbb{E}[X|Y], \epsilon)$ are jointly Gaussian, as this
+vector results from a linear map applied to $(X,Y)$. Moreover, we know that
+$\epsilon$ is uncorrelated with any measurable function of $Y$ due to the orthogonality
+condition of conditional expectation. $\mathbb{E}[X|Y]$ is one such measurable function
+and thus $\epsilon$ and $\mathbb{E}[X|Y]$ are uncorrelated. However, they are jointly
+Gaussian and hence also independent. $\qquad \blacksquare$
+
+
+
+
 {% endkatexmm %}
 
 ## Covariance Operator
