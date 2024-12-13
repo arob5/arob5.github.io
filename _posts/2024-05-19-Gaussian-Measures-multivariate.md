@@ -369,9 +369,6 @@ condition of conditional expectation. $\mathbb{E}[X|Y]$ is one such measurable f
 and thus $\epsilon$ and $\mathbb{E}[X|Y]$ are uncorrelated. However, they are jointly
 Gaussian and hence also independent. $\qquad \blacksquare$
 
-
-
-
 {% endkatexmm %}
 
 ## Covariance Operator
