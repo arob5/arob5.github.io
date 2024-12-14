@@ -4,7 +4,7 @@ subtitle: Gauss-Newton, Levenberg-Marquardt
 layout: default
 date: 2024-11-26
 keywords: statistics
-published: true
+published: false
 ---
 
 This post provides an introduction to nonlinear least squares (NLS), which

@@ -4,7 +4,7 @@ subtitle: Understanding the inverse covariance matrix in general, and in the Gau
 layout: default
 date: 2024-12-09
 keywords:
-published: true
+published: false
 ---
 
 # Setup and Notation
