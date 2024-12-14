@@ -254,7 +254,7 @@ the random vector $X$ as "randomized summation"; that is, a linear combination
 of nonrandom vectors $A_i$ where the coefficients $Z_i$ are random. In the
 case of the eigendecomposition, this summation assumes the form
 \begin{equation}
-X = m + \sum_{i=1}^{n} \sqrt{\lambda}_i Z_i U_i,
+X = m + \sum_{i=1}^{n} \sqrt{\lambda}_i Z_i U_i, \tag{8}
 \end{equation}
 where the $\lambda_i$ are the diagonal values of $D$. This expression can
 be viewed as a special case of the Karhunen-Loeve expansion
@@ -266,7 +266,10 @@ be viewed as a special case of the Karhunen-Loeve expansion
 {% katexmm %}
 Throughout this section, let $(X,Y)$ denote a Gaussian vector in $\R^{d+n}$,
 such that $X \in \R^d$ and $Y \in \R^n$. We are interested in the conditional
-distribution of $X$ given $Y$. We start by characterizing the distribution
+distribution of $X$ given $Y$.
+
+### Conditional Expectation
+We start by characterizing the distribution
 of the conditional expectation $\mathbb{E}(X|Y)$, which we recall is a $Y$-measurable
 random vector in $\R^d$. The first part of the below result, which does not
 require any of the covariances involved to be positive definite, is theorem
@@ -276,12 +279,12 @@ require any of the covariances involved to be positive definite, is theorem
   The conditional expectation $\mathbb{E}(X|Y)$ is a Gaussian vector, and can be written
   as
   $$
-  \mathbb{E}(X|Y) = \mathbb{E}X + K(Y - \mathbb{E}Y),
+  \mathbb{E}(X|Y) = \mathbb{E}X + K(Y - \mathbb{E}Y), \tag{9}
   $$
   for a nonrandom linear operator $K: \R^n \to \R^d$. If $\text{Cov}[y]$ is
   positive definite, then
   $$
-  K = \text{Cov}[X,Y]\text{Cov}[Y]^{-1}.
+  K = \text{Cov}[X,Y]\text{Cov}[Y]^{-1}. \tag{10}
   $$
   </p>
 </blockquote>
@@ -292,7 +295,7 @@ simply subtract off the means in the non-centered case.
 Since Gaussian random variables are square integrable, then the conditional
 expectation can be characterized as an $L^2$ projection
 $$
-\mathbb{E}(X|Y) = \text{argmin}_{g} \mathbb{E}\lVert X - g(Y) \rVert^2,
+\mathbb{E}(X|Y) = \text{argmin}_{g} \mathbb{E}\lVert X - g(Y) \rVert^2, \tag{11}
 $$
 where the minimum is considered over all $Y$-measurable functions
 $g: \R^n \to \R^d$. The Hilbert projection theorem provides the orthogonality
@@ -305,7 +308,7 @@ implies the independence of $X-KY$ and $Y$, which in turn implies the
 $L^2$ orthogonality condition holds for all $g$. Thus, we must show that $K$
 can be defined to satisfy
 $$
-\text{Cov}[X-KY,Y]=0,
+\text{Cov}[X-KY,Y]=0, \tag{12}
 $$
 or equivalently
 $$
@@ -345,7 +348,7 @@ Gaussian. $\qquad \blacksquare$
 
 Notice that the above result implies that the conditional expectation satisfies
 $$
-\mathbb{E}[X|Y] \sim \mathcal{N}\left(\mathbb{E}X, K\text{Cov}[Y]K^\top \right).
+\mathbb{E}[X|Y] \sim \mathcal{N}\left(\mathbb{E}X, K\text{Cov}[Y]K^\top \right). \tag{13}
 $$
 The fact that the expectation is $\mathbb{E}X$ can be seen from direct
 calculation or as a consequence of the law of iterated expectation. A very useful
@@ -356,7 +359,7 @@ $\epsilon$.
   <p><strong>Corollary.</strong>
   The random vector $X$ can be decomposed as
   \begin{align}
-  &X = \mathbb{E}[X|Y] + \epsilon, &&\epsilon := X - \mathbb{E}[X|Y],
+  &X = \mathbb{E}[X|Y] + \epsilon, &&\epsilon := X - \mathbb{E}[X|Y], \tag{14}
   \end{align}
   where $\mathbb{E}[X|Y]$ and $\epsilon$ are independent.
   </p>
@@ -368,6 +371,82 @@ $\epsilon$ is uncorrelated with any measurable function of $Y$ due to the orthog
 condition of conditional expectation. $\mathbb{E}[X|Y]$ is one such measurable function
 and thus $\epsilon$ and $\mathbb{E}[X|Y]$ are uncorrelated. However, they are jointly
 Gaussian and hence also independent. $\qquad \blacksquare$
+
+### Conditional Distribution
+In practice, we are typically interested in conditioning on a single realization
+$y$ of the random vector $Y$. The concept that captures this notion is
+[regular conditional probabilty](https://en.wikipedia.org/wiki/Regular_conditional_probability). A full discussion of this would take us too far
+afield for this post, but just note that when we talk of the distribution of
+$X|Y=y$, we technically are referring to the regular conditional probability
+kernel. In the case that the Gaussian distribution of $(X,Y)$ is nonsingular,
+then this concept reverts to the typical notion of conditional densities.
+
+We now leverage our characterization of $\mathbb{E}[X|Y]$ to derive the
+conditional distribution $X|Y=y$. To do so, we utilize a basic fact about
+regular conditional probability; a proof can be found in Lemma 2 of
+{% cite pathwiseGP %}. The result states that if the decomposition
+$$
+X \overset{d}{=} g(Y) + \epsilon \tag{15}
+$$
+holds, and $Y$ is independent of $\epsilon$, then
+$$
+(X|Y=y) \overset{d}{=} g(y) + \epsilon. \tag{16}
+$$
+
+The Gaussian conditional can thus be characterized by combining this fact with (14).
+<blockquote>
+  <p><strong>Corollary.</strong>
+  The conditional distribution $X|Y=y$ is Gaussian, with mean and covariance
+  given by
+  \begin{align}
+  \mathbb{E}[X|Y=y] &= \mathbb{E}[X] + K(y-\mathbb{E}[Y]) \tag{17}
+  \text{Cov}[X|Y=y] &= \text{Cov}[X] - K\text{Cov}[Y]K^\top -
+  \text{Cov}[X,Y]K^\top - K\text{Cov}[X,Y] \tag{18}
+  \end{align}
+  </p>
+</blockquote>
+
+**Proof.**
+The expression $X = \mathbb{E}[X|Y] + \epsilon$ given in (14) is of the form
+(15) since $Y$ and $\epsilon$ are independent. Thus, (16) gives
+$$
+(X|Y=y) \overset{d}{=} \mathbb{E}[X|y] + \epsilon, \tag{19}
+$$
+where
+\begin{align}
+\mathbb{E}[X|y] &= \mathbb{E}[X] + K(y-\mathbb{E}[Y]) \newline
+\epsilon &= X - \mathbb{E}[X|Y] = X - \mathbb{E}[X] - K(Y-\mathbb{E}[Y]).
+\end{align}
+The righthand side of (19) results from the application of a linear function
+to $(X,Y)$ and thus is Gaussian, verifying that $X|Y=y$ is Gaussian. The
+conditional mean (17) follows immediately upon noting that
+$\mathbb{E}[\epsilon] = 0$. For the covariance, we have
+\begin{align}
+\text{Cov}[\mathbb{E}[X|y] + \epsilon] &= \text{Cov}[\epsilon] \newline
+&= \text{Cov}[X - KY] \newline
+&= \text{Cov}[X] - K\text{Cov}[Y]K^\top -
+\text{Cov}[X,Y]K^\top - K\text{Cov}[X,Y]. \qquad \blacksquare
+\end{align}
+
+
+
+In the case that $\text{Cov}[Y]$ is positive definite, then we substitute
+expression (10) for $K$ to yield the widely cited
+"Gaussian conditioning identities".
+
+<blockquote>
+  <p><strong>Corollary.</strong>
+  If $\text{Cov}[Y]$ is positive definite, then (17) and (18) are given by
+  \begin{align}
+  \mathbb{E}[X|Y=y] &= \mathbb{E}[X] + \text{Cov}[X,Y]\text{Cov}[Y]^{-1}(y-\mathbb{E}[Y]) \tag{20}
+  \text{Cov}[X|Y=y] &= \text{Cov}[X] - \text{Cov}[X,Y]\text{Cov}[Y]^{-1}\text{Cov}[Y,X] \tag{21}
+  \end{align}
+  </p>
+</blockquote>
+
+
+
+
 
 {% endkatexmm %}
 
