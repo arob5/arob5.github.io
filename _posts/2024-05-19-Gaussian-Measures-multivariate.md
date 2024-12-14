@@ -281,7 +281,7 @@ require any of the covariances involved to be positive definite, is theorem
   $$
   \mathbb{E}(X|Y) = \mathbb{E}X + K(Y - \mathbb{E}Y), \tag{9}
   $$
-  for a nonrandom linear operator $K: \R^n \to \R^d$. If $\text{Cov}[y]$ is
+  for a nonrandom linear operator $K: \R^n \to \R^d$. If $\text{Cov}[Y]$ is
   positive definite, then
   $$
   K = \text{Cov}[X,Y]\text{Cov}[Y]^{-1}. \tag{10}
@@ -343,14 +343,14 @@ $$
 Note that the above derivations show that $\text{Cov}[X-KY,Y]$ is not a function
 of $Y^\perp$. We have thus defined a linear operator $K: \R^n \to \R^d$ that
 satisfies $\text{Cov}[X-KY,Y]=0$. Since $\mathbb{E}[X|Y] = KY$ is a linear
-function of the Gaussian random variable $Y$, then $\mathbb{E}[X|Y]$ is itself
+function of the Gaussian vector $Y$, then $\mathbb{E}[X|Y]$ is itself
 Gaussian. $\qquad \blacksquare$
 
 Notice that the above result implies that the conditional expectation satisfies
 $$
-\mathbb{E}[X|Y] \sim \mathcal{N}\left(\mathbb{E}X, K\text{Cov}[Y]K^\top \right). \tag{13}
+\mathbb{E}[X|Y] \sim \mathcal{N}\left(\mathbb{E}[X], K\text{Cov}[Y]K^\top \right). \tag{13}
 $$
-The fact that the expectation is $\mathbb{E}X$ can be seen from direct
+The fact that the expectation is $\mathbb{E}[X]$ can be seen from direct
 calculation or as a consequence of the law of iterated expectation. A very useful
 perspective is to view $X$ as a sum of $\mathbb{E}[X|Y]$ and some residual term
 $\epsilon$.
@@ -399,9 +399,8 @@ The Gaussian conditional can thus be characterized by combining this fact with (
   The conditional distribution $X|Y=y$ is Gaussian, with mean and covariance
   given by
   \begin{align}
-  \mathbb{E}[X|Y=y] &= \mathbb{E}[X] + K(y-\mathbb{E}[Y]) \tag{17}
-  \text{Cov}[X|Y=y] &= \text{Cov}[X] - K\text{Cov}[Y]K^\top -
-  \text{Cov}[X,Y]K^\top - K\text{Cov}[X,Y] \tag{18}
+  \mathbb{E}[X|Y=y] &= \mathbb{E}[X] + K(y-\mathbb{E}[Y]) \tag{17} \newline
+  \text{Cov}[X|Y=y] &= \text{Cov}[X] - K\text{Cov}[Y]K^\top - \text{Cov}[X,Y]K^\top - K\text{Cov}[X,Y] \tag{18}
   \end{align}
   </p>
 </blockquote>
@@ -428,25 +427,19 @@ $\mathbb{E}[\epsilon] = 0$. For the covariance, we have
 \text{Cov}[X,Y]K^\top - K\text{Cov}[X,Y]. \qquad \blacksquare
 \end{align}
 
-
-
 In the case that $\text{Cov}[Y]$ is positive definite, then we substitute
-expression (10) for $K$ to yield the widely cited
+expression (10) for $K$ to yield the beloved
 "Gaussian conditioning identities".
 
 <blockquote>
   <p><strong>Corollary.</strong>
   If $\text{Cov}[Y]$ is positive definite, then (17) and (18) are given by
   \begin{align}
-  \mathbb{E}[X|Y=y] &= \mathbb{E}[X] + \text{Cov}[X,Y]\text{Cov}[Y]^{-1}(y-\mathbb{E}[Y]) \tag{20}
+  \mathbb{E}[X|Y=y] &= \mathbb{E}[X] + \text{Cov}[X,Y]\text{Cov}[Y]^{-1}(y-\mathbb{E}[Y]) \tag{20} \newline
   \text{Cov}[X|Y=y] &= \text{Cov}[X] - \text{Cov}[X,Y]\text{Cov}[Y]^{-1}\text{Cov}[Y,X] \tag{21}
   \end{align}
   </p>
 </blockquote>
-
-
-
-
 
 {% endkatexmm %}
 
