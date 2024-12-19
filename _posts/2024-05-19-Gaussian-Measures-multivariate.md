@@ -1,6 +1,6 @@
 ---
 title: Gaussian Measures, Part 2 - The Multivariate Case
-subtitle: A fairly deep dive into Gaussian measures in finitely many dimensions. The next step in building up to the infinite-dimensional case.
+subtitle: Gaussian measures in finite dimensions; i.e., multivariate Gaussians/Gaussian vectors.
 layout: default
 date: 2024-05-19
 keywords: GP, Prob-Theory
