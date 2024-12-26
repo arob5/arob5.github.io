@@ -39,9 +39,9 @@ f(x) &:= \varphi(x)^\top \beta = \sum\_{j=1}^{q} \beta_j \varphi_j(x) \in \mathc
 Every polynomial in the space can be represented via a particular choice of the
 coefficient vector $\beta \in \mathbb{R}^q$. As a concrete example in the
 one-dimensional setting $d = 1$ with polynomial dimension $p = 2$ we have
-$\varphi(x) = \begin{bmatrix} 1 & x & x^2 \end{bmatrix}^\top$ (when we draw
+$\varphi(x) = \begin{bmatrix} 1 & x & x^2 \end{bmatrix}^\top$. When we draw
 connections with the kernel approach, the scaling of these basis elements will
-be different, but the same ideas apply).
+be different, but the same ideas apply.
 
 ## Polynomial Kernel
 The goal is to find a kernel function $k: \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$
@@ -270,7 +270,7 @@ posterior predictive distribution is given by
 where
 \begin{align}
 \tilde{m} &= \tilde{\Phi}\Phi^\top \left(\Phi \Phi^\top + \lambda I_n \right)^{-1}y \newline
-\tilde{C} &= 
+\tilde{C} &=
 \end{align}
 
 ## Polynomial Kernel

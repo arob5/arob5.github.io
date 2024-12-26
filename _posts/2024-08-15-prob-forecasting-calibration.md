@@ -182,12 +182,6 @@ previous definition to this special case.
 
 {% endkatexmm %}
 
-
-
-
-
-
-
 ## References
 1. Predicting good probabilities with supervised learning.
 2. https://scikit-learn.org/stable/modules/calibration.html
@@ -197,3 +191,5 @@ previous definition to this special case.
 6. The comparison and evaluation of forecasters (DeGroot et al)
 7. The Well-Calibrated Bayesian (Philip)
 8. Interval Estimation for a Binomial Proportion (Brown et al)
+9. Metrics of Calibration for Probabilistic Predictions
+10. Asymptotic Calibration (Foster)

@@ -4,7 +4,7 @@ subtitle: Prior and posterior predictive checks.
 layout: default
 date: 2024-11-21
 keywords: UQ
-published: false
+published: true
 ---
 
 {% katexmm %}
@@ -116,37 +116,99 @@ $$
 which is precisely the posterior predictive distribution given in (5).
 Note a potential concern with this approach: the data $y_{\text{obs}}$
 is used twice. It is first used to construct the posterior distribution
-$\pi(\theta)$, then again when comparing to $T(y_\text{obs})$. We will
+$\pi(\theta)$, then again when comparing to $T(y_\text{rep})$ to
+$T(y_\text{obs})$. We will
 discuss the consequences of such "double-dipping" below in more depth.
 For the time being, let's intuitively consider the potential concerns.
 Since the posterior is influenced by the observed data, then it would
 seem that by design $T(y_{\text{obs}})$ ought to be close to
-$T(y_{\text{rep}})$. Thus, we expect posterior predictive checks to be
+$T(y_{\text{rep}})$. Thus, we might expect posterior predictive checks to be
 overly optimistic, potentially failing to diagnose cases of model
 misspecification.
 
 On the other hand, there is still reason to think
 that such checks may be of some value, especially given a well-chosen
 test statistic $T$. For example, suppose our model assumes a simple
-Gaussian likelihood $y|\theta \sim \Gaussian(\theta, \sigma^2 I)$. In this
+Gaussian likelihood $y|\theta \sim \mathcal{N}(\theta, \sigma^2 I)$. In this
 case, the posterior essentially balances the model fit term
 $\lVert y_{\text{obs}} - \theta \rVert^2$ with the prior $\pi_0(\theta)$.
-Thus, the posterior only incorporates the information in the data
-via the quadratic error between $y_{\text{obs}}$ and $\theta$. It would
-therefore be unsurprising that a posterior predictive check with respect
-to $T(y) := \lVert y_{\text{obs}} - \theta \rVert^2$ would look quite
-optimistic. However, we might consider choosing $T$ to capture some other
-aspect of the model fit.
-
-TODO: issue is that $T$ as defined above depends on $T(y,\theta)$.
+Therefore, it would be unsurprising that a posterior predictive check with
+respect to $T(y) := y$ or $T(y) := yy^\top$ would look quite optimistic.
+However, the Gaussian likelihood does not at all take into account higher
+moments. It therefore might be helpful to choose $T$ to target higher moments
+of the data in order to interrogate the assumed Gaussian data generating
+process.  
 
 ## Comparing to the Reference
 ### Simulating Data
 ### Graphical Checks
-### Bayesian p-values  
+### Bayesian p-values
+$\bar{p}(y_{\text{obs}}) := \mathbb{P}[T(y_{\text{rep}}) \geq T(y_{\text{obs}})]$.
+
 {% endkatexmm %}
 
 # Frequentist Interpretation: Calibration
+{% katexmm %}
+It is important to note that, thus far, we have been viewing the event
+$\{T(y_{\text{rep}}) \geq T(y_{\text{obs}})\}$ as random only as
+a function of $y_{\text{rep}} \sim q$, where the distribution
+$q$ is associated with the Bayesian probability model. In particular,
+we will consider $q$ to be the posterior predictive distribution
+(7) for now. We interpret the data $y_{\text{obs}}$ as
+fixed (non-random), which
+implies that $\bar{p}(y_{\text{obs}})$ is likewise non-random.
+In thinking about how to interpret the quantity
+$\bar{p}(y_{\text{obs}})$, we naturally might wonder about
+how sensitive its value is to $y_{\text{obs}}$. After all,
+in practice many factors contribute the construction of the
+dataset, and if things had progressed slightly differently
+we might have ended up with different data. The Bayesian
+model doesn't really let us tackle this question;
+$\bar{p}(y_{\text{obs}})$ lives entirely in the world
+of the Bayesian probability model. One approach to this
+question is to assume that the data $y_{\text{obs}}$
+is generated from some true distribution
+$$
+y_{\text{obs}} \sim p_{\star}.
+$$
+If the likelihood $p(y|\theta)$ is well-specified then
+$p_{\star}$ takes the form $p_{\star}(y) = p(y|\theta_{\star})$
+for some true parameter value $\theta_{\star}$. We will
+denote probabilities with respect to
+$y_{\text{obs}} \sim p_{\star}$ using the notation
+$\mathbb{P}_{\star}[\cdot]$.
+
+We have
+now adopted a classical perspective on the data-generating
+process, placing a frequentist perspective on top of the
+Bayesian model. With this additional assumption, we now
+view $\bar{p}(y_{\text{obs}})$ as a random variable,
+with the randomness stemming from
+$y_{\text{obs}} \sim p_{\star}$. We expect the value
+of $\bar{p}(y_{\text{obs}})$ to vary with different
+realizations of $y_{\text{obs}}$. For example, even if the
+Bayesian model is reasonable, it might be that certain
+realizations of $y_{\text{obs}}$ lead to extreme
+values of $T(y_{\text{obs}})$ with corresponding large
+values of $\bar{p}(y_{\text{obs}})$. Ideally, we would hope
+that $\bar{p}(y_{\text{obs}})$ "tracks" with the distribution
+$p_{\star}$. Precisely, for any fixed $y$, we would like the
+following to hold:
+$$
+\bar{p}(y) = \mathbb{P}\left[T(y_{\text{rep}}) \geq T(y) \right]
+= \mathbb{P}_{\star}\left[T(y_{\text{obs}}) \geq T(y) \right].
+$$
+The first probability is with respect to $y_{\text{rep}} \sim q$,
+while the second is with respect to $y_{\text{obs}} \sim p_{\star}$.
+This equality provides a connection between the Bayesian
+and frequentist perspectives. It says that the Bayesian
+p-value (which has nothing to do with $p_{\star}$) can
+alternatively be interpreted as a probability with respect
+to the true data-generating process. Note that $y_{\text{rep}}$
+also implicitly depends on $p_{\star}$ through the posterior
+distribution
+
+{% endkatexmm %}
 
 References to add:
 - Posterior predictive checks (David M. Blei, Princeton)
@@ -154,3 +216,7 @@ References to add:
 - Bayesian posterior predictive checks for complex models (Lynch)
 - Split predictive checks
 - Holdout predictive checks for Bayesian model criticism (Moran et al)
+- Bayesian predictive assessment of model fitness via realized discrepancies (Gelman et al)
+- Bayesian checking for topic models (Mimno et al)
+- Checking for prior-data conflict (Evans and Moshonov)
+- Comment: Posterior predictive assessment for data subsets in hierarchical models via MCMC.

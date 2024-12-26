@@ -51,9 +51,9 @@ signs in (4) can be returned so that the user knows whether they computed the ne
 version or not.
 {% endkatexmm %}
 
-## LogDiffExp
+## LogExpMinusOne
 
-## Log Exp Plus 1 Trick I use
+## LogDiffExp
 
 
 ## References:
