@@ -4,7 +4,7 @@ subtitle: Describing and estimating the covariance structure of stochastic proce
 layout: default
 date: 2024-12-19
 keywords:
-published: true
+published: false
 ---
 
 # References

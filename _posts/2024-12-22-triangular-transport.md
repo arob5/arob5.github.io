@@ -4,7 +4,7 @@ subtitle:
 layout: default
 date: 2024-12-22
 keywords:
-published: true
+published: false
 ---
 
 - Motivate as in Ghattas book: applying inverse transform sampling sequentially.

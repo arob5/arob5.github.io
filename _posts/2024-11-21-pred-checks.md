@@ -4,7 +4,7 @@ subtitle: Prior and posterior predictive checks.
 layout: default
 date: 2024-11-21
 keywords: UQ
-published: true
+published: false
 ---
 
 {% katexmm %}

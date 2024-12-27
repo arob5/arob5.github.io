@@ -4,7 +4,7 @@ subtitle: Derivation of the PIT, and various generalizations.
 layout: default
 date: 2024-08-12
 keywords: probability, statistics
-published: true
+published: false
 ---
 
 # Setup and Background

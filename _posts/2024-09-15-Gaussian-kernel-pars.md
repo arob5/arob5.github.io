@@ -156,7 +156,7 @@ $$
 $$
 and solving for $d$, we obtain
 $$
-d = \ell \sqrt{\log(1/\epsilon)}, \tag{9}
+d = d(\ell) = \ell \sqrt{\log(1/\epsilon)}, \tag{9}
 $$
 a value that scales linearly in $\ell$. For example, if we set
 $\epsilon = 0.001$, then (9) becomes $d \approx 7\ell$. In words, this says
@@ -167,9 +167,9 @@ To generalize these notions to the product covariance in (7), we can consider
 producing a correlation decay plot for each dimension separately; i.e., we
 can generate the values $\rho(d_i; \ell_j)$ in (8) for each
 $i = 1,\dots,k$ and $j = 1,\dots,p$. While this gives us information about
-the correlation decay in each dimension, we must keep in mind that the decay in
-$\rho(d)$ is controlled by the *product* of
-$\rho(d; \ell_j), \dots, \rho(d; \ell_p)$.
+the correlation decay in each dimension, we must keep in mind that the decay
+in $\rho(d_1, \dots, d_p)$ is controlled by the *product* of
+$\rho(d_1; \ell_1), \dots, \rho(d_p; \ell_p)$.
 
 ## Marginal Variance
 The marginal variance is more straightforward to interpret. As we established
@@ -213,15 +213,73 @@ considerations for avoiding pathological behavior when estimating the
 hyperparameters of the covariance function.
 
 ## Lengthscales
-The lengthscale parameter $\ell$ is constrained to $(0, \infty)$. However,
+We start by consdering bounds
+$$
+\ell \in [\ell_{\text{min}}, \ell_{\text{max}}], \tag{11}
+$$
+for the lengthscale parameter. I should start by noting that these bounds should
+be informed by domain knowledge, if it is available. We will consider there
+case where there is not prior knowledge, and instead consider empirical
+approaches based on the training data.
+In general, this parameter is constrained
+to the interval $(0, \infty)$. However,
 note that learning the value of $\ell$ from the training data relies on the
 consideration of how $y_i$ varies based on pairwise distances between the
 $x_i$. Thus, there is no information in the data to inform lengthscale values
 that are below the minimum, or above the maximum, observed pairwise distances.
-Let $d_1, \dots, d_m$ denote the set of pairwise distances constructed from
-the training inputs $x_1, \dots, x_n$. There are $m = \frac{n(n-1)}{2}$ such
-distances, corresponding the the number of entries in the lower triangle
-(excluding the diagonal) of an $n \times n$ matrix. 
+Let $d^{(1)}, \dots, d^{(m)}$ denote the set of pairwise distances constructed
+from the training inputs $x_1, \dots, x_n$. There are $m = \frac{n(n-1)}{2}$
+such distances, corresponding the the number of entries in the lower triangle
+(excluding the diagonal) of an $n \times n$ matrix. Thus, a reasonable first
+step is to enforce the constraint
+$$
+\ell_{\text{min}} := d_{\text{min}}, \qquad \ell_{\text{max}} := d_{\text{max}}, \tag{12}
+$$
+where $d_{\text{min}}$ and $d_{\text{max}}$ denote the minimum and maximum of
+$\{d^{(1)}, \dots, d^{(m)}\}$, respectively. Without this constraint, an
+optimizer can sometimes get stuck in local minima at very small or large
+lengthscales, which can lead to pathological Gaussian process fits. As
+mentioned previously, it is typically best to think in terms of correlations,
+so let's consider the implications of the chocie (12) from this viewpoint.
+If $\ell = \ell_{\text{min}}$, the correlation at the minimum
+observed pairwise distance is given by
+$$
+\rho(d_{\text{min}}; \ell_{\text{min}})
+= \rho(d_{\text{min}}; d_{\text{min}})
+= \exp\left[-\left(\frac{d_{\text{min}}}{d_{\text{min}}}\right)^2 \right]
+= \exp(-1) \approx 0.37.
+$$
+Thus, the lower bound in (12) implies that we are constraining the lengthscale
+to satisfy
+$$
+\rho(d_{\text{min}}; \ell) \geq 0.37. \tag{13}
+$$
+We can generalize this idea and instead set $\ell_{\text{min}}$ to be the
+value that achieves the constraint
+$$
+\rho(d_{\text{min}};\ell_{\text{min}}) = \rho_{\text{min}}, \tag{14}
+$$
+for some value $\rho_{\text{min}}$ we are free to specify. Solving (14) for
+$\ell_{\text{min}}$, we obtain
+$$
+\ell_{\text{min}}
+= \frac{d_{\text{min}}}{\sqrt{\log\left(1/\rho_{\text{min}}\right)}}. \tag{15}
+$$
+Note that setting $\rho_{\text{min}} < 0.37$ loosens the bound, relative to
+(12), and vice versa; that is,
+\begin{align}
+&\rho_{\text{min}} < 0.37 \implies \ell_{\text{min}} < d_{\text{min}} \newline
+&\rho_{\text{min}} > 0.37 \implies \ell_{\text{min}} > d_{\text{min}}
+\end{align}
+We can generalize this even further by replacing $d_{\text{min}}$ and
+$d_{\text{max}}$ by empirical quantiles of $\{d^{(1)}, \dots, d^\text{(m)}\}$.
+For example, we might consider enforcing (14) where the minimum
+$d_{\text{min}}$ is replaced by the $5^{\text{th}}$ percentile of the
+observed pairwise distances. Making this replacement without changing
+$\rho_{\text{min}}$ will result in a more restrictive bound; i.e., a larger
+value for $\ell_{\text{min}}$.
+While we have focused on the lower bound, note
+that all the same reasoning applies to the upper bound as well. 
 
 
 

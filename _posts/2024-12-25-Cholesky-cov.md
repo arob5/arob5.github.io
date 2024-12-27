@@ -4,7 +4,7 @@ subtitle: Regression interpretation of the Cholesky decomposition, with applicat
 layout: default
 date: 2024-12-25
 keywords:
-published: true
+published: false
 ---
 
 In this post we consider the Cholesky decomposition of the covariance
@@ -66,5 +66,5 @@ Thus, the map $x \mapsto L^{-1}x$ outputs a "decorrelated" random vector. The
 inverse map $\epsilon \mapsto L\epsilon$ "re-correlates" $\epsilon$, producing
 a random vector with covariance $C$. If we add on the assumption that
 $x$ is Gaussian, then $\epsilon$ is a Gaussian vector with independent
-entries. The transformation $L\epsilon$ is the typical method used in simulating 
+entries. The transformation $L\epsilon$ is the typical method used in simulating
 draws from a correlated Gaussian vector.
