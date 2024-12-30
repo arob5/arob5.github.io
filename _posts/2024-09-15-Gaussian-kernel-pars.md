@@ -201,7 +201,7 @@ Bayesian approach and sample from the posterior distribution over the
 hyperparameters. We won't go into such topics here. Throughout this section,
 suppose that we have observed $n$ input-output pairs
 $$
-y_i = f(x_i), \qquad i=1, \dots, n \tag{11}
+y^{(i)} = f(x^{(i)}), \qquad i=1, \dots, n \tag{11}
 $$
 for some function of interest $f$. For now we assume that these observations
 are noiseless, and $f$ is modeled as a Gaussian process with covariance
@@ -225,7 +225,7 @@ In general, this parameter is constrained
 to the interval $(0, \infty)$. However,
 note that learning the value of $\ell$ from the training data relies on the
 consideration of how $y_i$ varies based on pairwise distances between the
-$x_i$. Thus, there is no information in the data to inform lengthscale values
+$x^{(i)}$. Thus, there is no information in the data to inform lengthscale values
 that are below the minimum, or above the maximum, observed pairwise distances.
 Let $d^{(1)}, \dots, d^{(m)}$ denote the set of pairwise distances constructed
 from the training inputs $x_1, \dots, x_n$. There are $m = \frac{n(n-1)}{2}$
@@ -240,7 +240,7 @@ $\{d^{(1)}, \dots, d^{(m)}\}$, respectively. Without this constraint, an
 optimizer can sometimes get stuck in local minima at very small or large
 lengthscales, which can lead to pathological Gaussian process fits. As
 mentioned previously, it is typically best to think in terms of correlations,
-so let's consider the implications of the chocie (12) from this viewpoint.
+so let's consider the implications of the choice (12) from this viewpoint.
 If $\ell = \ell_{\text{min}}$, the correlation at the minimum
 observed pairwise distance is given by
 $$
@@ -278,8 +278,24 @@ $d_{\text{min}}$ is replaced by the $5^{\text{th}}$ percentile of the
 observed pairwise distances. Making this replacement without changing
 $\rho_{\text{min}}$ will result in a more restrictive bound; i.e., a larger
 value for $\ell_{\text{min}}$.
+
+To generalize this to the product correlation in (7), we can simply repeat the
+procedure independently for each input dimension. In other words, we consider
+the pairwise distances $d^{(1)}_{j}, \dots, d^{(n)}_{j}$ in the $j^{\text{th}}$
+dimension, where each distance is of the form
+$\lvert x_j^{(i)} - x_j^{(l)} \rvert$ for some $i \neq l$. The bounds for the
+parameter $\ell_j$ can then be constructed as described above with respect to
+these pairwise distances. Let $d_{\text{min},j}$ be the minimum (or some
+other quantile) of $d^{(1)}_{j}, \dots, d^{(n)}_{j}$. This procedure then
+implies the constraint
+$$
+\rho(d^{(1)}_{j}, \dots, d^{(n)}_{j}) \geq \rho_{\text{min}}^{p}. \tag{16}
+$$
+For example, if we choose $\rho_{\text{min}} = 0.37$ in $p=5$ dimensions, then
+$\rho_{\text{min}}^p \approx 0.007$.
+
 While we have focused on the lower bound, note
-that all the same reasoning applies to the upper bound as well. 
+that all the same reasoning applies to the upper bound as well.
 
 
 
