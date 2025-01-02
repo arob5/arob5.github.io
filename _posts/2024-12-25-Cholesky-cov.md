@@ -316,18 +316,3 @@ By the uniqueness of the modified Cholesky decomposition (noted in the
 introduction) it follows that we have precisely formed the unique matrices
 $L$ and $D$ definining the modified Cholesky decomposition of $C$.
 {% endkatexmm %}
-
-
-# Another Regression Interpretation
-{% katexmm %}
-In this section, we provide an alternative regression interpretation.
-We consider a slightly different sequence of least squares problems that
-connects to the modified Cholesky decomposition of the *precision* $C^{-1}$,
-rather than the covariance.
-{% endkatexmm %}
-
-# Sparsity
-TODO: see Katzfuss Remark 1 in "Hierarchical sparse Cholesky decomposotion with
-applications to...". Can I use one of the two regression perspectives to prove
-either of the two facts in Remark 1? It seems that I could use the first
-perspective to prove the first part, and the same with the second.
