@@ -292,7 +292,7 @@ $$
 \rho(d^{(1)}_{j}, \dots, d^{(n)}_{j}) \geq \rho_{\text{min}}^{p}. \tag{16}
 $$
 For example, if we choose $\rho_{\text{min}} = 0.37$ in $p=5$ dimensions, then
-$\rho_{\text{min}}^p \approx 0.007$.
+$\rho_{\text{min}}^5 \approx 0.007$.
 
 While we have focused on the lower bound, note
 that all the same reasoning applies to the upper bound as well.

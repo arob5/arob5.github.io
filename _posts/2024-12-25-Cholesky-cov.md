@@ -137,22 +137,122 @@ spirit to (7), as we will consider a sequence of regressions that condition
 on previous entries of $x$. The ideas discussed here come primarily from
 from {% cite CholeskyCovReg %}.
 
-## Sequential Least Squares
+## Sequence of Least Squares Problems
 We start by recursively defining a sequence of least squares problems, which
 we then link to the factorization $C = LDL^\top$.
 
 <blockquote>
   <p><strong>Sequential Least Squares.</strong> <br>
-  Let $x \sim \mathcal{N}(m,C)$, with $C = \text{Cov}[x]$ positive definite.
+  Let $x \sim \mathcal{N}(0,C)$, with $C = \text{Cov}[x]$ positive definite.
   We recursively define the entries of
-  $\epsilon := (\epsilon^{(1)}, \dots, \epsilon^{(p)})$ as follows:
-  - Set $\epsilon^{(1)} := x^{(1)}$.
-  - For $j = 2, \dots, p$ define
+  $\epsilon := (\epsilon^{(1)}, \dots, \epsilon^{(p)})$ as follows: <br><br>
+  1. Set $\epsilon^{(1)} := x^{(1)}$. <br>
+  2. For $j = 2, \dots, p$ define the regression coefficient
+  $\beta^{(j)} \in \R^{j-1}$ by
+  $$
+  \beta^{(j)}
+  := \text{argmin}_{\beta} \mathbb{E}\left\lvert x^{(j)} - \sum_{k=1}^{j-1} \beta_k \epsilon^{(k)} \right\rvert^2 \tag{11}
+  $$
+  and set
+  $$
+  \epsilon^{(j)} := x^{(j)} - \sum_{k=1}^{j-1} \beta_k^{(j)} \epsilon^{(k)}. \tag{12}
+  $$
   </p>
 </blockquote>
 
+In words, $\epsilon^{(j)}$ is the residual of the least squares regression of
+the response $x^{(j)}$ on the explanatory variables
+$\epsilon^{(1)}, \dots, \epsilon^{(j-1)}$, and $\beta^{(j)}$ is the coefficient
+vector. Take note that we are regressing on the *residuals* from the previous
+regressions, rather than the $x^{(j)}$ themselves. We assume for simplicity that
+$x$ is mean zero to avoid having to deal with an intercept term; for non mean
+zero variables, we can start by subtracting off their mean and then apply
+the same procedure. Note also that the zero mean assumption implies that
+$\mathbb{E}[\epsilon] = 0$; this follows from $\epsilon^{(1)} = x^{(1)}$ along
+with the recursion (12).
+
+Our goal is now to connect this algorithm to the modified Cholesky decomposition
+of $C$. In particular, we will show that the $\epsilon$ defined by the
+regression residuals is precisely the $\epsilon$ defined in (5), which arises
+from the modified Cholesky decomposition. To start, note that if we rearrange
+(12) as
+$$
+x^{(j)} := \epsilon^{(j)} + \sum_{k=1}^{j-1} \beta^{(k)} \epsilon^{(k)}, \tag{13}
+$$
+then we see the vectors $\epsilon$ and $x$ are related as
+$$
+x = L\epsilon, \tag{14}
+$$
+where
+\begin{align}
+L &:=
+\begin{bmatrix} 1 & 0 & 0 & \cdots & 0 \newline
+                \beta^{(2)}_1 & 1 & 0 & \cdots & 0 \newline
+                \vdots & \vdots & \vdots & \cdots & 0 \newline
+                \beta^{(p)}_1 & \beta^{(p)}_2 & \cdots & \cdots & 1\end{bmatrix}. \tag{15}
+\end{align}
+That is, we have defined $L$ to be the lower triangular matrix with
+$j^{\text{th}}$ row set to $(\beta^{(j)}, 1)$, the $j^{\text{th}}$ coefficient
+vector with a $1$ appended to the end. We immediately have that $L$ is
+invertible, as it is a triangular matrix with non-zero entries on the diagonal.
+We also have
+$$
+C = \text{Cov}[x] = \text{Cov}[L\epsilon] = L \text{Cov}[\epsilon] L^{\top}. \tag{16}
+$$
+In order to show that (16) actually yields the modified Chokesky factorization,
+we must establish that $\text{Cov}[\epsilon]$, the residual covariance matrix,
+is diagonal with positive diagonal entries.
+
+<blockquote>
+  <p><strong>Proposition.</strong> <br>
+  The random vector $\epsilon$ defined by (12) satisfies
+  $$
+  \epsilon \sim \mathcal{N}(0, D), \tag{17}
+  $$
+  where $D$ is a diagonal matrix with positive entries on the diagonal.
+  </p>
+</blockquote>
+
+**Proof.** The result follows immediately upon viewing (11) as a projection
+in a suitable inner product space, and then applying the
+[Hilbert projection theorem](https://en.wikipedia.org/wiki/Hilbert_projection_theorem).
+In particular, note that all of the $x^{(j)}$ and $\epsilon^{(j)}$ are zero
+mean, square integrable random variables. We can thus consider the Hilbert
+space of all such random variables with inner product defined by
+$\langle \psi, \eta \rangle := \mathbb{E}[\psi \eta]$. Under this interpretation,
+we see that (12) can be rewritten as
+$$
+\sum_{k=1}^{j-1} \beta_k^{(j)} \epsilon^{(k)} =
+\text{argmin}_{x^\prime \in \mathcal{E}^{(j)}} \lVert x - x^\prime \rVert, \tag{18}
+$$
+where $\mathcal{E}^{(j)}$ is the subspace spanned by
+$\epsilon^{(1)}, \dots, \epsilon^{(j)}$
+and $\lVert \cdot \rVert$ is the norm induced by $\langle \cdot, \cdot \rangle$.
+Since $\epsilon^{(j)}$ is the residual associated with the projection (18),
+the Hilbert projection theorem gives the optimality condition
+$\epsilon^{(j)} \perp \mathcal{E}^{(j)}$; that is,
+$$
+\langle \epsilon^{(j)}, \epsilon^{(k)} \rangle
+= \mathbb{E}[\epsilon^{(j)} \epsilon^{(k)}]
+= \text{Cov}[\epsilon^{(j)}, \epsilon^{(k)}] = 0, \qquad k = 1, \dots, j-1. \tag{19}
+$$
+This implies that all of the residuals are pairwise uncorrelated. This implies
+that $D = \text{Cov}[\epsilon]$ is diagonal. We know from (14) that
+$x = L\epsilon$; since $C = \text{Cov}[x]$ is positive definite, then
+$\text{Cov}[\epsilon]$ must also be positive definite. Thus, the diagonal
+entries of $D$ must be strictly positive. $\qquad \blacksquare$
+
+Using the recursive regression procedure in (11) and (12), we have constructed
+$\epsilon$ and $L$ satisfying $C = LDL^\top$, where $D = \text{Cov}[\epsilon]$
+is a diagonal matrix with positive diagonal entries, and $L$ is lower triangular.
+By the uniqueness of the modified Cholesky decomposition (noted in the
+introduction) it follows that we have precisely formed the unique matrices
+$L$ and $D$ definining the modified Cholesky decomposition of $C$.
+
 
 {% endkatexmm %}
+
+
 
 # Another Regression Interpretation
 {% katexmm %}
@@ -160,9 +260,5 @@ In this section, we provide an alternative regression interpretation.
 We consider a slightly different sequence of least squares problems that
 connects to the modified Cholesky decomposition of the *precision* $C^{-1}$,
 rather than the covariance.
-
-{% endkatexmm %}
-
-
 
 {% endkatexmm %}
