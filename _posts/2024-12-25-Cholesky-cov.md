@@ -77,10 +77,13 @@ standard Cholesky factorization $C = LL^\top$ with $\epsilon$ still defined as
 in (5), then $\text{Cov}[\epsilon] = I$.
 {% endkatexmm %}
 
-# Conditional Variances
+# Conditional Variances and Covariances
 {% katexmm %}
-The following result provides an interpretation of the diagonal entries of $D$
-in the Gaussian setting.
+We start by demonstrating how the (modified) Cholesky decomposition
+encodes information
+related to conditional variances and covariances between the $x^{(j)}$.
+The below result considers conditional variances, and provides an interpretation
+of the diagonal entries of $D$ in the Gaussian setting.
 
 <blockquote>
   <p><strong>Proposition (conditional variances).</strong> <br>
@@ -127,6 +130,70 @@ Thus, the diagonal entries of $D$ give the variances of the $x^{(j)}$,
 conditional on all preceding entries in the vector. Clearly, the interpretation
 depends on the ordering of the entries, a fact that will be true for many
 results that rely on the Cholesky decomposition.
+
+We can generalize the above result to consider conditional covariances
+instead of variances, which yields an interpretation of the off-diagonal
+elements of $L$.
+
+<blockquote>
+  <p><strong>Proposition (conditional covariances).</strong> <br>
+  Let $x \sim \mathcal{N}(m,C)$, with $C = \text{Cov}[x]$ positive definite. Set
+  $\epsilon := L^{-1}x$, where $C = LDL^\top$. Then for $i > j$,
+  $$
+  \text{Cov}[x^{(i)}, x^{(j)}|x^{(1)}, \dots, x^{(j-1)}] = \ell_{ij}d_j, \qquad j = 1, \dots, p-1 \tag{11}
+  $$
+  where the $j=1$ case is interpreted as the unconditional covariance
+  $\text{Cov}[x^{(i)},x^{(1)}]$. If we instead define $L$ by $C = LL^\top$,
+  then
+  $$
+  \text{Cov}[x^{(i)}, x^{(j)}|x^{(1)}, \dots, x^{(j-1)}] = \ell_{ij}\ell_{jj}, \qquad j = 1, \dots, p-1. \tag{12}
+  $$
+  In particular, in either case we have
+  $$
+  \ell_{ij}=0 \iff
+  \text{Cov}[x^{(i)}, x^{(j)}|x^{(1)}, \dots, x^{(j-1)}] = 0 \iff
+  x^{(i)} \perp x^{(j)} | x^{(1)}, \dots, x^{(j-1)}. \tag{13}
+  $$
+  </p>
+</blockquote>
+
+**Proof.** The proof proceeds similarly to the conditional variance case.
+We have
+\begin{align}
+\text{Cov}[x^{(i)}, x^{(j)}|x^{(1)}, \dots, x^{(j-1)}]
+&= \text{Cov}\left[\sum_{k=1}^{i} \ell_{ik} \epsilon^{(k)},
+\sum_{k=1}^{j} \ell_{jk} \epsilon^{(k)}
+\bigg|x^{(1)}, \dots, x^{(j-1)}\right] \newline
+&= \text{Cov}\left[\sum_{k=1}^{i} \ell_{ik} \epsilon^{(k)},
+\sum_{k=1}^{j} \ell_{jk} \epsilon^{(k)}
+\bigg|\epsilon^{(1)}, \dots, \epsilon^{(j-1)}\right] \newline
+&= \text{Cov}\left[\sum_{k=j}^{i} \ell_{ik} \epsilon^{(k)},
+\ell_{jj} \epsilon^{(j)}
+\bigg|\epsilon^{(1)}, \dots, \epsilon^{(j-1)}\right] \newline
+&= \sum_{k=j}^{i} \ell_{ik}\ell_{jj} \text{Cov}\left[\epsilon^{(k)}, \epsilon^{(j)}|\epsilon^{(1)}, \dots, \epsilon^{(j-1)}\right] \newline
+&= \sum_{k=j}^{i} \ell_{ik}\ell_{jj} \text{Cov}\left[\epsilon^{(k)}, \epsilon^{(j)}\right] \newline
+&= \ell_{ij}\ell_{jj} \text{Var}\left[\epsilon^{(j)}\right]
+\end{align}
+The penultimate step uses the fact that the $\epsilon^{(j)}$ are
+conditionally uncorrelated, owing to the fact that the $\epsilon^{(j)}$
+are jointly Gaussian and independent. The final step also uses the
+fact that the $\epsilon^{(j)}$ are uncorrelated, and hence all terms where
+$k \neq j$ vanish. For $C = LDL^\top$ the final expression simplifies to
+$\ell_{ij}\ell_{jj} \text{Var}\left[\epsilon^{(j)}\right] = \ell_{ij} \cdot 1 \cdot d_j = \ell_{ij}d_j$. For $C = LL^\top$ it becomes
+$\ell_{ij}\ell_{jj} \cdot 1 = \ell_{ij}\ell_{jj}$. The first implication
+in (13) follows immediately from (11) and (12). The second implication
+follows from the fact that $x$ is Gaussian, and hence the conditional
+uncorrelatedness implies conditional independence. $\blacksquare$
+
+We thus find that the Cholesky decomposition of a Gaussian covariance
+is closely linked to the *ordered* conditional dependence structure of
+$x$. The factorization encodes conditional covariances, where the
+conditioning is with respect to all preceding variables; reordering
+the entries of $x$ may yield drastically different insights.
+The connection between sparsity in the Cholesky factor and
+conditional independence can be leveraged in the design of statistical
+models and algorithms. For an example, see the
+paper {% cite SparseCholeskyVecchia %}.
 {% endkatexmm %}
 
 # A Regression Interpretation
@@ -151,11 +218,11 @@ we then link to the factorization $C = LDL^\top$.
   $\beta^{(j)} \in \R^{j-1}$ by
   $$
   \beta^{(j)}
-  := \text{argmin}_{\beta} \mathbb{E}\left\lvert x^{(j)} - \sum_{k=1}^{j-1} \beta_k \epsilon^{(k)} \right\rvert^2 \tag{11}
+  := \text{argmin}_{\beta} \mathbb{E}\left\lvert x^{(j)} - \sum_{k=1}^{j-1} \beta_k \epsilon^{(k)} \right\rvert^2 \tag{14}
   $$
   and set
   $$
-  \epsilon^{(j)} := x^{(j)} - \sum_{k=1}^{j-1} \beta_k^{(j)} \epsilon^{(k)}. \tag{12}
+  \epsilon^{(j)} := x^{(j)} - \sum_{k=1}^{j-1} \beta_k^{(j)} \epsilon^{(k)}. \tag{15}
   $$
   </p>
 </blockquote>
@@ -169,19 +236,19 @@ $x$ is mean zero to avoid having to deal with an intercept term; for non mean
 zero variables, we can start by subtracting off their mean and then apply
 the same procedure. Note also that the zero mean assumption implies that
 $\mathbb{E}[\epsilon] = 0$; this follows from $\epsilon^{(1)} = x^{(1)}$ along
-with the recursion (12).
+with the recursion (15).
 
 Our goal is now to connect this algorithm to the modified Cholesky decomposition
 of $C$. In particular, we will show that the $\epsilon$ defined by the
 regression residuals is precisely the $\epsilon$ defined in (5), which arises
 from the modified Cholesky decomposition. To start, note that if we rearrange
-(12) as
+(15) as
 $$
-x^{(j)} := \epsilon^{(j)} + \sum_{k=1}^{j-1} \beta^{(k)} \epsilon^{(k)}, \tag{13}
+x^{(j)} := \epsilon^{(j)} + \sum_{k=1}^{j-1} \beta^{(k)} \epsilon^{(k)}, \tag{16}
 $$
 then we see the vectors $\epsilon$ and $x$ are related as
 $$
-x = L\epsilon, \tag{14}
+x = L\epsilon, \tag{17}
 $$
 where
 \begin{align}
@@ -189,7 +256,7 @@ L &:=
 \begin{bmatrix} 1 & 0 & 0 & \cdots & 0 \newline
                 \beta^{(2)}_1 & 1 & 0 & \cdots & 0 \newline
                 \vdots & \vdots & \vdots & \cdots & 0 \newline
-                \beta^{(p)}_1 & \beta^{(p)}_2 & \cdots & \cdots & 1\end{bmatrix}. \tag{15}
+                \beta^{(p)}_1 & \beta^{(p)}_2 & \cdots & \cdots & 1\end{bmatrix}. \tag{18}
 \end{align}
 That is, we have defined $L$ to be the lower triangular matrix with
 $j^{\text{th}}$ row set to $(\beta^{(j)}, 1)$, the $j^{\text{th}}$ coefficient
@@ -197,9 +264,9 @@ vector with a $1$ appended to the end. We immediately have that $L$ is
 invertible, as it is a triangular matrix with non-zero entries on the diagonal.
 We also have
 $$
-C = \text{Cov}[x] = \text{Cov}[L\epsilon] = L \text{Cov}[\epsilon] L^{\top}. \tag{16}
+C = \text{Cov}[x] = \text{Cov}[L\epsilon] = L \text{Cov}[\epsilon] L^{\top}. \tag{19}
 $$
-In order to show that (16) actually yields the modified Chokesky factorization,
+In order to show that (19) actually yields the modified Chokesky factorization,
 we must establish that $\text{Cov}[\epsilon]$, the residual covariance matrix,
 is diagonal with positive diagonal entries.
 
@@ -207,51 +274,48 @@ is diagonal with positive diagonal entries.
   <p><strong>Proposition.</strong> <br>
   The random vector $\epsilon$ defined by (12) satisfies
   $$
-  \epsilon \sim \mathcal{N}(0, D), \tag{17}
+  \epsilon \sim \mathcal{N}(0, D), \tag{20}
   $$
   where $D$ is a diagonal matrix with positive entries on the diagonal.
   </p>
 </blockquote>
 
-**Proof.** The result follows immediately upon viewing (11) as a projection
+**Proof.** The result follows immediately upon viewing (14) as a projection
 in a suitable inner product space, and then applying the
 [Hilbert projection theorem](https://en.wikipedia.org/wiki/Hilbert_projection_theorem).
 In particular, note that all of the $x^{(j)}$ and $\epsilon^{(j)}$ are zero
 mean, square integrable random variables. We can thus consider the Hilbert
 space of all such random variables with inner product defined by
 $\langle \psi, \eta \rangle := \mathbb{E}[\psi \eta]$. Under this interpretation,
-we see that (12) can be rewritten as
+we see that (15) can be rewritten as
 $$
 \sum_{k=1}^{j-1} \beta_k^{(j)} \epsilon^{(k)} =
-\text{argmin}_{x^\prime \in \mathcal{E}^{(j)}} \lVert x - x^\prime \rVert, \tag{18}
+\text{argmin}_{x^\prime \in \mathcal{E}^{(j)}} \lVert x - x^\prime \rVert, \tag{21}
 $$
 where $\mathcal{E}^{(j)}$ is the subspace spanned by
 $\epsilon^{(1)}, \dots, \epsilon^{(j)}$
 and $\lVert \cdot \rVert$ is the norm induced by $\langle \cdot, \cdot \rangle$.
-Since $\epsilon^{(j)}$ is the residual associated with the projection (18),
+Since $\epsilon^{(j)}$ is the residual associated with the projection (21),
 the Hilbert projection theorem gives the optimality condition
 $\epsilon^{(j)} \perp \mathcal{E}^{(j)}$; that is,
 $$
 \langle \epsilon^{(j)}, \epsilon^{(k)} \rangle
 = \mathbb{E}[\epsilon^{(j)} \epsilon^{(k)}]
-= \text{Cov}[\epsilon^{(j)}, \epsilon^{(k)}] = 0, \qquad k = 1, \dots, j-1. \tag{19}
+= \text{Cov}[\epsilon^{(j)}, \epsilon^{(k)}] = 0, \qquad k = 1, \dots, j-1. \tag{22}
 $$
-This implies that all of the residuals are pairwise uncorrelated. This implies
-that $D = \text{Cov}[\epsilon]$ is diagonal. We know from (14) that
+This implies that all of the residuals are pairwise uncorrelated, and hence
+$D = \text{Cov}[\epsilon]$ is diagonal. We know from (17) that
 $x = L\epsilon$; since $C = \text{Cov}[x]$ is positive definite, then
 $\text{Cov}[\epsilon]$ must also be positive definite. Thus, the diagonal
 entries of $D$ must be strictly positive. $\qquad \blacksquare$
 
-Using the recursive regression procedure in (11) and (12), we have constructed
+Using the recursive regression procedure in (14) and (15), we have constructed
 $\epsilon$ and $L$ satisfying $C = LDL^\top$, where $D = \text{Cov}[\epsilon]$
 is a diagonal matrix with positive diagonal entries, and $L$ is lower triangular.
 By the uniqueness of the modified Cholesky decomposition (noted in the
 introduction) it follows that we have precisely formed the unique matrices
 $L$ and $D$ definining the modified Cholesky decomposition of $C$.
-
-
 {% endkatexmm %}
-
 
 
 # Another Regression Interpretation
@@ -260,5 +324,10 @@ In this section, we provide an alternative regression interpretation.
 We consider a slightly different sequence of least squares problems that
 connects to the modified Cholesky decomposition of the *precision* $C^{-1}$,
 rather than the covariance.
-
 {% endkatexmm %}
+
+# Sparsity
+TODO: see Katzfuss Remark 1 in "Hierarchical sparse Cholesky decomposotion with
+applications to...". Can I use one of the two regression perspectives to prove
+either of the two facts in Remark 1? It seems that I could use the first
+perspective to prove the first part, and the same with the second.
