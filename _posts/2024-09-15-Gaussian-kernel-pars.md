@@ -88,7 +88,7 @@ between points.
 
 ## Generalizing to Multiple Dimensions
 To generalize (1) to a $p$-dimensional input space, we define
-$k: \mathbb{R}^p \times \mathbb{R}^p \to \mathbb{R}$ as a product of
+$k: \mathbb{R}^p \times \mathbb{R}^p \to \mathbb{R}$ using a product of
 one-dimensional correlation functions:
 $$
 k(x,z)
@@ -213,15 +213,17 @@ considerations for avoiding pathological behavior when estimating the
 hyperparameters of the covariance function.
 
 ## Lengthscales
-We start by consdering bounds
+
+### One Dimensional
+We start by considering bounds
 $$
 \ell \in [\ell_{\text{min}}, \ell_{\text{max}}], \tag{11}
 $$
 for the lengthscale parameter. I should start by noting that these bounds should
-be informed by domain knowledge, if it is available. We will consider there
-case where there is not prior knowledge, and instead consider empirical
+be informed by domain knowledge, if it is available. We will consider the
+case where there is no prior knowledge, and instead consider empirical
 approaches based on the training data.
-In general, this parameter is constrained
+In general, $\ell$ is constrained
 to the interval $(0, \infty)$. However,
 note that learning the value of $\ell$ from the training data relies on the
 consideration of how $y_i$ varies based on pairwise distances between the
@@ -279,7 +281,13 @@ observed pairwise distances. Making this replacement without changing
 $\rho_{\text{min}}$ will result in a more restrictive bound; i.e., a larger
 value for $\ell_{\text{min}}$.
 
-To generalize this to the product correlation in (7), we can simply repeat the
+### Multiple Input Dimensions
+We consider two different approaches to generalize the above procedure to
+$p$-dimensional input space.
+
+#### Dimension-by-Dimension
+In considering bounds for the lengthscales $\ell_1, \dots, \ell_p$ in the
+product correlation (7), one approach is to simply repeat the
 procedure independently for each input dimension. In other words, we consider
 the pairwise distances $d^{(1)}_{j}, \dots, d^{(n)}_{j}$ in the $j^{\text{th}}$
 dimension, where each distance is of the form
@@ -289,10 +297,39 @@ these pairwise distances. Let $d_{\text{min},j}$ be the minimum (or some
 other quantile) of $d^{(1)}_{j}, \dots, d^{(n)}_{j}$. This procedure then
 implies the constraint
 $$
-\rho(d^{(1)}_{j}, \dots, d^{(n)}_{j}) \geq \rho_{\text{min}}^{p}. \tag{16}
+\rho(d_{\text{min},1}, \dots, d_{\text{min},p}) \geq \rho_{\text{min}}^{p}. \tag{16}
 $$
 For example, if we choose $\rho_{\text{min}} = 0.37$ in $p=5$ dimensions, then
-$\rho_{\text{min}}^5 \approx 0.007$.
+$\rho_{\text{min}}^5 \approx 0.007$. It is important to note that (16) does not
+provide a direct constraint on the minimum correlation at the distance
+$d_\text{min} := \min_{i \neq l} \lVert x^{(i)} - x^{(l)} \rVert_2$. The distances
+$d_{\text{min},j}$ in (16) may be coming from different pairs of inputs.
+There is a distinction between the pairs of points that are closest in each
+input dimension separately, and the pair that is closest in $\mathbb{R}^p$.
+
+#### Joint Constraint
+We might instead choose to constrain the correlation at the distance
+$d_\text{min} = \min_{i \neq l} \lVert x^{(i)} - x^{(l)} \rVert_2$, which means we are now
+considering Euclidean distance in $\mathbb{R}^p$, rather approaching the problem
+one dimension at a time. To start, we can consider scaling the inputs such that
+$x \in [0,1]^p$. In particular, for each dimension $j$ we re-scale as
+$$
+\tilde{x}_j := \frac{x_j - m_j}{M_j - m_j}, \tag{17}
+$$
+where we have defined
+\begin{align}
+&m_j := \min_{i} x^{(i)}\_j, &&M_j := \max_{i} x^{(i)}_j. \tag{18}
+\end{align}
+We'll use tildes to denote quantities pertaining to the scaled space.
+We can now choose
+$\tilde{\ell}_1, \dots, \tilde{\ell}_p$ to satisfy
+$$
+\rho(\tilde{d}_{\text{min}}; \ell_1, \dots, \ell_p) = \rho_{\text{min}}. \tag{19}
+$$
+Again, we might consider replacing $d_{\text{min}}$ with an empirical quantile
+of the $p$-dimensional pairwise distances. The equation (19) is underdetermined,
+but since
+
 
 While we have focused on the lower bound, note
 that all the same reasoning applies to the upper bound as well.

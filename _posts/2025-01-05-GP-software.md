@@ -172,6 +172,7 @@ value. I would hope the underlying optimization routine has no trouble with
 this, but no promises that this is actually a good idea.
 
 TODO: note two different optimization routines.
+TODO: note that there is no update method.
 
 ### Prediction
 
@@ -191,6 +192,13 @@ Test
 ```
 
 # hetGP (R)
+`hetGP` is another `R` package I've worked with. The name is short for
+"heteroscedastic", implying that this package has support for GP models
+where the noise term is of the form $\epsilon(x) \sim \mathcal{N}(0, \sigma^2(x))$;
+that is, the noise can vary across the input space. Fitting models of this form
+thus typically requires having replicate observations of $y(x)$ at the same $x$
+value. Since this post is focused on more standard GP models, we instead focus on
+reviewing `hetGP`'s support for traditional homoscedastic noise models.
 
 ### Mean Functions
 
