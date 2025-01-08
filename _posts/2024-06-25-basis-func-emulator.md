@@ -201,8 +201,8 @@ Having laid out the general model, we now provide concrete details for specific
 choices of the basis construction and the emulator model. For the former we
 consider the popular PCA/SVD approach, which we have already hinted at above.
 For the latter, we consider the use of Gaussian processes (GPs). The combination
-of these two choices was first presented in the seminal paper Higdon et al
-(2008). I have a whole in-depth
+of these two choices was first presented in the seminal paper
+{% cite HigdonBasisEmulator%}. I have a whole in-depth
 [post](https://arob5.github.io/blog/2023/12/15/PCA/) on PCA,
 so I will assume general background knowledge on this topic.
 
@@ -303,55 +303,97 @@ $w_j(u) = \langle \mathcal{G}(u)-\overline{g}, v_j\rangle$.
 In this section we consider approximating the maps $u \mapsto w_j(u)$ with
 Gaussian processes (GPs). The specific features of the PCA basis construction
 provide useful information in designing a reasonable GP model. In particular,
-we consider emulating the maps $u \mapsto w_j(u)$ with a set of independent GPs,
-each with prior mean zero and prior marginal variance (scale) one. We justify
-each of these choices in turn, and then summarize the GP prior below.
-We then conclude by deriving how the GP predictive distributions induce a
-stochastic emulator for $\mathcal{G}(u)$.
+we consider why it is typically reasonable emulate the maps $u \mapsto w_j(u)$
+separately using a set of independent GPs. We then discuss how the independent
+GP approach induces a multi-output GP emulator for $\mathcal{G}(u)$ with a
+particular covariance structure.
 
-### Zero Prior Mean
+### Independent GPs
+We first consider the typical choice to model each $w_j(u)$ separately as an
+independent GP. For this, we point to a result proved in the post
+[post](https://arob5.github.io/blog/2023/12/15/PCA/); namely, if we define
+$w^i := [w_1(u_i), \dots, w_r(u_i)]^\top \in \mathbb{R}^r$, then the vectors
+$w^1, \dots, w^n$ have empirical covariance
+$$
+\hat{C}_w := \frac{1}{n-1} \sum_{i=1}^{n} w^i(w^i)^\top = \frac{1}{n-1}\Lambda_r, \tag{17}
+$$
+with $\Lambda_r$ given in (13). In words, the weight vectors have zero sample
+covariance across dimensions. This seems to provide some justification for the
+independent GP approach, thought we should be careful not to overstate the
+claim. We can view $\hat{C}_w$ as an estimate of
+$$
+C_w := \mathbb{E}_{u \sim \rho} (w(u) - \mathbb{E}[w(u)])(w(u) - \mathbb{E}[w(u)])^\top, \tag{18}
+$$
+where $w(u) = (w_1(u), \dots, w_r(u))$. Even if we knew that $C_w$ was
+actually diagonal, we should take care to note that this means the $w_j(u)$
+are uncorrelated *on average* with respect to $u \sim \rho$. The assumption
+to fit independent GPs entails assuming a probabilistic model for $w(u)$
+such that the $w_j(u)$ are pairwise independent *conditional* on each $u$.
+Thus, diagonal structure in $C_w$ does not necessarily justify this assumption.
+In practice, the independent GP approach is often reasonable, and makes things
+much easier.
+
+### Prior Mean Specification
+We next consider the specification of the GP prior for each independent GP.
 Start by noting that the sample mean of the vectors $\{w_j(u_i)\}_{i=1}^{n}$
 is zero for each $j = 1, \dots, p$. Indeed,
 $$
 \frac{1}{n} \sum_{i=1}^{n} w_j(u_i)
 = \frac{1}{n} \sum_{i=1}^{n} \langle g^c_i,v_j \rangle
 = \left\langle \frac{1}{n} \sum_{i=1}^{n} g^c_i,v_j \right\rangle
-= \langle 0,v_j \rangle = 0. \tag{17}
+= \langle 0,v_j \rangle = 0. \tag{19}
 $$
-The weight functions are thus centered about zero with respect to the design
-points. If the $g_i$ are indicative of typical variation in the outputs, then
-the $w_j(u)$ should also be approximately centered with respect to $u \sim \rho$,
-not just over the design points $u_i$. Therefore, it appears reasonable
-to define zero-mean prior distributions on the $w_j(u)$.
+Similar to above, we can view this as an estimate of
+$\mathbb{E}_{u \sim \rho}[w_j(u)]$. It is tempting to conclude that a constant
+zero prior mean assumption is thus justified for each GP. Again, this isn't
+quite right. If $\mathbb{E}_{u \sim \rho}[w_j(u)] \approx 0$, then this tells
+us that on average, over the whole input space, the weight $w_j(u)$ is
+approximately zero. This does *not* guarantee the absence of a trend in the map
+$u \mapsto w_j(u)$. For example, this map might look linear, but is centered
+around zero so that the positive and negative values average out. The behavior
+of the weight maps will depend on the simulator and the basis vectors. If the
+simulator output is somewhat stationary, then the $w_j(u)$ will typically also
+look stationary, and so the zero constant mean assumption is probably
+reasonable. In other cases, one might want to consider using some sort of trend
+for the prior mean (e.g., polynomial basis functions). Standard GP model
+checking procedures should be used to determine what is best for a particular
+application. In the application presented in {% cite HigdonBasisEmulator %}, the
+zero mean assumption is regarded as reasonable.
 
-### Independent GPs
-Next, we justify the choice to model each $w_j(u)$ separately as an independent
-GP. For this, we point to a result proved in the post
-[post](https://arob5.github.io/blog/2023/12/15/PCA/); namely, if we define
-$w^i := [w_1(u_i), \dots, w_r(u_i)]^\top \in \mathbb{R}^r$, then the vectors
-$w^1, \dots, w^n$ have empirical covariance
+### Prior Covariance Specification
+The covariance function used for each GP is also a modeling choice that must
+be specified on a case-by-case basis. If any trends in the functions $w_j(u)$
+have been adequately addressed in the prior mean, then it is often reasonable
+to utilize a stationary covariance function; e.g., one of the form
 $$
-\hat{C}_w := \frac{1}{n-1} \sum_{i=1}^{n} w^i(w^i)^\top = \frac{1}{n-1}\Lambda_r, \tag{18}
+\text{Cov}[w_j(u), w_j(u^\prime)] = \alpha^2 c(u-u^\prime). \tag{20}
 $$
-with $\Lambda_r$ given in (13). In words, the weight vectors have zero sample
-covariance across dimensions. Similar in spirit to the zero mean case, we
-hope that this fact approximately holds true beyond the sample of design
-points. Thus, modeling the processes $w_j(u)$ independently for each $j$
-seems to be a reasonable choice.
+Typical choices are covariances of the Gaussian or Matérn classes. In
+{% cite HigdonBasisEmulator %}, the authors consider "fully Bayesian" GPs,
+whereby priors are placed on the marginal variance $\alpha^2$ and other
+hyperparameters characterizing the correlation function $c(\cdot)$. A common
+alternative is to opt for an empirical Bayes approach and fix these parameters
+at their optimized values.
 
-### Unit Scale
-Finally, we justify the decision to define a prior distribution for
-$w_j(u)$. From (18), we see that the empirical variance of
-$w_j(u_1), \dots, w_j(u_n)$ is proportional to $\lambda_j$. To make things
-simpler, let's define $\tilde{w}_j(u) := \lambda_j^{-1/2} w_j(u)$ so that
-$\tilde{w}_j(u_1), \dots, \tilde{w}_j(u_n)$ now has unit sample variance.
-TODO: need to account for $n-1$ factor as well.
+### Error Term
+Next, we consider a statistical model for the error term $\epsilon(u)$ defined
+in (16). In {% cite HigdonBasisEmulator %}, it is assumed that
+$$
+\epsilon(u) \sim \mathcal{N}(0, \sigma^2 I), \tag{21}
+$$
+with $\sigma^2$ treated as an unknown parameter that is assigned an inverse
+Gamma prior. 
+
+
+### Implied Multi-Output GP for the Simulator
+
 
 {% endkatexmm %}
 
+# Other References
+The main reference for this post is the paper {% cite HigdonBasisEmulator %}.
+Below are some later papers that explore similar ideas.
 
-# References
-- Computer Model Calibration using High Dimensional Output (Higdon et al., 2008)
 - JMS&Williamson D. B. (2020). ”Efficient calibration for high-dimensional computer model output using basis methods”. arXiv preprint arXiv:1906.05758
 - JMS, Dodwell T.J., et al. (2021) ”A History Matching Approach to Building Full-Field Emulators in Composite Analysis”.
 - JMS, Williamson D. B., Scinocca J., and Kharin V. (2019). ”Uncertainty quantification for computer models with spatial output using calibration-optimal bases”. Journal of the American Statistical Association, 114.528, 1800-1814.

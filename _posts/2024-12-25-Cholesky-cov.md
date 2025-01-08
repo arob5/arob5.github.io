@@ -56,8 +56,8 @@ with positive definite covariance $C := \text{Cov}[x]$. We will often assume
 that $x$ is Gaussian, but this assumption is not required for some of the
 results discussed below. We focus on the (modified) Cholesky decomposition
 $C = LDL^\top$, letting $L = \{\ell_{ij}\}$ denote the entries of the
-lower Cholesky factor. For the modified decomposition, and
-$D := \text{diag}(d_1, \dots, d_p)$, where $d_i > 0$.
+lower Cholesky factor. For the modified decomposition, we write
+$D := \text{diag}(d_1, \dots, d_p)$, where each $d_j > 0$.
 
 Let $C = LDL^\top$ and define the random variable
 $$
@@ -148,7 +148,7 @@ elements of $L$.
   $$
   \text{Cov}[x^{(i)}, x^{(j)}|x^{(1)}, \dots, x^{(j-1)}] = \ell_{ij}\ell_{jj}, \qquad j = 1, \dots, p-1. \tag{12}
   $$
-  In particular, in either case we have
+  In particular, in either case it holds that
   $$
   \ell_{ij}=0 \iff
   \text{Cov}[x^{(i)}, x^{(j)}|x^{(1)}, \dots, x^{(j-1)}] = 0 \iff
@@ -266,7 +266,7 @@ We also have
 $$
 C = \text{Cov}[x] = \text{Cov}[L\epsilon] = L \text{Cov}[\epsilon] L^{\top}. \tag{19}
 $$
-In order to show that (19) actually yields the modified Chokesky factorization,
+In order to show that (19) actually yields the modified Cholesky factorization,
 we must establish that $\text{Cov}[\epsilon]$, the residual covariance matrix,
 is diagonal with positive diagonal entries.
 
@@ -314,5 +314,38 @@ $\epsilon$ and $L$ satisfying $C = LDL^\top$, where $D = \text{Cov}[\epsilon]$
 is a diagonal matrix with positive diagonal entries, and $L$ is lower triangular.
 By the uniqueness of the modified Cholesky decomposition (noted in the
 introduction) it follows that we have precisely formed the unique matrices
-$L$ and $D$ definining the modified Cholesky decomposition of $C$.
+$L$ and $D$ defining the modified Cholesky decomposition of $C$.
+
+TODO: connect the conditional covariance and regression interpretations by
+using the known form of the regression coefficient. The conditional
+covariance forms a portion of this coefficient expression.
+
+## Connection to the Conditional Covariance Perspective
+At this point we have two different interpretations of the (modified) Cholesky
+decomposition of $C$: (i.) the conditional covariance perspective provided
+in (12); and (ii.) the regression formulation given in (14), (15), and (18).
+In particular, these results yield interpretations of the entries of $L$.
+Assuming we use the factorization $C = LDL^\top$, and letting $i > j$, the
+above results give
+$$
+\ell_{ij} =
+\frac{\text{Cov}[x^{(i)}, x^{(j)}| x^{(1)}, \dots, x^{(j-1)} ]}{\text{Var}[x^{(j)}|x^{(1)}, \dots, x^{(j-1)}]} (23)
+$$
+and
+$$
+\ell_{ij} =
+\beta^{(i)}_j = \text{Cov}[\epsilon^{(1:j-1)}]^{-1} \text{Cov}[\epsilon^{(1:j-1)}, x_i]. \tag{24}
+$$
+In (24) we are using the notation
+$\epsilon^{(1:j-1)} := (\epsilon^{(1)}, \dots, \epsilon^{(j-1)})$, and inserting the
+closed-form solution of the optimization problem (14). As a side note, by combining
+(23) and (24), we see that
+$$
+\beta^{(i)}_j = \frac{\text{Cov}[x^{(i)}, x^{(j)}| x^{(1)}, \dots, x^{(j-1)} ]}{\text{Var}[x^{(j)}|x^{(1)}, \dots, x^{(j-1)}]}, \tag{25}
+$$
+which shows that the regression coefficient (24), which is a function of
+variances and covariances of the residuals $\epsilon$, can alternatively be
+written using conditional variances and covariances of the original $x$
+variables.
+
 {% endkatexmm %}
