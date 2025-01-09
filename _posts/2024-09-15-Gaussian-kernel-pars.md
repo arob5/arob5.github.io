@@ -295,45 +295,83 @@ $\lvert x_j^{(i)} - x_j^{(l)} \rvert$ for some $i \neq l$. The bounds for the
 parameter $\ell_j$ can then be constructed as described above with respect to
 these pairwise distances. Let $d_{\text{min},j}$ be the minimum (or some
 other quantile) of $d^{(1)}_{j}, \dots, d^{(n)}_{j}$. This procedure then
-implies the constraint
+implies the dimension-by-dimension constraint
 $$
-\rho(d_{\text{min},1}, \dots, d_{\text{min},p}) \geq \rho_{\text{min}}^{p}. \tag{16}
+\rho(d_{\text{min},j}; \ell_j) \geq \rho_{\text{min}}, \qquad j=1, \dots, p \tag{16}
+$$
+which in turn implies
+$$
+\rho(d_{\text{min},1}, \dots, d_{\text{min},p}) \geq \rho_{\text{min}}^{p}. \tag{17}
 $$
 For example, if we choose $\rho_{\text{min}} = 0.37$ in $p=5$ dimensions, then
 $\rho_{\text{min}}^5 \approx 0.007$. It is important to note that (16) does not
 provide a direct constraint on the minimum correlation at the distance
-$d_\text{min} := \min_{i \neq l} \lVert x^{(i)} - x^{(l)} \rVert_2$. The distances
-$d_{\text{min},j}$ in (16) may be coming from different pairs of inputs.
-There is a distinction between the pairs of points that are closest in each
-input dimension separately, and the pair that is closest in $\mathbb{R}^p$.
+$D_\text{min} := \min_{i \neq l} \lVert x^{(i)} - x^{(l)} \rVert_2$.
+There is a distinction between the pairs of points that are closest in
+each input dimension separately, and the pair that is closest in $\mathbb{R}^p$.
+The distances $d_{\text{min},j}$ in (16) may be coming from different pairs of
+inputs, not the particular pair of inputs that is closest in $\mathbb{R}^p$.
+For this portion of the post, we will use capital "D" for distances in the
+multivariate space, and lower case "d_j" for univariate distance with respect
+to the $j^{\text{th}}$ dimension.
 
-#### Joint Constraint
+#### Multivariate Constraint
 We might instead choose to constrain the correlation at the distance
-$d_\text{min} = \min_{i \neq l} \lVert x^{(i)} - x^{(l)} \rVert_2$, which means we are now
-considering Euclidean distance in $\mathbb{R}^p$, rather approaching the problem
-one dimension at a time. To start, we can consider scaling the inputs such that
-$x \in [0,1]^p$. In particular, for each dimension $j$ we re-scale as
+$D_\text{min} = \min_{i \neq l} \lVert x^{(i)} - x^{(l)} \rVert_2$,
+which means we are now considering Euclidean distance in $\mathbb{R}^p$,
+rather than approaching the problem one dimension at a time. For the lower bound,
+this means enforcing the constraint
 $$
-\tilde{x}_j := \frac{x_j - m_j}{M_j - m_j}, \tag{17}
+\rho(x_{\star}, x_{\star}^\prime; \ell_{\text{min},1}, \dots, \ell_{\text{min},p}) = \rho_{\text{min}}, \tag{18}
+$$
+where $(x_{\star}, x_{\star}^\prime)$ are a pair of training inputs
+satisfying $\lVert x_{\star} - x_{\star}^\prime \rVert_2 = D_{\text{min}}$; i.e., the
+two closest points. In order to choose the lower bounds $\ell_{\text{min},j}$,
+a reasonable approach is to assume the $\ell_{\text{min},j}$ scale linearly
+with the scale of the respective input dimension. Equivalently, we can
+consider scaling the inputs so that $x \in [0,1]^p$.
+In particular, for each dimension $j$ we re-scale as
+$$
+\tilde{x}_j := \frac{x_j - m_j}{M_j - m_j}, \tag{19}
 $$
 where we have defined
 \begin{align}
-&m_j := \min_{i} x^{(i)}\_j, &&M_j := \max_{i} x^{(i)}_j. \tag{18}
+&m_j := \min_{i} x^{(i)}\_j, &&M_j := \max_{i} x^{(i)}_j. \tag{20}
 \end{align}
-We'll use tildes to denote quantities pertaining to the scaled space.
-We can now choose
-$\tilde{\ell}_1, \dots, \tilde{\ell}_p$ to satisfy
+We'll use tildes to denote quantities pertaining to the scaled space, and
+also stop writing the "min" subscript in $\ell_{\text{min},j}$ for succinctness.
+Note that this scaling implies that univariate distances scale as
 $$
-\rho(\tilde{d}_{\text{min}}; \ell_1, \dots, \ell_p) = \rho_{\text{min}}. \tag{19}
+\tilde{d}_j
+:= \tilde{x}_j - \tilde{x}_j^\prime
+= \frac{x_j - m_j}{M_j - m_j} - \frac{x^\prime_j - m_j}{M_j - m_j}
+= \frac{x_j - x_j^\prime}{M_j - m_j}
+= \frac{d_j}{M_j - m_j}. \tag{21}
 $$
-Again, we might consider replacing $d_{\text{min}}$ with an empirical quantile
-of the $p$-dimensional pairwise distances. The equation (19) is underdetermined,
-but since
-
-
-While we have focused on the lower bound, note
-that all the same reasoning applies to the upper bound as well.
-
+Since lengthscales correspond to distances, we have
+$$
+\tilde{\ell}_j := \frac{\ell_j}{M_j - m_j}, \tag{22}
+$$
+Note that these scalings have no effect on the correlations, since
+$$
+\rho(\tilde{x},\tilde{x}^\prime; \tilde{\ell}_1, \dots, \tilde{\ell}_p)
+= \exp\left[-\sum_{j=1}^{p} \left(\frac{\tilde{d}_j}{\tilde{\ell}_j}\right)^2 \right]
+= \exp\left[-\sum_{j=1}^{p} \left(\frac{d_j}{\ell_j}\right)^2 \right]
+= \rho(x,x^\prime; \ell_1, \dots, \ell_p), \tag{23}
+$$
+given that the $M_j - m_j$ factors cancel in the ratio. If we consider an
+isotropic model in scaled space
+(i.e., $\tilde{\ell} \equiv \tilde{\ell}_j \ \forall j$), then this is equivalent
+to assuming that the lengthscale bounds scale linearly as
+$$
+\ell_j = (M_j - m_j)\tilde{\ell}. \tag{24}
+$$
+If we enforce the constraint
+$$
+\rho(\tilde{x}_{\star}, \tilde{x}^\prime_{\star}; \tilde{\ell}, \dots, \tilde{\ell}) = \rho_{\text{min}} \tag{25}
+$$
+in scaled space, then we see from (23) that this encodes the constraint
+(18), as desired.
 
 
 {% endkatexmm %}
