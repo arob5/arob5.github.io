@@ -9,9 +9,29 @@ published: true
 
 In this post we discuss the interpretation of the hyperparameters defining
 a Gaussian covariance function. We then consider some practical considerations
-to keep in mind when learning the values of these parameters. In particular,
-we discuss empirical methods for setting reasonable bounds and default
-values.
+to keep in mind when learning the values of these parameters. In particular, we
+focus on setting bounds and initialization values to avoid
+common pathologies in hyperparameter optimization. The typical application
+is hyperparameter estimation for Gaussian process models. It is important
+to emphasize that ideally one would define informative priors on hyperparameters
+and cast hyperparameter optimization within a Bayesian inferential framework.
+Even if one is only optimizing hyperparameters, prior distributions offer a
+principled means of regularizing the optimization problem. In this post, we
+focus only on bound constraints for hyperparameters, which can be thought
+of equivalently as uniform priors. In addition, we consider the setting where
+little prior knowledge is available, so that they main purpose of the bounds
+is to avoid pathological behavior in the optimization. We discuss heuristic
+methods for empirically deriving reasonable default bounds based on the
+training data. Deriving the bounds from the training data also implies that the
+process can be automated, which may be useful in certain contexts.
+In general, I would typically recommend considering priors
+other than uniform distributions. However, I think this is still a useful exercise
+to think through. Moreover, many of the more classically-oriented Gaussian process
+packages (e.g., kergp and hetGP in `R`) only offer hyperparameter regularization
+via bound constraints. For a discussion on non-uniform priors and full Bayesian
+inference for Gaussian process hyperparameters, see Michael Betencourt's
+excellent posts [here](https://betanalpha.github.io/assets/case_studies/gp_part2/part2.html)
+and [here](https://betanalpha.github.io/assets/case_studies/gp_part3/part3.html).
 
 # The Gaussian covariance function
 {% katexmm %}
@@ -372,6 +392,43 @@ $$
 $$
 in scaled space, then we see from (23) that this encodes the constraint
 (18), as desired.
+
+## Marginal Variance
+We now consider the definition of reasonable default bounds for the marginal
+variance parameter $\alpha^2$. Throughout this section, we assume that $f(x)$
+is a zero-mean Gaussian process with a Gaussian covariance function.
+A reasonable approach here is to cap $\alpha^2$
+so that most of the prior probability falls within the observed range of the
+data. As always, such a heuristic could present challenges in generalizing
+beyond the training data, and domain knowledge should take precedent in
+constraining the value of $\alpha^2$.
+
+To make precise the notion of placing most prior mass over the observed
+data range, let $y_{\text{max}} := \max_i \lvert y_i \rvert$. Then we can define
+the upper bound $\alpha^2_{\text{max}}$ as the value of $\alpha$ implying
+$$
+\mathbb{P}\left[\lvert f(x)\rvert \leq y_{\text{max}} \right] = p, \tag{26}
+$$
+for some (large) probability $p$ (e.g., $p=0.99$). This constraint excludes
+values $\alpha > \alpha_{\text{max}}$, which would lead to priors that place
+more probability on values of $\lvert f(x) \rvert$ that exceed $y_{\text{max}}$.
+The use of the value $y_{\text{max}}$ might lead to some concern around
+robustness, since a single extreme value $y_i$ could exert significant
+influence on the bound $\alpha_{\text{max}}$. On the flip side, we also don't
+want to simply ignore the larger values and set $\alpha_{\text{max}}$
+restrictively low. Similar to the lengthscale bound approach, one option
+is to replace $y_{\text{max}}$ with a different empirical quantile, and
+pair this with a slightly lower value of $p$.
+
+In any case, for a chosen quantile $y_{\text{max}}$ and probability $p$,
+we can solve the expression (26) for $\alpha$ to obtain an expression
+for the bound $\alpha_{\text{max}}$. Noting that
+$f(x) \sim \mathcal{N}(0, \alpha^2)$, we see that (26) can equivalently
+be written as
+$$
+\mathbb{P}\left[-y_{\text{max}} \leq \alpha Z \leq y_{\text{max}} \right] = p, \tag{27}
+$$
+where $Z \sim \mathcal{N}(0,1)$.
 
 
 {% endkatexmm %}
