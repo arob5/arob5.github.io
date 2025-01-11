@@ -412,7 +412,7 @@ $$
 for some (large) probability $p$ (e.g., $p=0.99$). This constraint excludes
 values $\alpha > \alpha_{\text{max}}$, which would lead to priors that place
 more probability on values of $\lvert f(x) \rvert$ that exceed $y_{\text{max}}$.
-The use of the value $y_{\text{max}}$ might lead to some concern around
+The use of the value $y_{\text{max}}$ might lead to some concerns around
 robustness, since a single extreme value $y_i$ could exert significant
 influence on the bound $\alpha_{\text{max}}$. On the flip side, we also don't
 want to simply ignore the larger values and set $\alpha_{\text{max}}$
@@ -428,7 +428,16 @@ be written as
 $$
 \mathbb{P}\left[-y_{\text{max}} \leq \alpha Z \leq y_{\text{max}} \right] = p, \tag{27}
 $$
-where $Z \sim \mathcal{N}(0,1)$.
-
+where $Z \sim \mathcal{N}(0,1)$. Since Gaussians are symmetric, we can write
+(27) as
+$$
+1 - 2 \mathbb{P}\left[Z \geq y_{\text{max}}/\alpha \right] = p. \tag{28}
+$$
+Solving (28) for $\alpha$ then gives
+$$
+\alpha = \frac{y_{\text{max}}}{\Phi^{-1}\left(\frac{1+p}{2}\right)}, \tag{29}
+$$
+recalling that $\Phi(t) := \mathbb{P}[Z \leq t]$ denotes the standard normal
+distribution function. 
 
 {% endkatexmm %}
