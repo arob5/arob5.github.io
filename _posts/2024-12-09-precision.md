@@ -92,7 +92,7 @@ We summarize this important connection below.
   <p><strong>Joint and Conditional Precision.</strong> <br>
   The precision matrix of the conditional distribution $x_A|x_B$ is given by
   $$
-  P_{A|B} = C_{A|B}^{-1} = P_A. \tag{11}
+  P_{A|B} = (C_{A|B})^{-1} = P_A. \tag{11}
   $$
   In words, the conditional precision is obtained by deleting the rows and
   columns of the joint precision $P$ that involve the conditioning variables
@@ -109,9 +109,9 @@ $$
 and noting that $(P_A)^{-1}$ is simply a two-by-two matrix that we can consider
 inverting by hand.
 <blockquote>
-  <p><strong>Zeros of Precision imply Conditional Independence.</strong> <br>
-  An entry $P_{ij}$ of the joint precision matrix is zero if and only if
-  $x_i$ and $x_j$ are conditionally independent, given all other variables.
+  <p><strong>Zeros in Precision imply Conditional Independence.</strong> <br>
+  An entry $P_{ij}$, $i \neq j$ of the joint precision matrix is zero if and only
+  if $x_i$ and $x_j$ are conditionally independent, given all other variables.
   That is,
   $$
   P_{ij} = 0 \iff \text{Cov}[x_i,x_j|x_B] = 0 \iff x_i \perp x_j | x_B, \tag{13}
@@ -126,29 +126,98 @@ precision $P$ corresponding to the variables $x_i$ and $x_j$. Thus,
 $$
 \text{Cov}[x_i,x_j|x_B] = [C_{A|B}]_{12} = 0 \iff [(P_A)^{-1}]_{12} = 0.
 $$
-Denoting the entries of $P_A$ by $a, b, c, d$ we use the well-known formula
+We use the well-known formula
 for the inverse of a two-by-two matrix to obtain
 \begin{align}
-(P_A)^{-1} &= \begin{bmatrix} a & b \newline c & d\end{bmatrix}
-= \frac{1}{ad-bc} \begin{bmatrix} d & -b \newline -c & a\end{bmatrix}.
+(P_A)^{-1} &= \begin{bmatrix} P_{ii} & P_{ij} \newline P_{ji} & P_{jj} \end{bmatrix}
+= \frac{1}{P_{ii}P_{jj}- P_{ij}^2} \begin{bmatrix} P_{jj} & -P_{ji} \newline -P_{ij} & P_{ii}\end{bmatrix}.
 \end{align}
 Notice that the off-diagonal entries of $P_A$ and $(P_A)^{-1}$ are the same,
 up to a minus sign. This means
 $$
-\text{Cov}[x_i,x_j|x_B] = [C_{A|B}]_{12} = 0 \iff [P_A]_{12} = 0.
+\text{Cov}[x_i,x_j|x_B] = [C_{A|B}]_{12} = 0 \iff P_{ij} = 0,
 $$
-Noting that the entry $[P_A]_{12}$ corresponds to $P_{ij}$, the result is
-proved. The fact that conditional uncorrelatedness implies conditional
+so the result is proved. The fact that conditional uncorrelatedness implies conditional
 independence follows from the fact that $x_A|x_B$ is Gaussian. $\qquad \blacksquare$
+
+The above result interprets the zero values of off-diagonal elements of the
+precision matrix. Later in this post we will revisit the precision, and see
+that non-zero values can be interpreted through the lens of partial correlation.
+An interpretation of the magnitude of the diagonal elements is more
+straightforward, and is given in the below result.
+
+<blockquote>
+  <p><strong>Diagonal Entries of Precision.</strong> <br>
+  The diagonal entry $P_{ii}$ of the precision gives the reciprocal of the
+  variance of $x_i$, conditional on all other variables; that is,
+  $$
+  P_{ii} = \text{Var}[x_i|x_{\tilde i}]^{-1} \tag{14}
+  $$
+  </p>
+</blockquote>
+
+**Proof.** We know from (12) that $C_{A|B} = (P_A)^{-1}$. Let $A := \{i\}$ and
+$B := \{1, \dots, n\} \setminus \{i,j\}$. It follows that
+$$
+\text{Var}[x_i|x_{\tilde i}] = C_{A|B} = (P_A)^{-1} = P_{ii}^{-1}. \qquad \qquad \blacksquare
+$$
+
 {% endkatexmm %}
 
-# Geometry induced by the precision
-
 # Partial correlations
+{% katexmm %}
+We now turn our focus to the definition of a quantity analogous to a correlation
+coefficient, but which measures the linear dependence between two random
+variables after the effect of a third confounding variable has been removed.
+This notion is made precise below.
+<blockquote>
+  <p><strong>Definition: partial correlation.</strong> <br>
+  For a set of random variables $x_1, \dots, x_n$, let
+  $A,B,C \subset \{1, \dots, n\}$ be disjoint index sets. Define the linear
+  regression coefficients
+  \begin{align}
+  \alpha_A^\star, \beta_A^\star &:= \text{argmin}_{\alpha,\beta} \mathbb{E}\lVert x_A - (\alpha + \beta_A^\top x_C)\rVert^2 \newline
+  \alpha_B^\star, \beta_B^\star &:= \text{argmin}_{\alpha,\beta} \mathbb{E} \lVert x_B - (\alpha + \beta_B^\top x_C)\rVert^2,
+  \end{align}
+  and associated residuals
+  \begin{align}
+  e_{A} &:= x_A - (\alpha_A^\star + (\beta_A^\star)^\top x_C) \newline
+  e_{B} &:= x_B - (\alpha_B^\star + (\beta_B^\star)^\top x_C).
+  \end{align}
+  The partial correlation coefficient between $x_A$ and $x_B$ given $x_C$ is
+  defined as
+  $$
+  \rho_{AB \cdot C} := \text{Cor}[e_A, e_B]. \tag{15}
+  $$
+  </p>
+</blockquote>
 
-# Gaussian special case
+The intuition here is that the residuals from the regressions contain variation
+that is unexplained by $x_C$, so that $\rho_{AB \cdot C}$ quantifies the linear
+dependence between $x_A$ and $x_B$ after removing the effect of $x_C$. We
+emphasize the importance of the word "linear" here, as linearity plays a role
+in two different ways in the above definition. Recall that the typical
+correlation coefficient measures linear dependence, so the statement in (15)
+is a measure of linear dependence between the residuals. Moreover, the
+residuals themselves are defined via linear regressions, and hence the sense
+in which the effect of $x_C$ is "removed" also relies on linearity
+assumptions. Note also that we are allowing $x_A$ and $x_B$ to be sets of
+variables, so the linear regressions considered above are multi-output
+regressions, which can essentially be thought of as a set of independent
+univariate regressions, since the loss function simply sums the error across
+the outputs. Thus, in general, the $\alpha$s and $\beta$s are vectors and
+matrices, respectively.
 
-# Graphical models
+We should also note briefly that partial correlation is in general distinct
+from the concept of *conditional correlation*, though the two coincide when
+the variables in question are jointly Gaussian. For details see
+{% cite BabaPartialCondCor %} and {% cite LawrancePartialCondCor %}.
+{% endkatexmm %}
+
+# Precision Matrix and Partial Correlation
+{% katexmm %}
+{% endkatexmm %}
+
 
 1. Estimation and Model Identification for Continuous Spatial Processes (Vecchia)
 2. Graphical Models in Applied Mathematical Multivariate Statistics
@@ -156,3 +225,8 @@ independence follows from the fact that $x_A|x_B$ is Gaussian. $\qquad \blacksqu
 4. https://stats.stackexchange.com/questions/10795/how-to-interpret-an-inverse-covariance-or-precision-matrix
 5. http://en.wikipedia.org/wiki/Partial_correlation#Using_matrix_inversion
 6. https://stats.stackexchange.com/questions/140080/why-does-inversion-of-a-covariance-matrix-yield-partial-correlations-between-ran
+7. Dichotomization, Partial Correlation, and Conditional Independence
+8. Kernel Partial Correlation Coefficient — a Measure of Conditional Dependence
+9. On Conditional and Partial Correlation (Lawrance)
+10. A note on the partial correlation coefficient (Fleiss and Tanur)
+11. Partial correlation and conditional correlation as measures of conditional independence (Baba et al)
