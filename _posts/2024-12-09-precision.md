@@ -215,7 +215,71 @@ the variables in question are jointly Gaussian. For details see
 {% endkatexmm %}
 
 # Precision Matrix and Partial Correlation
+
 {% katexmm %}
+Having defined partial and conditional correlation, we now return to the
+question of interpreting the off-diagonal elements of a Gaussian precision
+matrix. Throughout this section we assume that $x_1, \dots, x_n$ are jointly
+Gaussian with positive definite covariance $C$ and precision matrix $P$.
+The following definition normalizes the precision
+matrix, analogous to the way a covariance matrix is normalized to produce a
+correlation matrix.
+
+<blockquote>
+  <p><strong>Normalized Precision.</strong> <br>
+  Define the normalized precision $\bar{P}$ as the matrix with elements
+  $$
+  \bar{P}_{ij} := \frac{P_{ij}}{\sqrt{P_{ii}P_{jj}}}. \tag{16}
+  $$
+  </p>
+</blockquote>
+
+We are now ready to establish the connection between the (normalized) precision
+and the notions of conditional and partial correlation. Note that the diagonal
+elements of $\bar{P}$ satisfy $\bar{P}_{ii}=1$. The following result interprets
+the off-diagonal elements.
+
+<blockquote>
+  <p><strong>Off-Diagonal Entries of Precision.</strong> <br>
+  Assume that $x_1, \dots, x_n$ are jointly Gaussian with normalized precision
+  matrix $\bar{P}$. Let $\{i,j\}$ be a pair of distinct indices and
+  $B := \{1,\dots,n\} \setminus \{i,j\}$ its complement. Then
+  $$
+  \bar{P}_{ij} = -\rho_{ij\cdot B} = -\text{Cor}[x_i,x_j|x_B]. \tag{17}
+  $$
+  In words, the off-diagonal entry $\bar{P}_{ij}$ is equal to the negated
+  partial correlation between $x_i$ and $x_j$ given all other variables.
+  It is likewise equal to the negated conditional correlation.
+  </p>
+</blockquote>
+
+**Proof.**
+Let $A := \{i,j\}$. Recall from (12) that
+\begin{align}
+C_{A|B} &= (P_A)^{-1}
+= \begin{bmatrix} P_{ii} & P_{ij} \newline P_{ji} & P_{jj} \end{bmatrix}^{-1}
+= \gamma \begin{bmatrix} P_{jj} & -P_{ij} \newline -P_{ji} & P_{ii} \end{bmatrix}, \tag{18}
+\end{align}
+with $\gamma := (P_{ii}P_{jj}-P^2_{ij})^{-1}$.
+We have again used the expression for the inverse of a two-by-two matrix.
+The equality in (18) gives
+\begin{align}
+\text{Var}[x_i|x_B] &= \gamma P_{jj} \newline
+\text{Var}[x_j|x_B] &= \gamma P_{ii} \newline
+\text{Cov}[x_i,x_j|x_B] &= -\gamma P_{ij}.
+\end{align}
+We thus have
+$$
+\bar{P}_{ij}
+= \frac{P_{ij}}{\sqrt{P_{ii}P_{jj}}}
+= -\frac{\text{Cov}[x_i,x_j|x_B]}{\sqrt{\text{Var}[x_i|x_B]\text{Var}[x_j|x_B]}}
+= -\text{Cor}[x_i,x_j|x_B].
+$$
+This establishes the relationship between the precision elements and
+conditional correlation. It now remains to link this with partial correlation.
+
+
+
 {% endkatexmm %}
 
 
