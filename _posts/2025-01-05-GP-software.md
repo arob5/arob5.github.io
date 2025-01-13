@@ -4,7 +4,7 @@ subtitle: Exploring and explaining the source code of some popular GP packages.
 layout: default
 date: 2025-01-05
 keywords: GP
-published: true
+published: false
 ---
 
 There are an overwhelming number of Gaussian process (GP) packages implemented

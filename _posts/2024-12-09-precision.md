@@ -397,6 +397,7 @@ that cover similar topics.
 - Dichotomization, Partial Correlation, and Conditional Independence (Vargha et al, 1996)
 - A note on the partial correlation coefficient (Fleiss and Tanur, 1971)
 - Kernel Partial Correlation Coefficient — a Measure of Conditional Dependence (Huang et al, 2022)
+- Back to the basics: Rethinking partial correlation network methodology (Williams and Rast, 2019)
 - Some StackExchange posts on precision matrices and partial correlation:
 [here](https://stats.stackexchange.com/questions/10795/how-to-interpret-an-inverse-covariance-or-precision-matrix) and [here](https://stats.stackexchange.com/questions/140080/why-does-inversion-of-a-covariance-matrix-yield-partial-correlations-between-ran)
 - Wikipedia [article](http://en.wikipedia.org/wiki/Partial_correlation#Using_matrix_inversion) on partial correlation
