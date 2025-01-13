@@ -7,26 +7,30 @@ keywords:
 published: true
 ---
 
+In this post, we explore how the precision (inverse covariance) matrix for a
+Gaussian distribution encodes conditional dependence relations between the
+underlying variables. We also introduce the notions of conditional and
+partial correlation, and prove their equivalence in the Gaussian setting.
+Ideas along these lines are widely used in areas such as probabilistic graphical
+models (e.g., Gaussian Markov random fields and scalable Gaussian processes)
+and high-dimensional covariance estimation. A natural complement to this
+topic is my [post](https://arob5.github.io/blog/2024/12/25/Cholesky-cov/) on the
+Cholesky decomposition of a covariance matrix, which provides an alternate route
+to analyzing conditional dependence structure. The main source for this post
+is {% cite LauritzenGraphicalModels %}, which is freely available online and
+provides an excellent rigorous introduction to graphical models in statistics.
+
 # Setup and Notation
 {% katexmm %}
-Throughout this post we will consider the set of random variables
-$x := \{x_1, x_2, \dots, x_n\}$, each taking values in $\R$.
-We will generically write $p(x_1, x_2, \dots, x_n)$
-to denote the joint distribution of these variables, and abuse notation by
-using the same symbol $p(\cdot)$ to indicate marginal and conditional
-distributions. For example $p(x_i, x_j)$ is the marginal distribution for
-$(x_i, x_j)$ and $p(x_i, x_j|x_k)$ is the distribution of $(x_i, x_j)$,
-conditional on $x_k$. We will find it convenient to introduce some shorthand
-to avoid listing these random variables all the time. For and index set
-$A \subseteq \{1, 2, \dots, n\}$ we define $x_A := \{x_i\}_{i \in A}$.
+Throughout this post we consider a set of random variables $x_1, \dots, x_n$,
+each taking values in $\mathbb{R}$. For an (ordered) index set
+$A \subseteq \{1,\dots,n\}$, we write $x_A$ to denote the column vector
+$[x_i]_{i \in A}$ that retains the ordering of $A$. We will use the convention
+that $B := \{1,\dots,n\} \setminus A$ is the complement of $A$, and use the
+shorthand $x_{\sim i}$ for the vector of all variables excluding $x_i$.
 We also write
-$\tilde{x}_A := x \setminus x_A := \{x_i\}_{i \notin A}$ to indicate the subset
-of all variables in $x$ excluding $x_A$. Finally, we introduce the shorthand
-$x_{ij} := \{x_i, x_j\}$ and $x_{i:j} := \{x_i, \dots, x_j\}$ (for $i \leq j$).
-Finally, while we have introduced the above notation using sets, we will
-utilize the same notation for vectors when relevant. For example, when relevant,
-$x_A$ will denote the column vector $[x_i]_{i \in A}$ with entries ordered
-according to the specified order of the index set $A$.
+$x_i \perp x_j|x_B$ to mean that $x_i$ and $x_j$ are conditionally independent
+given $x_B$.
 {% endkatexmm %}
 
 # The Precision Matrix of a Gaussian
@@ -35,12 +39,12 @@ In this section we will explore how the precision matrix of a Gaussian
 distribution is closely related to the conditional dependence structure of the
 random variables $x_1, \dots, x_n$. Throughout this section, we assume
 $$
-x = (x_1, \dots, x_n)^\top \sim \mathcal{N}(m, C), \tag{3}
+x = (x_1, \dots, x_n)^\top \sim \mathcal{N}(m, C), \tag{1}
 $$
 where $C$ is positive definite. Hence, it is invertible, and we denote its
 inverse by
 $$
-P := C^{-1}, \tag{4}
+P := C^{-1}, \tag{2}
 $$
 which we refer to as the *precision matrix*. The precision inherits positive
 definiteness from $C$. In some contexts
@@ -49,14 +53,14 @@ definiteness from $C$. In some contexts
 
 Throughout this section, our focus will be on the dependence between two
 variables $x_i$ and $x_j$, conditional on all others. Thus, let's define the
-index sets $A := \{i,j\}$ and $B := \{1,\dots,n\} \setminus \{i,j\}$. We partition
-the joint Gaussian (3) (after possibly reordering the variables) as
+index sets $A := \{i,j\}$ and $B := \{1,\dots,n\} \setminus \{i,j\}$. We
+partition the joint Gaussian (1) (after possibly reordering the variables) as
 \begin{align}
 \begin{bmatrix} x_A \newline x_B \end{bmatrix}
 &\sim \mathcal{N}\left(
 \begin{bmatrix} m_A \newline m_B \end{bmatrix},
 \begin{bmatrix} C_A & C_{AB} \newline C_{BA} & C_B \end{bmatrix}
-\right). \tag{5}
+\right). \tag{3}
 \end{align}
 
 Our focus is
@@ -64,35 +68,35 @@ thus on the conditional distribution of $x_A|x_B$. We recall that conditionals
 of Gaussians are themselves Gaussian, and that the conditional covariance
 takes the form
 $$
-C_{A|B} := \text{Cov}[x_A|x_B] = C_A - C_{AB}C_B^{-1}C_{BA}. \tag{6}
+C_{A|B} := \text{Cov}[x_A|x_B] = C_A - C_{AB}C_B^{-1}C_{BA}. \tag{4}
 $$
 I go through these derivations in depth in [this](https://arob5.github.io/blog/2024/05/19/Gaussian-Measures-multivariate/) post. For our present purposes, it is important to appreciate the
-connection between the conditional covariance (6) and the joint precision $P$.
+connection between the conditional covariance (4) and the joint precision $P$.
 To this end, let's consider partitioning the precision in the same manner
 as the covariance:
 \begin{align}
-P &= C^{-1} = \begin{bmatrix} P_A & P_{AB} \newline P_{BA} & P_B \end{bmatrix}. \tag{7}
+P &= C^{-1} = \begin{bmatrix} P_A & P_{AB} \newline P_{BA} & P_B \end{bmatrix}. \tag{5}
 \end{align}
 The above blocks of $P$ can be obtained via a direct application of partitioned
 matrix inverse identities from linear algebra (see, e.g., James E. Pustejovsky's
 [post](https://jepusto.com/posts/inverting-partitioned-matrices/) for some nice background).
-Applying the partitioned matrix identity to (7) yields
+Applying the partitioned matrix identity to (5) yields
 \begin{align}
-P_A &= (C_A - C_{AB}C_B^{-1}C_{BA})^{-1} \tag{8} \newline
-P_{AB} &= -C_B^{-1} C_{BA}P_A. \tag{9}
+P_A &= (C_A - C_{AB}C_B^{-1}C_{BA})^{-1} \tag{6} \newline
+P_{AB} &= -C_B^{-1} C_{BA}P_A. \tag{7}
 \end{align}
-Notice in (8) that $P_A$, the upper-left block of the joint precision, is
+Notice in (6) that $P_A$, the upper-left block of the joint precision, is
 precisely equal to the inverse of the conditional covariance
-$C_{A|B}$ given in (6). We denote this conditional precision by
+$C_{A|B}$ given in (4). We denote this conditional precision by
 $$
-P_{A|B} := C_{A|B}^{-1}. \tag{10}
+P_{A|B} := (C_{A|B})^{-1}. \tag{8}
 $$
 We summarize this important connection below.
 <blockquote>
   <p><strong>Joint and Conditional Precision.</strong> <br>
   The precision matrix of the conditional distribution $x_A|x_B$ is given by
   $$
-  P_{A|B} = (C_{A|B})^{-1} = P_A. \tag{11}
+  P_{A|B} = (C_{A|B})^{-1} = P_A. \tag{9}
   $$
   In words, the conditional precision is obtained by deleting the rows and
   columns of the joint precision $P$ that involve the conditioning variables
@@ -102,9 +106,9 @@ We summarize this important connection below.
 
 This connection also leads us to our main result, which states that conditional
 independence can be inferred from zero entries of the precision matrix. This
-result follows immediately by rearranging (11) to
+result follows immediately by rearranging (9) to
 $$
-C_{A|B} = (P_A)^{-1} \tag{12}
+C_{A|B} = (P_A)^{-1} \tag{10}
 $$
 and noting that $(P_A)^{-1}$ is simply a two-by-two matrix that we can consider
 inverting by hand.
@@ -114,7 +118,7 @@ inverting by hand.
   if $x_i$ and $x_j$ are conditionally independent, given all other variables.
   That is,
   $$
-  P_{ij} = 0 \iff \text{Cov}[x_i,x_j|x_B] = 0 \iff x_i \perp x_j | x_B, \tag{13}
+  P_{ij} = 0 \iff \text{Cov}[x_i,x_j|x_B] = 0 \iff x_i \perp x_j | x_B, \tag{11}
   $$
   where $B := \{1, \dots, n\} \setminus \{i,j\}$.
   </p>
@@ -151,67 +155,171 @@ straightforward, and is given in the below result.
   The diagonal entry $P_{ii}$ of the precision gives the reciprocal of the
   variance of $x_i$, conditional on all other variables; that is,
   $$
-  P_{ii} = \text{Var}[x_i|x_{\tilde i}]^{-1} \tag{14}
+  P_{ii} = \text{Var}[x_i|x_{\sim i}]^{-1} \tag{12}
   $$
   </p>
 </blockquote>
 
-**Proof.** We know from (12) that $C_{A|B} = (P_A)^{-1}$. Let $A := \{i\}$ and
-$B := \{1, \dots, n\} \setminus \{i,j\}$. It follows that
+**Proof.** We know from (9) that $C_{A|B} = (P_A)^{-1}$. Let $A := \{i\}$ and
+$B := \{1, \dots, n\} \setminus \{i\}$. It follows that
 $$
-\text{Var}[x_i|x_{\tilde i}] = C_{A|B} = (P_A)^{-1} = P_{ii}^{-1}. \qquad \qquad \blacksquare
+\text{Var}[x_i|x_{\sim i}] = C_{A|B} = (P_A)^{-1} = P_{ii}^{-1}. \qquad \qquad \blacksquare
 $$
 
 {% endkatexmm %}
 
-# Partial correlations
+# Notions of Linear Conditional Dependence
+In this section, we introduce two analogs of the correlation coefficient that
+quantify the linear dependence between two variables, conditional on another
+set of variables. We show that if all random variables are jointly Gaussian,
+then the two notions coincide.
+
 {% katexmm %}
-We now turn our focus to the definition of a quantity analogous to a correlation
-coefficient, but which measures the linear dependence between two random
-variables after the effect of a third confounding variable has been removed.
-This notion is made precise below.
+## Conditional Correlation
+We start by defining *conditional correlation*, which is nothing more than
+the typical notion of correlation but defined with respect to a conditional
+probability measure. We give the definition with respect to our current setup,
+but of course the notion can be generalized.
+
+<blockquote>
+  <p><strong>Definition: conditional correlation.</strong> <br>
+  For a pair of indices $\{i,j\}$ and its complement
+  $B := \{1, \dots, n\} \setminus \{i,j\}$, we define the conditional covariance
+  between $x_i$ and $x_j$, given $x_B$, as
+  $$
+  \text{Cov}[x_i,x_j|x_B] := \mathbb{E}^B\left[(x_i-\mathbb{E}^B[x_i])(x_j-\mathbb{E}^B[x_j]) \right], \tag{13}
+  $$
+  where we denote $\mathbb{E}^B[\cdot] := \mathbb{E}[\cdot|x_B]$. The conditional
+  correlation is then defined as usual by normalizing the covariance (13):
+  $$
+  \text{Cor}[x_i,x_j|x_B]
+  := \frac{\text{Cov}[x_i,x_j|x_B]}{\sqrt{\text{Var}[x_i|x_B]\text{Var}[x_j|x_B]}}. \tag{14}
+  $$
+  </p>
+</blockquote>
+
+The conditional correlation is simply a correlation where all expectations
+involved are conditional on $x_B$. It is sometimes also denoted as
+$\rho_{ij|B} := \text{Cor}[x_i,x_j|x_B]$.
+
+## Partial correlation
+We now consider an alternative notion of conditional linear dependence that is
+defined with respect to underlying linear regression models. For generality,
+we provide a definition that quantifies dependence between sets of variables
+$x_{A_1}$ and $x_{A_2}$, after removing the confounding effect of a third
+set $x_{B}$. However, our primary interest will be in the special case
+$A_1 = \{i\}$ and $A_2 = \{j\}$, which aligns with the conditional correlation
+definition given above.
+
 <blockquote>
   <p><strong>Definition: partial correlation.</strong> <br>
   For a set of random variables $x_1, \dots, x_n$, let
-  $A,B,C \subset \{1, \dots, n\}$ be disjoint index sets. Define the linear
+  $A_1,A_2 \subset \{1, \dots, n\}$ be index sets and $B$ a third index set
+  disjoint from the other two. Define the linear
   regression coefficients
   \begin{align}
-  \alpha_A^\star, \beta_A^\star &:= \text{argmin}_{\alpha,\beta} \mathbb{E}\lVert x_A - (\alpha + \beta_A^\top x_C)\rVert^2 \newline
-  \alpha_B^\star, \beta_B^\star &:= \text{argmin}_{\alpha,\beta} \mathbb{E} \lVert x_B - (\alpha + \beta_B^\top x_C)\rVert^2,
+  \alpha_{A_1}^\star, \beta_{A_1}^\star &:= \text{argmin}_{\alpha,\beta} \mathbb{E}\lVert x_{A_1} - \alpha + \beta_{A_1}^\top x_B)\rVert^2 \tag{15} \newline
+  \alpha_{A_2}^\star, \beta_{A_2}^\star &:= \text{argmin}_{\alpha,\beta} \mathbb{E} \lVert x_{A_2} - (\alpha + \beta_{A_2}^\top x_B)\rVert^2,
   \end{align}
   and associated residuals
   \begin{align}
-  e_{A} &:= x_A - (\alpha_A^\star + (\beta_A^\star)^\top x_C) \newline
-  e_{B} &:= x_B - (\alpha_B^\star + (\beta_B^\star)^\top x_C).
+  e_{A_1} &:= x_{A_1} - (\alpha_{A_1}^\star + [\beta_{A_1}^\star)^\top x_B] \tag{16} \newline
+  e_{A_2} &:= x_{A_2} - (\alpha_{A_2}^\star + [\beta_{A_2}^\star)^\top x_B].
   \end{align}
-  The partial correlation coefficient between $x_A$ and $x_B$ given $x_C$ is
-  defined as
+  The partial correlation coefficient between $x_{A_1}$ and $x_{A_2}$ given
+  $x_B$ is defined as
   $$
-  \rho_{AB \cdot C} := \text{Cor}[e_A, e_B]. \tag{15}
+  \rho_{A_{1}A_{2} \cdot B} := \text{Cor}[e_{A_1}, e_{A_2}]. \tag{17}
   $$
   </p>
 </blockquote>
 
 The intuition here is that the residuals from the regressions contain variation
-that is unexplained by $x_C$, so that $\rho_{AB \cdot C}$ quantifies the linear
-dependence between $x_A$ and $x_B$ after removing the effect of $x_C$. We
-emphasize the importance of the word "linear" here, as linearity plays a role
-in two different ways in the above definition. Recall that the typical
-correlation coefficient measures linear dependence, so the statement in (15)
+that is unexplained by $x_B$, so that $\rho_{A_{1}A_{2} \cdot B}$ quantifies the
+linear dependence between $x_{A_1}$ and $x_{A_2}$ after removing the effect of
+$x_B$. We emphasize the importance of the word "linear" here, as linearity plays
+a role in two different ways in the above definition. Recall that the typical
+correlation coefficient measures linear dependence, so the statement in (17)
 is a measure of linear dependence between the residuals. Moreover, the
 residuals themselves are defined via linear regressions, and hence the sense
-in which the effect of $x_C$ is "removed" also relies on linearity
-assumptions. Note also that we are allowing $x_A$ and $x_B$ to be sets of
+in which the effect of $x_B$ is "removed" also relies on linearity
+assumptions. Note also that we are allowing $x_{A_1}$ and $x_{A_2}$ to be sets of
 variables, so the linear regressions considered above are multi-output
 regressions, which can essentially be thought of as a set of independent
 univariate regressions, since the loss function simply sums the error across
 the outputs. Thus, in general, the $\alpha$s and $\beta$s are vectors and
 matrices, respectively.
 
-We should also note briefly that partial correlation is in general distinct
-from the concept of *conditional correlation*, though the two coincide when
-the variables in question are jointly Gaussian. For details see
-{% cite BabaPartialCondCor %} and {% cite LawrancePartialCondCor %}.
+## Equivalence for Gaussian Distributions
+We now introduce the additional assumption that $x_1, \dots x_n$ are jointly
+Gaussian and show that in this setting the definitions of conditional and
+partial correlation are equivalent. For more detailed discussion on these
+connections, see {% cite BabaPartialCondCor %} and {% cite LawrancePartialCondCor %}.
+
+<blockquote>
+  <p><strong>Conditional and Partial Correlation for Gaussians.</strong> <br>
+  Suppose that $x_1, \dots, x_n$ are jointly Gaussian, with positive definite
+  covariance $C$. For a pair of indices $\{i,j\}$ and its complement
+  $B := \{1, \dots, n\} \setminus \{i,j\}$, we have
+  $$
+  \rho_{ij \cdot B} = \text{Cor}[x_i,x_j|x_B]. \tag{18}
+  $$
+  That is, under joint Gaussianity the notions of conditional and partial
+  correlation coincide.
+  </p>
+</blockquote>
+
+**Proof.** The result will be proved by establishing that
+$$
+\text{Cov}[e_i,e_j] = \text{Cov}[x_i,x_j|x_B] \tag{19}
+$$
+for any $i$ and $j$ (possibly equal), where $e_i$ and $e_j$ are the residual
+random variables defined in (16) with $A_1 := \{i\}$ and $A_2 := \{j\}$.
+The $i=j$ case establishes the equality of the variances, meaning that the
+correlations will also be equal. To this end, we start by noting that the
+righthand side in (19) is given by the relevant entry of the matrix
+$$
+C_{A|B} = C_A - C_{AB}C_B^{-1}C_{BA}.
+$$
+where $A := \{i,j\}$. Recall that $C_{A|B}$ is defined in (4). By extracting
+the relevant entry of $C_{A|B}$ we have
+$$
+\text{Cov}[x_i,x_j|x_B] = C_{ij} - C_{iB}C_B^{-1}C_{Bj}. \tag{20}
+$$
+We now show that $\text{Cov}[e_i,e_j]$ reduces to (20). We recall that the
+conditional expectation for a square-integrable random variable is given by
+the projection
+$$
+\mathbb{E}[x_i|x_B] = \text{argmin}_{g} \lVert x_i - g(x_B)\rVert^2, \tag{21}
+$$
+where the minimum is considered over all $x_B$-measurable functions $g$. In our
+present Gaussian setting, this is solved by
+$$
+\mathbb{E}[x_i|x_B] = \mathbb{E}[x_i] + \langle k_i, x_B-\mathbb{E}[x_B]\rangle, \tag{22}
+$$
+where $k_i = \text{Cov}[x_B]^{-1} \text{Cov}[x_B,x_i] = C_B^{-1}C_{iB}$. See
+[this](https://arob5.github.io/blog/2024/05/19/Gaussian-Measures-multivariate/)
+post for the derivation of (22). The important thing to notice is that
+(22) is a linear function of $x_B$, which means that it solves the linear
+regression problem (15); i.e.,
+$\alpha^{\star}_{A_1} + (\beta^{\star}_{A_1})^\top x_B = \mathbb{E}[x_i|x_B]$.
+Thus,
+$$
+e_i = x_i - \mathbb{E}[x_i|x_B] = x_i - \mathbb{E}[x_i] -
+\langle k_i, x_B-\mathbb{E}[x_B]\rangle. \tag{23}
+$$
+and similarly for $e_j$. Notice that the constants $\mathbb{E}[x_i]$ and
+$\mathbb{E}[x_B]$ will be dropped when taking covariances, so it suffices to
+treat these as zero. We thus have
+\begin{align}
+\text{Cov}[e_i,e_j]
+&= \text{Cov}[x_i-\langle k_i, x_B\rangle,x_j-\langle k_j, x_B\rangle] \newline
+&= C_{ij} + k_i^\top C_B k_j - C_{iB}k_j - k_i^\top k_j - k_i^\top C_{Bj} \newline
+&= C_{ij} + C_{iB}C_B^{-1}C_B C_B^{-1}C_{Bj} - 2C_{iB}C_B^{-1}C_{Bj} \newline
+&= C_{ij} - C_{iB}C_B^{-1}C_{Bj}.
+\end{align}
+We see that the final expression agrees with (20), so the result is
+proved. $\qquad \blacksquare$
 {% endkatexmm %}
 
 # Precision Matrix and Partial Correlation
@@ -229,7 +337,7 @@ correlation matrix.
   <p><strong>Normalized Precision.</strong> <br>
   Define the normalized precision $\bar{P}$ as the matrix with elements
   $$
-  \bar{P}_{ij} := \frac{P_{ij}}{\sqrt{P_{ii}P_{jj}}}. \tag{16}
+  \bar{P}_{ij} := \frac{P_{ij}}{\sqrt{P_{ii}P_{jj}}}. \tag{24}
   $$
   </p>
 </blockquote>
@@ -245,7 +353,7 @@ the off-diagonal elements.
   matrix $\bar{P}$. Let $\{i,j\}$ be a pair of distinct indices and
   $B := \{1,\dots,n\} \setminus \{i,j\}$ its complement. Then
   $$
-  \bar{P}_{ij} = -\rho_{ij\cdot B} = -\text{Cor}[x_i,x_j|x_B]. \tag{17}
+  \bar{P}_{ij} = -\rho_{ij\cdot B} = -\text{Cor}[x_i,x_j|x_B]. \tag{25}
   $$
   In words, the off-diagonal entry $\bar{P}_{ij}$ is equal to the negated
   partial correlation between $x_i$ and $x_j$ given all other variables.
@@ -254,15 +362,15 @@ the off-diagonal elements.
 </blockquote>
 
 **Proof.**
-Let $A := \{i,j\}$. Recall from (12) that
+Let $A := \{i,j\}$. Recall from (9) that
 \begin{align}
 C_{A|B} &= (P_A)^{-1}
 = \begin{bmatrix} P_{ii} & P_{ij} \newline P_{ji} & P_{jj} \end{bmatrix}^{-1}
-= \gamma \begin{bmatrix} P_{jj} & -P_{ij} \newline -P_{ji} & P_{ii} \end{bmatrix}, \tag{18}
+= \gamma \begin{bmatrix} P_{jj} & -P_{ij} \newline -P_{ji} & P_{ii} \end{bmatrix}, \tag{26}
 \end{align}
 with $\gamma := (P_{ii}P_{jj}-P^2_{ij})^{-1}$.
 We have again used the expression for the inverse of a two-by-two matrix.
-The equality in (18) gives
+The equality in (26) gives
 \begin{align}
 \text{Var}[x_i|x_B] &= \gamma P_{jj} \newline
 \text{Var}[x_j|x_B] &= \gamma P_{ii} \newline
@@ -276,21 +384,19 @@ $$
 = -\text{Cor}[x_i,x_j|x_B].
 $$
 This establishes the relationship between the precision elements and
-conditional correlation. It now remains to link this with partial correlation.
-
-
-
+conditional correlation. Under the Gaussian assumption, the equivalence with
+the partial correlation follows from (18). $\qquad \blacksquare$
 {% endkatexmm %}
 
+# Additional Resources
+In addition to {% cite LauritzenGraphicalModels %}, {% cite BabaPartialCondCor %},
+and {% cite LawrancePartialCondCor %}, here is a list of some other resources
+that cover similar topics.
 
-1. Estimation and Model Identification for Continuous Spatial Processes (Vecchia)
-2. Graphical Models in Applied Mathematical Multivariate Statistics
-3. Graphical Models (Lauritzen)
-4. https://stats.stackexchange.com/questions/10795/how-to-interpret-an-inverse-covariance-or-precision-matrix
-5. http://en.wikipedia.org/wiki/Partial_correlation#Using_matrix_inversion
-6. https://stats.stackexchange.com/questions/140080/why-does-inversion-of-a-covariance-matrix-yield-partial-correlations-between-ran
-7. Dichotomization, Partial Correlation, and Conditional Independence
-8. Kernel Partial Correlation Coefficient — a Measure of Conditional Dependence
-9. On Conditional and Partial Correlation (Lawrance)
-10. A note on the partial correlation coefficient (Fleiss and Tanur)
-11. Partial correlation and conditional correlation as measures of conditional independence (Baba et al)
+- Graphical Models in Applied Mathematical Multivariate Statistics (Whittaker, 1991)
+- Dichotomization, Partial Correlation, and Conditional Independence (Vargha et al, 1996)
+- A note on the partial correlation coefficient (Fleiss and Tanur, 1971)
+- Kernel Partial Correlation Coefficient — a Measure of Conditional Dependence (Huang et al, 2022)
+- Some StackExchange posts on precision matrices and partial correlation:
+[here](https://stats.stackexchange.com/questions/10795/how-to-interpret-an-inverse-covariance-or-precision-matrix) and [here](https://stats.stackexchange.com/questions/140080/why-does-inversion-of-a-covariance-matrix-yield-partial-correlations-between-ran)
+- Wikipedia [article](http://en.wikipedia.org/wiki/Partial_correlation#Using_matrix_inversion) on partial correlation
