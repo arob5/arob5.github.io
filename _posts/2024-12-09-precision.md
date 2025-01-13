@@ -82,8 +82,8 @@ matrix inverse identities from linear algebra (see, e.g., James E. Pustejovsky's
 [post](https://jepusto.com/posts/inverting-partitioned-matrices/) for some nice background).
 Applying the partitioned matrix identity to (5) yields
 \begin{align}
-P_A &= (C_A - C_{AB}C_B^{-1}C_{BA})^{-1} \tag{6} \newline
-P_{AB} &= -C_B^{-1} C_{BA}P_A. \tag{7}
+P_A &= [C_A - C_{AB}(C_B)^{-1}C_{BA}]^{-1} \tag{6} \newline
+P_{AB} &= -(C_B)^{-1} C_{BA}P_A. \tag{7}
 \end{align}
 Notice in (6) that $P_A$, the upper-left block of the joint precision, is
 precisely equal to the inverse of the conditional covariance
@@ -110,7 +110,7 @@ result follows immediately by rearranging (9) to
 $$
 C_{A|B} = (P_A)^{-1} \tag{10}
 $$
-and noting that $(P_A)^{-1}$ is simply a two-by-two matrix that we can consider
+and noting that $P_A$ is simply a two-by-two matrix that we can consider
 inverting by hand.
 <blockquote>
   <p><strong>Zeros in Precision imply Conditional Independence.</strong> <br>
@@ -223,8 +223,8 @@ definition given above.
   \end{align}
   and associated residuals
   \begin{align}
-  e_{A_1} &:= x_{A_1} - (\alpha_{A_1}^\star + [\beta_{A_1}^\star)^\top x_B] \tag{16} \newline
-  e_{A_2} &:= x_{A_2} - (\alpha_{A_2}^\star + [\beta_{A_2}^\star)^\top x_B].
+  e_{A_1} &:= x_{A_1} - [\alpha_{A_1}^\star + (\beta_{A_1}^\star)^\top x_B] \tag{16} \newline
+  e_{A_2} &:= x_{A_2} - [\alpha_{A_2}^\star + (\beta_{A_2}^\star)^\top x_B].
   \end{align}
   The partial correlation coefficient between $x_{A_1}$ and $x_{A_2}$ given
   $x_B$ is defined as
@@ -297,7 +297,7 @@ present Gaussian setting, this is solved by
 $$
 \mathbb{E}[x_i|x_B] = \mathbb{E}[x_i] + \langle k_i, x_B-\mathbb{E}[x_B]\rangle, \tag{22}
 $$
-where $k_i = \text{Cov}[x_B]^{-1} \text{Cov}[x_B,x_i] = C_B^{-1}C_{iB}$. See
+where $k_i = \text{Cov}[x_B]^{-1} \text{Cov}[x_B,x_i] = C_B^{-1}C_{Bi}$. See
 [this](https://arob5.github.io/blog/2024/05/19/Gaussian-Measures-multivariate/)
 post for the derivation of (22). The important thing to notice is that
 (22) is a linear function of $x_B$, which means that it solves the linear
@@ -384,7 +384,7 @@ $$
 = -\text{Cor}[x_i,x_j|x_B].
 $$
 This establishes the relationship between the precision elements and
-conditional correlation. Under the Gaussian assumption, the equivalence with
+conditional correlation. Owing to the Gaussian assumption, the equivalence with
 the partial correlation follows from (18). $\qquad \blacksquare$
 {% endkatexmm %}
 
