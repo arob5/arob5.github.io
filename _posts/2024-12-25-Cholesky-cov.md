@@ -1,6 +1,6 @@
 ---
 title: Cholesky Decomposition of a Covariance Matrix
-subtitle: Regression interpretation of the Cholesky decomposition, with applications to covariance estimation.
+subtitle: Interpreting the Cholesky factor of a Gaussian covariance matrix.
 layout: default
 date: 2024-12-25
 keywords:

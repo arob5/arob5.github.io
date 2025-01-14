@@ -1,6 +1,6 @@
 ---
 title: Precision Matrices, Partial Correlations, and Conditional Independence
-subtitle:
+subtitle: Interpreting the inverse covariance matrix for Gaussian distributions.
 layout: default
 date: 2025-01-11
 keywords:
