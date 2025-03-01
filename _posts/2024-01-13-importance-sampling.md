@@ -47,7 +47,7 @@ Assuming this was all valid, we could then use the alternative Monte Carlo
 estimator to estimate the expectation of interest:
 
 $$
-\hat{P}\_Q(\phi) := \frac{1}{N} \sum_{n=1}^{N} \frac{\phi(X_n)p(X_n)}{q(X_n)},
+\hat{P}_Q(\phi) := \frac{1}{N} \sum_{n=1}^{N} \frac{\phi(X_n)p(X_n)}{q(X_n)},
 \qquad X_n \overset{\text{iid}}{\sim} Q. \tag{3}
 $$
 The fact that the estimator $\hat{P}_Q(\phi)$ is unbiased follows directly from
@@ -90,11 +90,12 @@ that the variance of the importance weights plays a key role in determining
 the success of the algorithm.
 {% endkatexmm %}
 
-## Measure Theoretic Setup
+## Measure Theoretic Framework
 {% katexmm %}
 In this section we cast IS in a measure-theoretic framework.
 From this point of view, IS can simply be seen as a change of measure.
 
+### Setup
 Let $(\mathcal{X}, \mathcal{B})$ be a measurable space, and $P$ a probability
 measure on this space. Let $Q$ be a second probability measure such that
 $P$ is absolutely continuous with respect to $Q$, written $P \ll Q$. This means
@@ -122,12 +123,96 @@ $$
 $$
 so we see that the expectation of $1_B(X)$ with respect to $X \sim P$ has
 been rewritten as an expectation with respect to $Q$; this is a
-*change-of-measure*. We see that the Radon-Nikodym derivative $dP/dQ(x)$
+*change-of-measure*. We also see that the Radon-Nikodym derivative $dP/dQ(x)$
 adopts the role of the IS weight function $w(x)$ defined in (4). It is a
 density describing how to re-weight $Q$ to align with $P$.
 
+### Importance sampling justification
+We saw in (8) that the main IS equality fell right out of the Radon-Nikodym
+theorem for the choice $\phi(x) = 1_B(x)$. To establish the main IS result we
+must generalize this to any $\mathcal{B}$-measurable function
+$\phi: \mathcal{X} \to \mathbb{R}$. The derivation is straightforward, and
+I will make use of the
+[Dirac measure](https://en.wikipedia.org/wiki/Dirac_measure)
+$\delta_x(B) := 1_B(x)$. Note that we can rewrite (7) using the Dirac measure as
+$$
+P(B) = \int_B \frac{dP}{dQ}(y) Q(dy)
+= \int 1_B(y) \frac{dP}{dQ}(y) Q(dy)
+= \int \delta_y(B) \frac{dP}{dQ}(y) Q(dy), \tag{9}
+$$
+and thus
+$$
+P(dx) = \int \delta_y(dx) \frac{dP}{dQ}(y) Q(dy). \tag{10}
+$$
+We therefore have,
+\begin{align}
+\mathbb{E}_P[\phi(X)]
+= \int \phi(x) P(dx)
+&= \int \phi(x) \left[\int \delta_y(dx) \frac{dP}{dQ}(y) Q(dy)\right] \newline
+&= \int \int \phi(x) \frac{dP}{dQ}(y)\delta_y(dx)Q(dy) \newline
+&= \int \frac{dP}{dQ}(y) \left[\phi(x)\delta_y(dx) \right] Q(dy) \newline
+&=\int \frac{dP}{dQ}(y) \phi(y) Q(dy) \newline
+&= \mathbb{E}_Q\left[\phi(X)\frac{dP}{dQ}(X)\right]. \tag{11}
+\end{align}
+
+I'm not providing full justification for all of the steps here, but
+second, third, and fourth equalities can be justified via Fubini's theorem. The penultimate step follows from the fact the integral of a function with respect
+to $\delta_y$ simply yields the function evaluated at $y$. An equivalent way
+to write this result is
+$$
+P(\phi) = Q(\phi dP/dQ). \tag{12}
+$$
+
+### Lebesgue Densities
+To wrap up the more formal specification, we connect the
+measure-theoretic statement (11) back to the typical density formulation
+(2). The latter statement is really a special case where both $P$ and $Q$
+admit densities with respect to a common dominating measure $\lambda$.
+In common applications, $\lambda$ is either the Lebesgue or counting measure,
+corresponding to the typical continuous and discrete settings.
+In addition to the assumption $P \ll Q$, we now add the additional
+assumption $Q \ll \lambda$ which implies
+$$
+P \ll Q \ll \lambda. \tag{13}
+$$
+
+With this additional assumption, we can simplify (11) as
+\begin{align}
+P(\phi)
+&= \int \phi(y) \frac{dP}{dQ}(y) Q(dy) \newline
+&= \int \phi(y) \frac{dP}{dQ}(y) \frac{dQ}{d\lambda}(y) \lambda(dy) \newline
+&= \int \phi(y) \left(\frac{dP}{dQ}\frac{dQ}{d\lambda}\right)(y) \lambda(dy), \tag{14}
+\end{align}
+
+where we have simply first applied the assumption $P \ll Q$ and then the
+assumption $Q \ll \lambda$. Note that we have now written the expectation
+$P(\phi)$ with respect to the dominating measure $\lambda$. The final line in
+the above derivation implies that
+$$
+\frac{dP}{d\lambda} = \frac{dP}{dQ}\frac{dQ}{d\lambda}, \tag{15}
+$$
+so
+$$
+\frac{dP}{dQ} = \frac{dP/d\lambda}{dQ/d\lambda},
+\qquad \text{when} \frac{dQ}{d\lambda} \neq 0. \tag{16}
+$$
+Let's denote the Radon-Nikodym derivatives in the numerator and denominator
+of (16) by $p(x) := dP/d\lambda(x)$ and $q(x) := dQ/d\lambda(x)$. When
+$\lambda$ is the Lebesgue measure then $p(x)$ and $q(x)$ are precisely what
+we colloquially refer to as "densities". Continuing from (14), we have
+\begin{align}
+P(\phi)
+&= \int \phi(y)\frac{dP}{dQ}(y)q(y) \lambda(dy) \newline
+&= \int \phi(y) \frac{p(y)}{q(y)} q(y) \lambda(dy) \newline
+&= Q(\phi p/q), \tag{17}
+\end{align}
+which is precisely the statement (2) when $\lambda$ is the Lebesgue
+density. 
 
 
 {% endkatexmm %}
+
+# Approximating the Target Distribution with Dirac Deltas
+
 
 # Example: Bayesian Inference
