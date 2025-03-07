@@ -61,7 +61,8 @@ more rigor, but to provide a bit of a roadmap let's make some initial notes:
 
 **Support issues.** Notice that we need to be careful about dividing by
 zero in (2). Loosely speaking, we cannot use a distribution $Q$ such that
-$q(x)=0$ when $\phi(x)p(x) \neq 0$. This will hold in particular when
+$q(x)=0$ when $\phi(x)p(x) \neq 0$. For $Q$ to be valid for different choices
+of $\phi$, then it must satisfy $q(x) > 0$ whenever $p(x) > 0$; i.e.,
 the support of $P$ is contained in the support of $Q$.
 
 **Choosing Q.** Intuitively, it seems that choices of $Q$ that are "similar"
@@ -83,7 +84,8 @@ $$
 \hat{P}_Q(\phi) := \frac{1}{N} \sum_{n=1}^{N} \phi(X_n)w(X_n),
 \qquad X_n \overset{\text{iid}}{\sim} Q. \tag{5}
 $$
-The $w(X_1), \dots, w(X_N)$ are typically called the *importance weights*.
+The $w(X_1), \dots, w(X_N)$ are typically called the *importance weights*, or
+sometimes the *likelihood ratio*.
 The IS estimate (5) can now be seen to be a weighted mean, where the weights
 adjust for the fact that we are sampling from $Q$ instead of $P$. We will see
 that the variance of the importance weights plays a key role in determining
@@ -155,7 +157,7 @@ We therefore have,
 &= \mathbb{E}_Q\left[\phi(X)\frac{dP}{dQ}(X)\right]. \tag{11}
 \end{align}
 
-I'm not providing full justification for all of the steps here, but
+I'm not providing full justification for all of the steps here, but the
 second, third, and fourth equalities can be justified via Fubini's theorem. The penultimate step follows from the fact the integral of a function with respect
 to $\delta_y$ simply yields the function evaluated at $y$. An equivalent way
 to write this result is
@@ -163,7 +165,7 @@ $$
 P(\phi) = Q(\phi dP/dQ). \tag{12}
 $$
 
-### Lebesgue Densities
+### Common Dominating Measure
 To wrap up the more formal specification, we connect the
 measure-theoretic statement (11) back to the typical density formulation
 (2). The latter statement is really a special case where both $P$ and $Q$
@@ -207,7 +209,88 @@ P(\phi)
 &= Q(\phi p/q), \tag{17}
 \end{align}
 which is precisely the statement (2) when $\lambda$ is the Lebesgue
-density. 
+density. Throughout the rest of this post, we will work with $p(x)$ and
+$q(x)$ and write integrals with respect to $dx$, consistent with the Lebesgue
+density case. However, note that one can think of $p(x)$ and $q(x)$ as
+densities with respect to some other dominating measure $\lambda$.
+{% endkatexmm %}
+
+# Basic Properties
+
+
+# Unnormalized Densities
+{% katexmm %}
+In many settings (e.g., Bayesian inference) we only know the target density
+up to a normalizing constant; i.e,
+$$
+p(x) = \frac{\tilde{p}(x)}{Z_p}, \tag{18}
+$$
+where $Z_p$ is intractable. Similarly, we might want to work with a proposal
+density $q(x)$ that is also only known up to a normalizing constant:
+$$
+q(x) = \frac{\tilde{q}(x)}{Z_q}. \tag{19}
+$$
+It is natural to ask if the IS is still applicable in this setting. Notice that
+the IS estimate from (3) becomes
+$$
+\hat{P}_Q(\phi)
+= \frac{1}{N} \sum_{n=1}^{N} \frac{\phi(X_n)p(X_n)}{q(X_n)},
+= \frac{Z_q}{Z_p} \frac{1}{N} \sum_{n=1}^{N} \frac{\phi(X_n)\tilde{p}(X_n)}{\tilde{q}(X_n)}, \tag{20}
+$$
+which we cannot compute without knowing $Z_p$ and $Z_q$ (unless $Z_p=Z_q$).
+Thus, the basic
+method presented above does not apply to this setting. We thus seek to extend
+the IS estimate to handle the unnormalized case. We first define the
+extension, and then provide two different interpretations.
+
+<blockquote>
+  <p><strong>Self-Normalized Importance Sampler.</strong> <br>
+  The self-normalized importance sampling (SNIS) estimator for the expectation
+  $P(\phi)$ with target density $p(x)=\tilde{p}(x)/Z_p$ and proposal density
+  $q(x)=\tilde{q}(x)/Z_q$ is given by
+  $$
+  \bar{P}_Q(\phi) := \sum_{n=1}^{N} \phi(X_n)\bar{w}(X_n), \qquad
+  X_n \overset{\text{iid}}{\sim} Q, \tag{21}
+  $$
+  where
+  \begin{align}
+  &\bar{w}(X_n) := \frac{\tilde{w}(X_n)}{\sum_{n=1}^{N} \tilde{w}(X_n)},
+  &&\tilde{w}(X_n) := \frac{\tilde{p}(X_n)}{\tilde{q}(X_n)}. \tag{22}
+  \end{align}
+  </p>
+</blockquote>
+
+Notice that the $\tilde{w}(X_n)$ are the weights computed with the unnormalized
+densities. These weights are then normalized to sum to one, yielding the
+normalized weights $\bar{w}(X_n)$ in (21).
+
+## Perspectives on the SNIS Estimator
+We now provide a couple of different interpretations of (21).
+
+**Ratio Estimator**. One way we could derive (21) is to consider a ratio
+estimator
+$$
+\mathbb{E}_P[\phi(X)]
+= \frac{\mathbb{E}_P[\phi(X)]}{1}
+\approx \frac{\hat{P}_Q(\phi)}{\hat{P}_Q(1)}, \tag{23}
+$$
+where the $1$ in $\hat{P}_Q(1)$ refers to the function that is identically
+$1$; $\phi(x) \equiv 1$. We have written the expectation $P(\phi)$ as a ratio
+and plugged in IS estimates for the numerator and denominator. The motivation
+for this is that the intractable normalizing constants cancel in the ratio:
+
+\begin{align}
+\frac{\hat{P}\_Q(\phi)}{\hat{P}\_Q(1)} = \frac{\frac{1}{N} \sum_{n=1}^{N} \frac{\phi(X_n)p(X_n)}{q(X_n)}}{\frac{1}{N} \sum_{n=1}^{N} \frac{p(X_n)}{q(X_n)}} \tag{24}
+\end{align}
+
+**Estimating the normalizing constant.** We can also view (21) as a modification
+of (20), whereby an IS estimator is inserted in place of $Z_q/Z_p$.
+Indeed, notice that
+\begin{align}
+\frac{1}{N} \sum_{n=1}^{N} \tilde{w}(X_n)
+= \frac{Z_q}{Z_p} \frac{1}{N} \sum_{n=1}^{N} \frac{p(X_n)}{q(X_n)}
+\overset{N \to \infty}{\to} \frac{Z_q}{Z_p}. \tag{25}
+\end{align}
 
 
 {% endkatexmm %}

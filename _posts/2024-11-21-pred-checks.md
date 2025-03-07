@@ -220,3 +220,4 @@ References to add:
 - Bayesian checking for topic models (Mimno et al)
 - Checking for prior-data conflict (Evans and Moshonov)
 - Comment: Posterior predictive assessment for data subsets in hierarchical models via MCMC.
+- Recommendations for visual predictive checks in Bayesian workflow (Sailynoja et al)
