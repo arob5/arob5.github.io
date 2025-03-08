@@ -4,7 +4,7 @@ subtitle: I describe the Monte Carlo method of importance sampling and derive so
 layout: default
 date: 2025-02-28
 keywords: Comp-Stats, Monte-Carlo, importance-sampling
-published: true
+published: false
 ---
 
 ## The Basic Idea

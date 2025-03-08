@@ -115,13 +115,90 @@ z_j := \text{logit}^{-1}\left(y_j + \log\left(\frac{1}{d-j}\right) \right),
 \qquad j=1, \dots, d-1. \tag{9}
 $$
 Notice that the correction term can also be written as a logit, since
-$$
+\begin{align}
 \text{logit}([d-j+1]^{-1})
 = \log\left(\frac{[d-j+1]^{-1}}{1-[d-j+1]^{-1}}\right)
-= \log\left(\frac{1}{(d-j+1)-1}\right)
-= \log\left(\frac{1}{d-j}\right). \tag{10}
-$$
+&= \log\left(\frac{1}{(d-j+1)-1}\right) \newline
+&= \log\left(\frac{1}{d-j}\right). \tag{10}
+\end{align}
 
+This adjustment implies that the zero vector $y=0$ maps to the relative cut
+proportions
+\begin{align}
+z_1 &= \text{logit}^{-1}\left(\text{logit}\left(\frac{1}{d}\right) \right) = \frac{1}{d} \newline
+z_2 &= \text{logit}^{-1}\left(\text{logit}\left(\frac{1}{d-1}\right) \right) = \frac{1}{d-1} \tag{11} \newline
+&\vdots
+\end{align}
+Feeding these values back through the map (6), we then see that
+$y=0$ maps to $x=(1/d, \dots, 1/d)$, as desired.
+
+## Density of $y$
+Let $p_x(x)$ denote a probability density on $x$. The density of $y = \phi(x)$
+(where $\phi$ is invertible and differentiable) is then given by the
+change-of-variables formula
+$$
+p_y(y) = p_x(\phi^{-1}(y)) \lvert \text{det} D\phi^{-1}(y) \rvert. \tag{12}
+$$
+Thus, we must compute the determinant of the Jacobian of the inverse
+transformation. In our present setting, notice that the stick-breaking procedure
+implies that $x_j$ depends only on $y_1, \dots, y_{j-1}$. This means that
+$D\phi^{-1}(y)$ is a $(d-1) \times (d-1)$ lower-triangular matrix. The
+determinant term is therefore given by
+$$
+\text{det} D\phi^{-1}(y)
+= \prod_{j=1}^{d} [D\phi^{-1}(y)]_{jj}
+= \prod_{j=1}^{d} \frac{\partial x_j}{\partial y_j}
+= \prod_{j=1}^{d} \frac{\partial x_j}{\partial z_j} \frac{\partial z_j}{\partial y_j}, \tag{13}
+$$
+where we have used the fact that the determinant of a triangular matrix is
+the product of its diagonal entries. The final step is an application of the
+chain rule for derivatives. We therefore need only concern ourselves with
+the diagonal entries of the Jacobian. The partial derivatives in (13) are
+computed as
+\begin{align}
+\frac{\partial x_j}{\partial z_j}
+&= \frac{\partial}{\partial z_j}\left[\left(1 - \sum_{i=1}^{j-1} x_i \right)z_j \right]
+= \left(1 - \sum_{i=1}^{j-1} x_i \right) \tag{14}
+\end{align}
+and
+$$
+\frac{\partial z_j}{\partial y_j}
+= \frac{\partial}{\partial y_j}\left[\text{logit}^{-1}\left(y_j + \log\left(\frac{1}{d-j}\right) \right) \right]
+= z_j(1-z_j). \tag{15}
+$$
+In (14) we have used the fact that $x_i$ does not depend on $z_j$ for $i < j$.
+In the $j=1$ case we treat the summation as equaling zero, so that the derivative
+is one (recall that $x_1=z_1$). In (15) we have used the fact that the derivative
+of the inverse logit is itself times one minus itself. Putting these two
+expressions together, we obtain
+$$
+\frac{\partial x_j}{\partial y_j}
+= \left(1 - \sum_{i=1}^{j-1} x_i \right)z_j(1-z_j). \tag{16}
+$$
+This expression can then be combined with (12) and (13) to compute the density
+$p_y(y)$. Notice that (16) is defined recursively with respect to the
+intermediate variables $z_j$. We now provide an algorithm for computing both
+$x$ and these partial derivatives. The helper variable $\ell$ tracks the length
+remaining from the original stick.
+
+<blockquote>
+  <p><strong>Algorithmic implementation of $\phi^{-1}$ and its derivative.</strong> <br><br>
+
+  <strong>Input:</strong> $ y = (y_1, \dots, y_{d-1})$. <br>
+  <strong>Returns:</strong> $x=\phi^{-1}(y)$, $g := \text{diag}\{D\phi^{-1}(y)\}$. <br>
+
+  1. $z := \phi_2^{-1}(y)$, using (9). <br>
+  2. $x_1 := z_1$ and $g_1 := 1$.  <br>
+  3. $\ell := 1-x_1$. <br>
+  4. For $j=2, \dots, d-1$: <br>
+    - $x_j := \ell z_j$. <br>
+    - $g_j := \ell z_j(1-z_j)$ <br>
+    - $\ell := \ell - x_j$ <br>
+  5. Return $x, g$
+  </p>
+</blockquote>
+
+# The Forward Transformation
 
 
 

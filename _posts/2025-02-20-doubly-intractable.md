@@ -4,7 +4,7 @@ subtitle: Doubly intractable MCMC, auxiliary variable methods, and the exchange 
 layout: default
 date: 2025-02-20
 keywords: probability, statistics
-published: true
+published: false
 ---
 
 {% katexmm %}
@@ -39,7 +39,7 @@ $$
 Such setups are known as *doubly intractable* owing to the two quantities
 we are unable to compute in (4): $Z$ and $C(u)$. While the former does not pose
 a problem for typical inference algorithms, the latter does since it depends on
-$u$. 
+$u$.
 
 
 {% endkatexmm %}

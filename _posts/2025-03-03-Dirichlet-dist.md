@@ -4,7 +4,7 @@ subtitle: Intuition and derivations.
 layout: default
 date: 2025-03-03
 keywords:
-published: true
+published: false
 ---
 
 # Resources
