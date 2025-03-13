@@ -187,19 +187,32 @@ remaining from the original stick.
   <strong>Input:</strong> $ y = (y_1, \dots, y_{d-1})$. <br>
   <strong>Returns:</strong> $x=\phi^{-1}(y)$, $g := \text{diag}\{D\phi^{-1}(y)\}$. <br>
 
-  1. $z := \phi_2^{-1}(y)$, using (9). <br>
-  2. $x_1 := z_1$ and $g_1 := 1$.  <br>
-  3. $\ell := 1-x_1$. <br>
-  4. For $j=2, \dots, d-1$: <br>
-    - $x_j := \ell z_j$. <br>
-    - $g_j := \ell z_j(1-z_j)$ <br>
-    - $\ell := \ell - x_j$ <br>
-  5. Return $x, g$
-  </p>
+  <ol>
+    <li>$z := \phi_2^{-1}(y)$, using (9).</li>
+    <li>$x_1 := z_1$ and $g_1 := 1$.</li>
+    <li>$\ell := 1-x_1$.</li>
+    <li>For $j=2, \dots, d-1$:</li>
+        <ol type="i">
+            <li>$x_j := \ell z_j$.</li>
+            <li>$g_j := \ell z_j(1-z_j)$</li>
+            <li>$\ell := \ell - x_j$</li>
+        </ol>
+    <li>Return $x, g$.</li>
+  </ol>
+</p>
 </blockquote>
 
 # The Forward Transformation
-
-
+We finish up by writing out the forward transformation $\phi$. For $\phi_1$,
+we invert (6) to obtain
+\begin{align}
+&z_1 = x_1, &&z_j = \left(1 - \sum_{i=1}^{j-1} x_i \right)^{-1}x_j, \qquad j=1,\dots,d-1. \tag{17}
+\end{align}
+For $\phi_2$, we invert (9), which yields
+$$
+y_j = \text{logit}(z_j) - \log\left(\frac{1}{d-j}\right), \qquad j=1, \dots, d-1. \tag{18}
+$$
+Given $x$, we can first compute $z$ in an iterative fashion using (17), and
+then compute $y$ by applying (18).
 
 {% endkatexmm %}
