@@ -16,7 +16,7 @@ website:
     logo: headshot_photo.png
     tools:
       - icon: github
-        href: https://github.com/arob5/arob5.github.io/
+        href: https://github.com/arob5/
     right:
       - text: Blog
         aria-label: "My Blog"
