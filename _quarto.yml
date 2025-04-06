@@ -1,0 +1,39 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Andrew G. Roberts"
+  site-url: https://arob5.github.io/
+  description: PhD candidate
+  comments:
+      utterances:
+        repo: arob5/arob5.github.io
+        label: utterances
+        theme: body-light
+        issue-term: title
+  navbar:
+    logo: headshot_photo.png
+    tools:
+      - icon: github
+        href: https://github.com/arob5/arob5.github.io/
+    right:
+      - text: Blog
+        aria-label: "My Blog"
+        href: blog/index.qmd
+  page-footer:
+    left: >-
+     &#169; 2025 Andrew G. Roberts &#8729; Made with [Quarto](https://quarto.org)
+    center: |
+      <a class="link-dark me-1" href="https://github.com/arob5" title="github" target="_blank" rel="noopener">{{< iconify fa6-brands github >}}</a>
+      <a class="link-dark me-1" href="https://orcid.org/0009-0002-4274-7914" title="orcid" target="_blank" rel="noopener">{{< iconify fa6-brands orcid >}}</a>
+      <a class="link-dark me-1" href="https://scholar.google.com/citations?user=E2erpCwAAAAJ&hl=en" title="Google Scholar" target="_blank"rel="noopener">{{< iconify fa6-brands google-scholar >}}</a>
+      <a class="link-dark me-1" href="https://linkedin.com/in/andrew-roberts5" title="LinkedIn" target="_blank" rel="noopener">{{< iconify fa6-brands linkedin >}}</a>
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+    css: styles.css
+    toc: true

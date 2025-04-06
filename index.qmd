@@ -1,0 +1,54 @@
+---
+title: ""
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: false
+---
+
+<style>
+.img-circle {
+  border-radius: 50%;
+  width: 150px;
+  height: 150px;
+  display: block;
+  margin: 0 auto;
+}
+.icon-links {
+  text-align: center;
+  margin-top: 10px;
+}
+.icon-links a {
+  margin: 0 10px;
+  font-size: 1.5em;
+}
+</style>
+
+<div style="text-align: center;">
+  <img src="headshot_photo.png" alt="Andrew G. Roberts" class="img-circle">
+
+  <h1>Andrew G. Roberts</h1>
+</div>
+
+
+## About Me
+
+I am a fourth year PhD candidate in Computing and Data Sciences at Boston University (BU), working with
+[Jonathan Huggins](http://jhhuggins.org/) and [Michael Dietze](https://www.bu.edu/earth/profiles/michael-dietze/).
+I am broadly interested in uncertainty quantification, Bayesian inverse problems, data assimilation, and
+spatiotemporal statistics, with the goal of developing new methodologies for environmental and ecological applications.
+My current work involves developing Bayesian methods for calibrating expensive mechanistic models of the terrestrial carbon
+cycle.
+
+Beyond my research, I am a trainee in [BU URBAN](https://sites.bu.edu/urban/),
+a graduate program in urban biogeoscience and environmental health. I am also
+an officer in the [BU chapter](https://www.bu.edu/math/bu-student-chapter-of-the-asa/)
+of the American Statistical Association, and previously co-organized the
+Environment and Climate [working group](https://www.md4sg.com/workinggroups/environment.html)
+within the [Mechanism Design for Social Good (MD4SG)](https://www.md4sg.com/index.html)
+research intitiative.
+
+Prior to BU, I worked as a research assistant at the Federal Reserve Bank of
+Boston. I received my B.S. in Quantitative Economics from Tufts University
+in 2018.

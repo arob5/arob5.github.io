@@ -1,0 +1,23 @@
+{
+  "posts/post-with-code/index.qmd": {
+    "index.html": "af0b7957"
+  },
+  "posts/welcome/index.qmd": {
+    "index.html": "0176a10d"
+  },
+  "index.qmd": {
+    "index.html": "80dad63f"
+  },
+  "about.qmd": {
+    "about.html": "984ff386"
+  },
+  "posts/MH-update-from-kernel.qmd": {
+    "MH-update-from-kernel.html": "429f492c"
+  },
+  "posts/pca.qmd": {
+    "pca.html": "3fee184f"
+  },
+  "posts/gp-specifications.qmd": {
+    "gp-specifications.html": "769cfb54"
+  }
+}
