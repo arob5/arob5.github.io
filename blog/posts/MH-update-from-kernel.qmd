@@ -1,6 +1,6 @@
 ---
 title: "Deriving the Metropolis-Hastings Update from the Transition Kernel"
-date: 2025-04-01
+date: 2023-12-31
 categories: [MCMC, Probability, Computational Statistics]
 ---
 
