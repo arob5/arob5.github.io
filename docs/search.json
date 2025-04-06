@@ -11,7 +11,7 @@
     "href": "blog/index.html",
     "title": "Andrew G. Roberts",
     "section": "",
-    "text": "Deriving the Metropolis-Hastings Update from the Transition Kernel\n\n\n\n\n\n\nMCMC\n\n\nProbability\n\n\nComputational Statistics\n\n\n\n\n\n\n\n\n\nApr 1, 2025\n\n\n\n\n\n\n\n\n\n\n\n\nIntroduction to Gaussian Process Priors and Hyperparameter Estimation\n\n\nA deep dive into hyperparameter specifications for GP mean and covariance functions, including both frequentist and Bayesian methods for hyperparameter estimation.\n\n\n\nStatistics\n\n\nGaussian-Process\n\n\nkernel-methods\n\n\n\n\n\n\n\n\n\nJan 11, 2024\n\n\n\n\n\n\n\n\n\n\n\n\nPrincipal Components Analysis\n\n\nA deep dive into PCA.\n\n\n\nStatistics\n\n\nLinear-Algebra\n\n\n\n\n\n\n\n\n\nDec 15, 2023\n\n\n\n\n\n\nNo matching items"
+    "text": "Introduction to Gaussian Process Priors and Hyperparameter Estimation\n\n\nA deep dive into hyperparameter specifications for GP mean and covariance functions, including both frequentist and Bayesian methods for hyperparameter estimation.\n\n\n\nStatistics\n\n\nGaussian-Process\n\n\nkernel-methods\n\n\n\n\n\n\n\n\n\nJan 11, 2024\n\n\n\n\n\n\n\n\n\n\n\n\nDeriving the Metropolis-Hastings Update from the Transition Kernel\n\n\n\n\n\n\nMCMC\n\n\nProbability\n\n\nComputational Statistics\n\n\n\n\n\n\n\n\n\nDec 31, 2023\n\n\n\n\n\n\n\n\n\n\n\n\nPrincipal Components Analysis\n\n\nA deep dive into PCA.\n\n\n\nStatistics\n\n\nLinear-Algebra\n\n\n\n\n\n\n\n\n\nDec 15, 2023\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "blog/posts/MH-update-from-kernel.html",
