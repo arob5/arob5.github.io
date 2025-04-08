@@ -2,9 +2,11 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/post-with-code/index.html",
-      "/posts/MH-update-from-kernel.html",
+      "/posts/reversed-Cholesky.html",
+      "/posts/ls-psd-cov.html",
+      "/posts/nonlinear-LS.html",
       "/posts/gp-specifications.html",
+      "/posts/MH-update-from-kernel.html",
       "/posts/pca.html"
     ]
   }

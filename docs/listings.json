@@ -2,6 +2,9 @@
   {
     "listing": "/blog/index.html",
     "items": [
+      "/blog/posts/reversed-Cholesky.html",
+      "/blog/posts/ls-psd-cov.html",
+      "/blog/posts/nonlinear-LS.html",
       "/blog/posts/gp-specifications.html",
       "/blog/posts/MH-update-from-kernel.html",
       "/blog/posts/pca.html"
