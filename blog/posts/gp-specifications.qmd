@@ -1,6 +1,6 @@
 ---
 title: "Introduction to Gaussian Process Priors and Hyperparameter Estimation"
-subtitle: A deep dive into hyperparameter specifications for GP mean and covariance functions, including both frequentist and Bayesian methods for hyperparameter estimation.
+description: A deep dive into hyperparameter specifications for GP mean and covariance functions, including both frequentist and Bayesian methods for hyperparameter estimation.
 date: 2024-01-11
 categories: [Statistics, Gaussian-Process, kernel-methods]
 ---

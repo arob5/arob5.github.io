@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-01-14">
-<meta name="description" content="Cholesky-like decomposition with upper-triangular matrices.">
+<meta name="dcterms.date" content="2024-02-15">
+<meta name="description" content="I discuss the generic problem of approximating the distribution resulting from a non-linear transformation of a Gaussian random variable, and then show how this leads to extensions of the Kalman filter which yield approximate filtering algorithms in the non-linear setting.">
 
-<title>The Reversed Cholesky Decomposition – Andrew G. Roberts</title>
+<title>Approximating Nonlinear Functions of Gaussians – Andrew G. Roberts</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -139,14 +139,15 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">The Reversed Cholesky Decomposition</h1>
+      <h1 class="title">Approximating Nonlinear Functions of Gaussians</h1>
+            <p class="subtitle lead">And the Extended Kalman Filter</p>
                   <div>
         <div class="description">
-          Cholesky-like decomposition with upper-triangular matrices.
+          I discuss the generic problem of approximating the distribution resulting from a non-linear transformation of a Gaussian random variable, and then show how this leads to extensions of the Kalman filter which yield approximate filtering algorithms in the non-linear setting.
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">Linear-Algebra</div>
+                <div class="quarto-category">Data-Assimilation</div>
               </div>
                   </div>
   </div>
@@ -158,7 +159,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">January 14, 2025</p>
+        <p class="date">February 15, 2024</p>
       </div>
     </div>
     
@@ -174,13 +175,17 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#connections-to-the-inverse-matrix" id="toc-connections-to-the-inverse-matrix" class="nav-link active" data-scroll-target="#connections-to-the-inverse-matrix">Connections to the Inverse Matrix</a></li>
-  <li><a href="#reverse-ordering" id="toc-reverse-ordering" class="nav-link" data-scroll-target="#reverse-ordering">Reverse Ordering</a>
+  <li><a href="#motivating-the-generic-problem" id="toc-motivating-the-generic-problem" class="nav-link active" data-scroll-target="#motivating-the-generic-problem">Motivating the Generic Problem</a>
   <ul class="collapse">
-  <li><a href="#the-reversal-operator" id="toc-the-reversal-operator" class="nav-link" data-scroll-target="#the-reversal-operator">The Reversal Operator</a></li>
-  <li><a href="#cholesky-factorization-of-reversed-matrix" id="toc-cholesky-factorization-of-reversed-matrix" class="nav-link" data-scroll-target="#cholesky-factorization-of-reversed-matrix">Cholesky Factorization of Reversed Matrix</a></li>
+  <li><a href="#forecast" id="toc-forecast" class="nav-link" data-scroll-target="#forecast">Forecast</a></li>
+  <li><a href="#analysis" id="toc-analysis" class="nav-link" data-scroll-target="#analysis">Analysis</a></li>
   </ul></li>
-  <li><a href="#other-resources" id="toc-other-resources" class="nav-link" data-scroll-target="#other-resources">Other Resources</a></li>
+  <li><a href="#the-generic-problem-setting" id="toc-the-generic-problem-setting" class="nav-link" data-scroll-target="#the-generic-problem-setting">The Generic Problem Setting</a></li>
+  <li><a href="#taylor-series-approximations" id="toc-taylor-series-approximations" class="nav-link" data-scroll-target="#taylor-series-approximations">Taylor Series Approximations</a>
+  <ul class="collapse">
+  <li><a href="#the-generic-method" id="toc-the-generic-method" class="nav-link" data-scroll-target="#the-generic-method">The Generic Method</a></li>
+  <li><a href="#application-the-extended-kalman-filter" id="toc-application-the-extended-kalman-filter" class="nav-link" data-scroll-target="#application-the-extended-kalman-filter">Application: The Extended Kalman Filter</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -191,108 +196,137 @@ window.Quarto = {
 
 
 
-<p>The Cholesky decomposition of a positive definite matrix <span class="math inline">\(C\)</span> is the unique factorization of the form <span class="math display">\[
-C = LL^\top, \tag{1}
-\]</span> such that <span class="math inline">\(L\)</span> is lower triangular with positive entries on its diagonal. We refer to <span class="math inline">\(L\)</span> as the Cholesky factor of <span class="math inline">\(C\)</span>, and denote this relationship by <span class="math inline">\(L := \text{chol}(C)\)</span>. Intuitively, it seems that the focus on lower triangular matrices is just a convention, and that we could alternatively consider factorizations of the form <span class="math display">\[
-C = UU^\top , \tag{2}
-\]</span> where <span class="math inline">\(U\)</span> is upper triangular with positive diagonal entries. This is no longer what is commonly called the Cholesky decomposition, but is similar in spirit. We will refer to this as the <em>reversed Cholesky decomposition</em>, or <em>rCholesky</em> for short. We call <span class="math inline">\(U\)</span> the rCholesky factor, and write <span class="math inline">\(U := \text{rchol}(C)\)</span>. In this post, we explore this alternative factorization, and demonstrate (i.) its close connections to the Cholesky factorization of <span class="math inline">\(C^{-1}\)</span>; and (ii.) its interpretation as the Cholesky factorization under a reverse ordering of the variable indices. These connections have various applications, including in high-dimensional covariance estimation; see, e.g., {% cite SparseCholeskyVecchia %} for one such example.</p>
-<section id="connections-to-the-inverse-matrix" class="level1">
-<h1>Connections to the Inverse Matrix</h1>
-<p>The first order of business is to ensure that we have the same uniqueness and existence properties for (2) as we do for (1). The below result shows that the rCholesky factorization inherits these properties from the Cholesky factorization.</p>
-<blockquote class="blockquote">
-<p>
-<strong>Existence and Uniqueness.</strong> <br> If <span class="math inline">\(C\)</span> is positive definite, then there exists a unique decomposition of the form <span class="math inline">\(C = UU^\top\)</span> such that <span class="math inline">\(U\)</span> is upper triangular with positive entries on the diagonal.
-</p>
-</blockquote>
-<p><strong>Proof.</strong> Since <span class="math inline">\(C\)</span> is positive definite, then <span class="math inline">\(C^{-1}\)</span> exists and is itself positive definite. Thus, there is a unique factorization of the form <span class="math inline">\(C^{-1} = LL^{\top}\)</span>, where <span class="math inline">\(L\)</span> is lower triangular with positive diagonal entries. Therefore, <span class="math inline">\(L\)</span> is invertible and <span class="math display">\[
-C = L^{-\top}L^{-1}. \tag{3}
-\]</span> Setting <span class="math inline">\(U := L^{-\top}\)</span>, we obtain <span class="math inline">\(C = UU^\top\)</span>. <span class="math inline">\(\qquad \blacksquare\)</span></p>
-<p>We see from the above proof that the rCholesky factor of <span class="math inline">\(C\)</span> is closely related to the Cholesky factor of <span class="math inline">\(C^{-1}\)</span>. This corollary is summarized below.</p>
-<blockquote class="blockquote">
-<p>
-<strong>Connection to Inverse Matrix.</strong> <br> Let <span class="math inline">\(C\)</span> be a positive definite matrix. Then <span class="math display">\[\begin{align}
-  \text{rchol}(C) &amp;= \text{chol}(C)^{-\top} \tag{4} \newline
-  \text{chol}(C) &amp;= \text{rchol}(C)^{-\top}. \tag{5}
-  \end{align}\]</span>
-</p>
-</blockquote>
-<p>A consequence of (4) and (5) is that we can easily transform between the Cholesky factorization of a matrix and the rCholesky factorization of its inverse.</p>
-</section>
-<section id="reverse-ordering" class="level1">
-<h1>Reverse Ordering</h1>
-<section id="the-reversal-operator" class="level2">
-<h2 class="anchored" data-anchor-id="the-reversal-operator">The Reversal Operator</h2>
-<p>As we will see, the rCholesky decomposition can be interpreted as a Cholesky decomposition of a matrix under reverse ordering. By reverse ordering, we mean that the order of both the rows and the columns of <span class="math inline">\(C\)</span> are reversed. This notion is more intuitive when viewing <span class="math inline">\(C\)</span> as a <span class="math inline">\(n \times n\)</span> covariance matrix for some random variables <span class="math inline">\(x_1, \dots, x_n\)</span>, such that <span class="math inline">\(C_{ij} = \text{Cov}[x_i,x_j]\)</span>. We thus see that the ordering of the variables determines the ordering of the matrix. Let <span class="math inline">\(x := (x_1, \dots, x_n)^\top\)</span> be the vector of variables such that <span class="math inline">\(C = \text{Cov}[x]\)</span>. We will denote by <span class="math display">\[
-\tilde{x} := (x_n, \dots, x_1)^\top \tag{6}
-\]</span> the reversed vector. The reversal operation <span class="math inline">\(x \mapsto \tilde{x}\)</span> is linear and can thus be represented by a matrix. In particular, <span class="math inline">\(\tilde{x}\)</span> is given by <span class="math display">\[
-\tilde{x} = Px \tag{7}
-\]</span> where <span class="math inline">\(P\)</span> is the square permutation matrix with ones on the <a href="https://en.wikipedia.org/wiki/Anti-diagonal_matrix">anti-diagonal</a>; i.e., the non-main diagonal going from the lower-left to the upper-right corner. For example, if <span class="math inline">\(n=3\)</span> then <span class="math display">\[
+<p>In a previous <a href="https://arob5.github.io/blog/2024/02/15/Kalman-Filter/">post</a>, I discussed the Kalman filter (KF), which provides the closed-form mean and covariance recursions characterizing the Gaussian filtering distributions for linear Gaussian hidden Markov models. In this post, we retain the Gaussian noise assumption, but generalize to nonlinear dynamics and observation operators. Our primary focus is the additive noise model <span class="math display">\[
 \begin{align}
-P &amp;= \begin{bmatrix}
-0 &amp; 0 &amp; 1 \newline 0 &amp; 1 &amp; 0 \newline 1 &amp; 0 &amp; 0
-\end{bmatrix}. \tag{8}
+v_{k+1} &amp;= g(v_k) + \eta_{k+1} &amp;&amp; \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{1} \newline
+y_{k+1} &amp;= h(v_{k+1}) + \epsilon_{k+1}, &amp;&amp; \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
+v_0 &amp;\sim \mathcal{N}(m_0, C_0), &amp;&amp;\{\epsilon_k\} \perp \{\eta_k\} \perp v_0
+\end{align}
+\]</span> but we will also touch on the case where the noise is also subject to nonlinear mapping; i.e.,</p>
+<p><span class="math display">\[
+\begin{align}
+v_{k+1} &amp;= g(v_k, \eta_{k+1}) &amp;&amp; \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{2} \newline
+y_{k+1} &amp;= h(v_{k+1}, \epsilon_{k+1}) &amp;&amp; \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
+v_0 &amp;\sim \mathcal{N}(m_0, C_0), &amp;&amp;\{\epsilon_k\} \perp \{\eta_k\} \perp v_0
 \end{align}
 \]</span></p>
-<p>We will make use of the following properties of the matrix <span class="math inline">\(P\)</span>.</p>
-<blockquote class="blockquote">
-<p>
-<strong>Properties of Reversal Operator.</strong> <br> The matrix <span class="math inline">\(P\)</span> that reverses the order of a vector satisfies <span class="math display">\[
-  P = P^\top, \qquad P = P^{-1}, \qquad P^2 = P \tag{9}
-  \]</span>
-</p>
-</blockquote>
-<p>The first property is true of any anti-diagonal matrix, and the latter two simply reflect the fact that applying the reversal operation twice results in the original vector. With these properties in hand, note that <span class="math display">\[
-\tilde{C} := \text{Cov}[\tilde{x}] = \text{Cov}[Px]
-= P\text{Cov}[x]P^\top = PCP^\top = PCP. \tag{10}
-\]</span></p>
-<p>In words, this says that the covariance matrix of the reversed vector is given by <span class="math inline">\(PCP\)</span>, where <span class="math inline">\(C\)</span> is the covariance of the original vector. If you prefer to avoid probabilistic language, then <span class="math inline">\(PCP\)</span> is simply the result of reversing the order of the columns and rows of <span class="math inline">\(C\)</span>. Reversing <span class="math inline">\(C\)</span> induces the same operation on its inverse, since <span class="math display">\[
-(\tilde{C})^{-1} := (PCP)^{-1} = P^{-1}C^{-1}P = PC^{-1}P, \tag{11}
-\]</span> where we have used (9).</p>
-</section>
-<section id="cholesky-factorization-of-reversed-matrix" class="level2">
-<h2 class="anchored" data-anchor-id="cholesky-factorization-of-reversed-matrix">Cholesky Factorization of Reversed Matrix</h2>
-<p>We now derive the form of the Cholesky and rCholesky decompositions of the reversed matrix <span class="math inline">\(\tilde{C}\)</span>. Notation becomes a bit confusing here, so we separate the two results for clarity.</p>
-<blockquote class="blockquote">
-<p>
-<strong>Cholesky under reverse ordering.</strong> <br> Let <span class="math inline">\(C = UU^\top\)</span> be the rCholesky decomposition of <span class="math inline">\(C\)</span>. Then the Cholesky decomposition of <span class="math inline">\(\tilde{C} = PCP\)</span> is given by <span class="math display">\[
-  \tilde{C} = (PUP)(PUP)^\top. \tag{12}
-  \]</span> This can be equivalently be written as <span class="math display">\[
-  \text{chol}(\tilde{C}) = \text{chol}(PCP) = PUP = P\text{rchol}(C)P. \tag{13}
-  \]</span> In words, this says that the Cholesky factor of <span class="math inline">\(\tilde{C}\)</span> is given by reversing the rCholesky factor of <span class="math inline">\(C\)</span>.
-</p>
-</blockquote>
-<p><strong>Proof.</strong> Using the fact that <span class="math inline">\(P^2 = I\)</span> we have <span class="math display">\[
-\tilde{C} = PCP = P(UU^\top)P = PUP^2 U^\top P = (PUP)(PUP)^\top.
-\]</span> The result is now immediate upon noticing that <span class="math inline">\(PUP\)</span> is lower triangular and has positive diagonal entries. <span class="math inline">\(\qquad \blacksquare\)</span></p>
-<blockquote class="blockquote">
-<p>
-<strong>rCholesky under reverse ordering.</strong> <br> Let <span class="math inline">\(C = LL^\top\)</span> be the Cholesky decomposition of <span class="math inline">\(C\)</span>. Then the rCholesky decomposition of <span class="math inline">\(\tilde{C} = PCP\)</span> is given by <span class="math display">\[
-  \tilde{C} = (PLP)(PLP)^\top. \tag{14}
-  \]</span> This can be equivalently be written as <span class="math display">\[
-  \text{rchol}(\tilde{C}) = \text{rchol}(PCP) = PLP = P\text{chol}(C)P. \tag{15}
-  \]</span> In words, this says that the rCholesky factor of <span class="math inline">\(\tilde{C}\)</span> is given by reversing the Cholesky factor of <span class="math inline">\(C\)</span>.
-</p>
-</blockquote>
-<p><strong>Proof.</strong> Using the fact that <span class="math inline">\(P^2 = I\)</span> we have <span class="math display">\[
-\tilde{C} = PCP = P(LL^\top)P = PLP^2 L^\top P = (PLP)(PLP)^\top.
-\]</span> The result is now immediate upon noticing that <span class="math inline">\(PLP\)</span> is upper triangular and has positive diagonal entries. <span class="math inline">\(\qquad \blacksquare\)</span></p>
-<p>These results tell us that we can use a Cholesky factorization of <span class="math inline">\(C\)</span> to immediately compute the rCholesky factorization of the reversed matrix <span class="math inline">\(\tilde{C}\)</span>. This statement is the same with the roles of Cholesky and rCholesky swapped. In (13) and (15) we can left and right multiply by <span class="math inline">\(P\)</span> to obtain the equivalent expressions <span class="math display">\[
+<p>Note even this more general formulation is still a special case of the generic Bayesian filtering problem, since we are restricting to the setting with Gaussian noise and a Gaussian initial condition.</p>
+<p>Let <span class="math inline">\(Y_k := \{y_1, \dots, y_k\}\)</span> denote the set of observations up through time step <span class="math inline">\(k\)</span>. We seek to characterize the filtering distributions <span class="math inline">\(v_k|Y_k\)</span>, and update them in an online fashion as more data arrives. I will denote the density of <span class="math inline">\(v_k|Y_k\)</span> by <span class="math inline">\(\pi_k(v_k) = p(v_k|Y_k)\)</span>. In the linear Gaussian setting these distributions are Gaussian, and can be computed analytically. The introduction of nonlinearity renders the filtering distributions non-Gaussian and not analytically tractable in general, motivating the need for approximations. Certain methods, such as particle filters, are designed to handle the situation where the departure from Gaussianity is severe. The methods discussed in this post, however, are applicable when Gaussian approximations are still reasonable. Given this, the algorithms discussed here all proceed by approximating the current filtering distribution by a Gaussian <span class="math inline">\(v_k|Y_k \sim \mathcal{N}(m_k, C_k)\)</span>. The algorithms differ in the approximations they employ to deal with the nonlinear functions <span class="math inline">\(h\)</span> and <span class="math inline">\(g\)</span> in order to arrive at a Gaussian approximation of the subsequent filtering distribution <span class="math inline">\(v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})\)</span>.</p>
+<p>There are many methods that fit into this general Gaussian approximation framework. In this post we focus on methods rooted in <em>linearization</em> of the nonlinear functions. Alternative approaches employ quadrature-based (e.g., the unscented Kalman filter) or Monte Carlo (e.g., the ensemble Kalman filter) approximations. Although the motivation stems from the filtering problem, we will focus mostly on the underlying fundamental problem here: approximating the distribution of a nonlinear function of a Gaussian random variable. The next section illustrates how this problem arises in the filtering context.</p>
+<section id="motivating-the-generic-problem" class="level2">
+<h2 class="anchored" data-anchor-id="motivating-the-generic-problem">Motivating the Generic Problem</h2>
+<p>We recall from the <a href="https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/">post</a> on Bayesian filtering that the map <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span> naturally decomposes into two steps: the forecast and analysis steps. We assume here the Gaussian approximation <span class="math inline">\(v_k := v_k|Y_k \sim \mathcal{N}(m_k, C_k)\)</span> has been invoked and consider approximating the map <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span>.</p>
+<section id="forecast" class="level3">
+<h3 class="anchored" data-anchor-id="forecast">Forecast</h3>
+<p>The forecast distribution <span class="math inline">\(\hat{\pi}_{k+1}(v_{k+1}) := p(v_{k+1}|Y_k)\)</span> is the distribution implied by feeding <span class="math inline">\(\pi_k\)</span> through the stochastic dynamics model. In the additive noise case (1), we observe that this comes down to approximating the distribution of the random variable <span class="math display">\[
+g(v_k) + \eta_{k+1} , \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{3}
+\]</span> However, since we will be invoking a Gaussian approximation <span class="math inline">\(g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>, in addition to the assumption that <span class="math inline">\(v_k\)</span> and <span class="math inline">\(\eta_{k+1}\)</span> are independent, then we can just focus our attention on the <span class="math inline">\(g(v_k)\)</span> term. Due to independence, once we obtain the approximation <span class="math inline">\(g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>, then <span class="math inline">\(g(v_k) + \eta_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1} + Q)\)</span> is immediate.</p>
+<p>In the non-additive noise case, the problem similarly comes down to approximating the distribution <span class="math display">\[
+g(v_k, \eta_{k+1}), \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{4}
+\]</span> Again, due to the independence assumptions we have that <span class="math inline">\((v_k, \eta_{k+1})\)</span> are jointly distributed <span class="math display">\[
 \begin{align}
-\text{chol}(C) &amp;= P\text{rchol}(PCP)P \tag{16} \newline
-\text{rchol}(C) &amp;= P\text{chol}(PCP)P. \tag{17} \newline
+\begin{bmatrix} v_k \newline \eta_{k+1} \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} m_k \newline 0 \end{bmatrix},
+  \begin{bmatrix} C_k &amp; 0 \newline 0 &amp; Q \end{bmatrix} \right).
 \end{align}
-\]</span> See remark 1 in {% cite SparseCholeskyVecchia %} for an example of an expression of this form, though the authors are decomposing <span class="math inline">\(C^{-1}\)</span> in place of <span class="math inline">\(C\)</span>.</p>
+\]</span></p>
+<p>Thus, this situation also reduces to approximating the distribution of a nonlinear map of a Gaussian; in this case, the map <span class="math inline">\(g(\tilde{v}_k)\)</span>, where <span class="math inline">\(\tilde{v}_k := (v_k, \eta_{k+1})^\top\)</span> is the Gaussian input.</p>
+</section>
+<section id="analysis" class="level3">
+<h3 class="anchored" data-anchor-id="analysis">Analysis</h3>
+<p>Let’s now suppose that we have the forecast approximation <span class="math inline">\(\hat{v}_{k+1} := v_{k+1}|Y_k \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span> in hand. The map <span class="math inline">\(\hat{\pi}_{k+1} \mapsto \pi_{k+1}\)</span> from forecast to filtering distribution is defined by the action of conditioning on the data <span class="math inline">\(y_{k+1}\)</span>. In the additive noise case (1), this entails the following application of Bayes’ theorem, <span class="math display">\[
+\begin{align}
+\pi_{k+1}(v_{k+1})
+&amp;\propto \mathcal{N}(y_{k+1}|h(v_{k+1}), R)\mathcal{N}(v_{k+1}|\hat{m}_{k+1}, \hat{C}_{k+1}).
+\end{align}
+\]</span> Although everything is Gaussian here, the nonlinear function <span class="math inline">\(h\)</span> breaks the Gaussianity of <span class="math inline">\(\pi_{k+1}\)</span> in general. One idea to deal with this might be to run MCMC and invoke the approximation <span class="math inline">\(v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})\)</span> with <span class="math inline">\(m_{k+1}\)</span> and <span class="math inline">\(C_{k+1}\)</span> set to their empirical estimates computed from the MCMC samples. This has the distinct disadvantage of requiring an MCMC run at every time step.</p>
+<p>In order to discover alternative approximation methods, it is useful to recall the joint Gaussian view of the analysis step, which I discuss in <a href="https://arob5.github.io/blog/2024/02/15/Kalman-Filter/">this</a> post. The idea here was that, in the linear Gaussian setting, <span class="math inline">\((v_{k+1}, y_{k+1})|Y_k\)</span> has a joint Gaussian distribution. The filtering distribution <span class="math inline">\(v_{k+1}|Y_{k+1} = v_{k+1}|y_{k+1}, Y_k\)</span> is then obtained as a conditional distribution of the joint Gaussian, which is available in closed-form. In the present setting of the additive noise model (1) this joint distribution is given by</p>
+<p><span class="math display">\[
+\begin{align}
+\begin{bmatrix} v_{k+1} \newline y_{k+1} \end{bmatrix} \bigg| Y_k
+&amp;= \begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{v}_{k+1}) + \epsilon_{k+1} \end{bmatrix},
+&amp;&amp; \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})
+\end{align}
+\]</span></p>
+<p>which is again generally non-Gaussian due to <span class="math inline">\(h\)</span>. This perspective points to the idea of approximating this joint distribution as a Gaussian, so that an approximation of the filtering distribution then falls out as a conditional. Notice that we have found ourselves in a very similar situation to the analysis step, in that we again want to approximate the nonlinear mapping of a Gaussian with a Gaussian. The problem is thus to furnish a Gaussian approximation of <span class="math display">\[
+\begin{align}
+\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1}) &amp;= \begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{v}_{k+1}) + \epsilon_{k+1} \end{bmatrix},
+&amp;&amp; \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1}), \ \epsilon_{k+1} \sim \mathcal{N}(0, R). \tag{5}
+\end{align}
+\]</span> In the non-additive error case (2), <span class="math inline">\(h(\hat{v}_{k+1}, \epsilon_{k+1})\)</span> replaces <span class="math inline">\(h(\hat{v}_{k+1}) + \epsilon_{k+1}\)</span> in the above expression. Note that the independence assumptions imply that <span class="math inline">\((\hat{v}_{k+1}, \epsilon_{k+1})\)</span> is joint Gaussian so <span class="math inline">\(\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1})\)</span> is indeed a nonlinear map of a Gaussian.</p>
 </section>
 </section>
-<section id="other-resources" class="level1">
-<h1>Other Resources</h1>
-<ul>
-<li>Relevant StackExchange posts: <a href="https://math.stackexchange.com/questions/2039477/cholesky-decompostion-upper-triangular-or-lower-triangular">here</a>, <a href="https://math.stackexchange.com/questions/712993/cholesky-decomposition-of-the-inverse-of-a-matrix">here</a>, and <a href="https://mathoverflow.net/questions/230808/computing-the-inverse-of-a-cholesky-decomposition">here</a></li>
-<li>Permutation and Grouping Methods for Sharpening Gaussian Process Approximations (Guiness, 2018)</li>
-<li>Iterative methods for sparse linear systems (Saad, 2003)</li>
-</ul>
+<section id="the-generic-problem-setting" class="level2">
+<h2 class="anchored" data-anchor-id="the-generic-problem-setting">The Generic Problem Setting</h2>
+<p>Now that we have identified the fundamental issues in the context of nonlinear filtering, we state the problem in generic terms. The notation used in this section should be viewed anew, not to be confused with the state space notation used above. The task is to provide a Gaussian approximation to a random variable <span class="math inline">\(u = f(v)\)</span>, where <span class="math inline">\(v\)</span> is Gaussian-distributed and <span class="math inline">\(f\)</span> is a nonlinear function; more precisely, <span class="math display">\[
+\begin{align}
+u &amp;= f(v), &amp;&amp; v \sim \mathcal{N}(m, C), \quad f: \mathbb{R}^n \to \mathbb{R}^m. \tag{6}
+\end{align}
+\]</span> In the filtering context, the forecast step represented an instantiation of this problem where <span class="math inline">\(f = g\)</span> and hence a special case where the dimensions of the domain and codomain of <span class="math inline">\(f\)</span> are equal. In the analysis step, <span class="math inline">\(f\)</span> is given by the map <span class="math inline">\(v \mapsto (v, h(v))^\top\)</span> (ignoring the <span class="math inline">\(\eta/\epsilon\)</span> for now) and thus represents the case where <span class="math inline">\(m &gt; n\)</span>. Although both of these cases are subsumed by (4), it is also helpful to consider them separately, as the second case has special structure which can present a more challenging problem. We thus define <span class="math display">\[
+\begin{align}
+\tilde{u} &amp;= \tilde{f}(v) := \begin{bmatrix} v \newline f(v) \end{bmatrix}, \tag{7}
+\end{align}
+\]</span> which captures this special case. With the generic problem stated, we now proceed to discuss specific methods which utilize different notions of linearization to produce Gaussian approximations of the distribution of <span class="math inline">\(u\)</span> and <span class="math inline">\(\tilde{u}\)</span>.</p>
+</section>
+<section id="taylor-series-approximations" class="level2">
+<h2 class="anchored" data-anchor-id="taylor-series-approximations">Taylor Series Approximations</h2>
+<p>The first approach we consider leverages a Taylor series approximation of the nonlinear function <span class="math inline">\(f\)</span>. When applied to the filtering problem, the resulting algorithm is known as the <em>extended Kalman filter</em>. We note that higher order Taylor approximations are also possible in certain settings, but we restrict to first order approximations here.</p>
+<section id="the-generic-method" class="level3">
+<h3 class="anchored" data-anchor-id="the-generic-method">The Generic Method</h3>
+<p>We consider approximating the nonlinear function <span class="math inline">\(f\)</span> with a local linear approximation, given by the Taylor series expansion around the current mean <span class="math inline">\(m\)</span>, <span class="math display">\[
+\begin{align}
+f(v) \approx f(m) + Df(m)[v - m].
+\end{align}
+\]</span> Note that I am applying the Jacobian notation so that <span class="math inline">\(Df(m) \in \mathbb{R}^{m \times n}\)</span>. Under this approximation we use the fact that <span class="math inline">\(v \sim \mathcal{N}(m, C)\)</span> to obtain <span class="math display">\[
+\begin{align}
+u = f(v) &amp; \approx f(m) + Df(m)[v - m] \tag{8} \newline
+&amp;\sim \mathcal{N}(f(m), [Df(m)]C [Df(m)]^\top).
+\end{align}
+\]</span></p>
+<p>The situation for <span class="math inline">\(\tilde{f}\)</span> is quite similar: <span class="math display">\[
+\begin{align}
+\tilde{f}(v) &amp;\approx \tilde{f}(m) + D\tilde{f}(m)[v - m] \tag{9} \newline
+&amp;= \begin{bmatrix} m \newline f(m) \end{bmatrix} + \begin{bmatrix} I \newline Df(m) \end{bmatrix}[v-m] \newline
+&amp;\sim
+\mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
+\begin{bmatrix} I \newline Df(m) \end{bmatrix} C \begin{bmatrix} I \newline Df(m) \end{bmatrix}^\top \right) \newline
+&amp;= \mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
+\begin{bmatrix} C &amp; C[Df(m)]^\top \newline [Df(m)]C &amp; [Df(m)]C[Df(m)]^\top \end{bmatrix} \right)
+\end{align}
+\]</span> where the last equality is in distribution. It is important to stress that these are <em>local</em> approximations; the linearization is constructed using only the local derivative information at the point <span class="math inline">\(m\)</span>. Thus, we would expect the quality of the approximation to decay for points farther from <span class="math inline">\(m\)</span>, and this decay to be more severe for <span class="math inline">\(f\)</span> which are highly nonlinear. Thus, intuitively we would expect the approximation (8) to be reasonable when the distribution of <span class="math inline">\(v\)</span> is tightly clustered around its mean. Distributions that are more diffuse will naturally lead to poorer approximations given that more of the probability mass exists in regions where the local linear approximation is not adequate. The situation in (9) presents an even greater concern; the quality of this approximation relies on the <em>joint</em> distribution of <span class="math inline">\((v, f(v))\)</span> staying close to its mean. Not only does this require the current distribution of <span class="math inline">\(v\)</span> to be concentrated about <span class="math inline">\(m\)</span>, but also the image <span class="math inline">\(f(v)\)</span> to be clustered about <span class="math inline">\(f(m)\)</span>. Thus, even if <span class="math inline">\(v\)</span> is tightly bound to its mean, highly nonlinear maps <span class="math inline">\(f\)</span> have the potential to yield a large spread of points in the codomain and thus reduce the quality of the approximation.</p>
+</section>
+<section id="application-the-extended-kalman-filter" class="level3">
+<h3 class="anchored" data-anchor-id="application-the-extended-kalman-filter">Application: The Extended Kalman Filter</h3>
+<p>We now apply these generic equations to the filtering settings (1) and (2), again breaking the problem into the forecast and analysis steps. The resulting approximate filtering algorithm is called the <strong>extended Kalman filter</strong> (EKF).</p>
+<section id="forecast-1" class="level4">
+<h4 class="anchored" data-anchor-id="forecast-1">Forecast</h4>
+<p>Assume the filtering distribution at time <span class="math inline">\(k\)</span> is given by <span class="math inline">\(v_k \sim \mathcal{N}(m_k, C_k)\)</span>. Starting with the additive noise model (1), we see that we must approximate the distribution <span class="math inline">\(g(v_k)\)</span>. Applying (8) and then adding the independent Gaussian <span class="math inline">\(\eta_{k+1}\)</span> yields the approximate forecast distribution <span class="math display">\[
+\begin{align}
+\hat{v}_{k+1} := v_{v+1}|Y_k \sim \mathcal{N}(g(m_k), [Dg(m_k)]C_k [Dg(m_k)]^\top + Q). \tag{10}
+\end{align}
+\]</span> This is quite similar to the forecast distribution for the Kalman filter, which is <span class="math inline">\(\mathcal{N}(Gm_k, GC_k G^\top + Q)\)</span> corresponding to the linear forward model <span class="math inline">\(g(v) = Gv\)</span>. We see that the EKF forecast covariance is equivalent to that obtained from the Kalman filter applied with the linear forward model <span class="math inline">\(G := Dg(m_k)\)</span>.</p>
+<p>The case of the non-additive noise (4) is similar, but now we must approximate <span class="math inline">\(g(v_k, \eta_{k+1})\)</span>. Recall that <span class="math inline">\((v_k, \eta_{k+1})\)</span> is joint Gaussian distributed, with mean <span class="math inline">\((m_k, 0)\)</span>. Applying (8) thus yields <span class="math display">\[
+\begin{align}
+v_{v+1}|Y_k &amp;\sim
+\mathcal{N}\left(g(m_k,0), [Dg(m_k,0)]\begin{bmatrix} C_k &amp; 0 \newline 0 &amp; Q \end{bmatrix} [Dg(m_k,0)]^\top\right) \newline
+&amp;= \mathcal{N}\left(g(m_k,0), [D_vg(m_k,0)]C_k [D_vg(m_k,0)]^\top + [D_{\eta}g(m_k,0)]Q [D_{\eta}g(m_k,0)]^\top\right), \tag{11}
+\end{align}
+\]</span> where the equality is in distribution and the subscripts <span class="math inline">\(D_v\)</span>, <span class="math inline">\(D_{\eta}\)</span> indicate the respective partial derivatives. Note the similarity between (10) and (11). The general form is the same, but the non-additive case requires derivatives with respect to the noise <span class="math inline">\(\eta\)</span> in order to approximate the effect of pushing <span class="math inline">\(\eta\)</span> through the nonlinear forward model. Following our intuition on when we expect the Taylor series linearization to be reasonable, we now observe that the approximation may deteriorate when either the current state <span class="math inline">\(v_k\)</span> or the stochastic noise <span class="math inline">\(\eta_{k+1}\)</span> is highly variable, in which case significant probability mass may be present in regions far from the point <span class="math inline">\((m_k, 0)\)</span> about which the Taylor series is expanded.</p>
+</section>
+<section id="analysis-1" class="level4">
+<h4 class="anchored" data-anchor-id="analysis-1">Analysis</h4>
+<p>Starting with the additive noise model, we recall that the analysis step requires approximation of (5). To this end, we apply (9) with <span class="math inline">\(\tilde{f}(\hat{v}_{k+1}) = (\hat{v}_{k+1}, h(\hat{v}_{k+1}))^\top\)</span> where <span class="math inline">\(\hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>. We actually require approximation of <span class="math inline">\((\hat{v}_{k+1}, y_{k+1})^\top = (\hat{v}_{k+1}, h(\hat{v}_{k+1}) + \epsilon_{k+1})^\top\)</span> but due to independence we can simply add <span class="math inline">\((0, \epsilon_{k+1})^\top\)</span> post-hoc. The combination of (9) with the addition of the noise term gives <span class="math display">\[
+\begin{align}
+\begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{m}_{k+1}) + \epsilon_{k+1} \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} \hat{m}_{k+1} \newline h(\hat{m}_{k+1}) \end{bmatrix},
+\begin{bmatrix} \hat{C}_{k+1} &amp; \hat{C}_{k+1}[Dh(\hat{m}_{k+1})]^\top \newline
+[Dh(\hat{m}_{k+1})]\hat{C}_{k+1} &amp; [Dh(\hat{m}_{k+1})]\hat{C}_{k+1} [Dh(\hat{m}_{k+1})]^\top + R \end{bmatrix} \right) \tag{12}
+\end{align}
+\]</span></p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

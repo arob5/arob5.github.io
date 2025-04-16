@@ -22,5 +22,14 @@
   },
   "posts/nonlinear-LS.qmd": {
     "nonlinear-LS.html": "38446436"
+  },
+  "posts/2024-02-15-nonlinear-maps-of-Gaussians.qmd": {
+    "2024-02-15-nonlinear-maps-of-Gaussians.html": "b2e2e1cf"
+  },
+  "posts/eki_1/eki_introduction.qmd": {
+    "eki_introduction.html": "d9e76ac8"
+  },
+  "posts/macro_test.qmd": {
+    "macro_test.html": "1fddfaca"
   }
 }

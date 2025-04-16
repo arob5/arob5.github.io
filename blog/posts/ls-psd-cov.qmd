@@ -1,6 +1,6 @@
 ---
 title: Regularized Least Squares with Singular Prior
-subtitle: Solving the regularized least squares optimization problem when the prior covariance matrix is not positive definite.
+description: Solving the regularized least squares optimization problem when the prior covariance matrix is not positive definite.
 date: 2024-12-03
 categories: [Statistics, Data-Assimilation, Optimization, Inverse-Problem]
 ---

@@ -1,6 +1,6 @@
 ---
 title: The Reversed Cholesky Decomposition
-subtitle: Cholesky-like decomposition with upper-triangular matrices.
+description: Cholesky-like decomposition with upper-triangular matrices.
 date: 2025-01-14
 categories: [Linear-Algebra]
 ---

@@ -1,6 +1,6 @@
 ---
 title: Nonlinear Least Squares
-subtitle: Gauss-Newton, Levenberg-Marquardt
+description: Gauss-Newton, Levenberg-Marquardt
 date: 2024-11-26
 categories: [Statistics, Optimization, Inverse-Problem]
 ---

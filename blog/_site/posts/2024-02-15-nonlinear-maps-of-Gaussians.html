@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-02-15">
+
+<title>Approximating Nonlinear Functions of Gaussians, Part I - Linearized Kalman Filter Extensions – Andrew G. Roberts</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Andrew G. Roberts</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Approximating Nonlinear Functions of Gaussians, Part I - Linearized Kalman Filter Extensions</h1>
+            <p class="subtitle lead">I discuss the generic problem of approximating the distribution resulting from a non-linear transformation of a Gaussian random variable, and then show how this leads to extensions of the Kalman filter which yield approximate filtering algorithms in the non-linear setting.</p>
+                                <div class="quarto-categories">
+                <div class="quarto-category">Data-Assimilation</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">February 15, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<p>In a previous <a href="https://arob5.github.io/blog/2024/02/15/Kalman-Filter/">post</a>, I discussed the Kalman filter (KF), which provides the closed-form mean and covariance recursions characterizing the Gaussian filtering distributions for linear Gaussian hidden Markov models. In this post, we retain the Gaussian noise assumption, but generalize to nonlinear dynamics and observation operators. Our primary focus is the additive noise model <span class="math display">\[
+\begin{align}
+v_{k+1} &amp;= g(v_k) + \eta_{k+1} &amp;&amp; \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{1} \newline
+y_{k+1} &amp;= h(v_{k+1}) + \epsilon_{k+1}, &amp;&amp; \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
+v_0 &amp;\sim \mathcal{N}(m_0, C_0), &amp;&amp;\{\epsilon_k\} \perp \{\eta_k\} \perp v_0
+\end{align}
+\]</span> but we will also touch on the case where the noise is also subject to nonlinear mapping; i.e.,</p>
+<p><span class="math display">\[
+\begin{align}
+v_{k+1} &amp;= g(v_k, \eta_{k+1}) &amp;&amp; \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{2} \newline
+y_{k+1} &amp;= h(v_{k+1}, \epsilon_{k+1}) &amp;&amp; \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
+v_0 &amp;\sim \mathcal{N}(m_0, C_0), &amp;&amp;\{\epsilon_k\} \perp \{\eta_k\} \perp v_0
+\end{align}
+\]</span></p>
+<p>Note even this more general formulation is still a special case of the generic Bayesian filtering problem, since we are restricting to the setting with Gaussian noise and a Gaussian initial condition.</p>
+<p>Let <span class="math inline">\(Y_k := \{y_1, \dots, y_k\}\)</span> denote the set of observations up through time step <span class="math inline">\(k\)</span>. We seek to characterize the filtering distributions <span class="math inline">\(v_k|Y_k\)</span>, and update them in an online fashion as more data arrives. I will denote the density of <span class="math inline">\(v_k|Y_k\)</span> by <span class="math inline">\(\pi_k(v_k) = p(v_k|Y_k)\)</span>. In the linear Gaussian setting these distributions are Gaussian, and can be computed analytically. The introduction of nonlinearity renders the filtering distributions non-Gaussian and not analytically tractable in general, motivating the need for approximations. Certain methods, such as particle filters, are designed to handle the situation where the departure from Gaussianity is severe. The methods discussed in this post, however, are applicable when Gaussian approximations are still reasonable. Given this, the algorithms discussed here all proceed by approximating the current filtering distribution by a Gaussian <span class="math inline">\(v_k|Y_k \sim \mathcal{N}(m_k, C_k)\)</span>. The algorithms differ in the approximations they employ to deal with the nonlinear functions <span class="math inline">\(h\)</span> and <span class="math inline">\(g\)</span> in order to arrive at a Gaussian approximation of the subsequent filtering distribution <span class="math inline">\(v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})\)</span>.</p>
+<p>There are many methods that fit into this general Gaussian approximation framework. In this post we focus on methods rooted in <em>linearization</em> of the nonlinear functions. Alternative approaches employ quadrature-based (e.g., the unscented Kalman filter) or Monte Carlo (e.g., the ensemble Kalman filter) approximations. Although the motivation stems from the filtering problem, we will focus mostly on the underlying fundamental problem here: approximating the distribution of a nonlinear function of a Gaussian random variable. The next section illustrates how this problem arises in the filtering context.</p>
+<section id="motivating-the-generic-problem" class="level2">
+<h2 class="anchored" data-anchor-id="motivating-the-generic-problem">Motivating the Generic Problem</h2>
+<p>We recall from the <a href="https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/">post</a> on Bayesian filtering that the map <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span> naturally decomposes into two steps: the forecast and analysis steps. We assume here the Gaussian approximation <span class="math inline">\(v_k := v_k|Y_k \sim \mathcal{N}(m_k, C_k)\)</span> has been invoked and consider approximating the map <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span>.</p>
+<section id="forecast" class="level3">
+<h3 class="anchored" data-anchor-id="forecast">Forecast</h3>
+<p>The forecast distribution <span class="math inline">\(\hat{\pi}_{k+1}(v_{k+1}) := p(v_{k+1}|Y_k)\)</span> is the distribution implied by feeding <span class="math inline">\(\pi_k\)</span> through the stochastic dynamics model. In the additive noise case (1), we observe that this comes down to approximating the distribution of the random variable <span class="math display">\[
+g(v_k) + \eta_{k+1} , \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{3}
+\]</span> However, since we will be invoking a Gaussian approximation <span class="math inline">\(g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>, in addition to the assumption that <span class="math inline">\(v_k\)</span> and <span class="math inline">\(\eta_{k+1}\)</span> are independent, then we can just focus our attention on the <span class="math inline">\(g(v_k)\)</span> term. Due to independence, once we obtain the approximation <span class="math inline">\(g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>, then <span class="math inline">\(g(v_k) + \eta_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1} + Q)\)</span> is immediate.</p>
+<p>In the non-additive noise case, the problem similarly comes down to approximating the distribution <span class="math display">\[
+g(v_k, \eta_{k+1}), \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{4}
+\]</span> Again, due to the independence assumptions we have that <span class="math inline">\((v_k, \eta_{k+1})\)</span> are jointly distributed <span class="math display">\[
+\begin{align}
+\begin{bmatrix} v_k \newline \eta_{k+1} \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} m_k \newline 0 \end{bmatrix},
+  \begin{bmatrix} C_k &amp; 0 \newline 0 &amp; Q \end{bmatrix} \right).
+\end{align}
+\]</span></p>
+<p>Thus, this situation also reduces to approximating the distribution of a nonlinear map of a Gaussian; in this case, the map <span class="math inline">\(g(\tilde{v}_k)\)</span>, where <span class="math inline">\(\tilde{v}_k := (v_k, \eta_{k+1})^\top\)</span> is the Gaussian input.</p>
+</section>
+<section id="analysis" class="level3">
+<h3 class="anchored" data-anchor-id="analysis">Analysis</h3>
+<p>Let’s now suppose that we have the forecast approximation <span class="math inline">\(\hat{v}_{k+1} := v_{k+1}|Y_k \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span> in hand. The map <span class="math inline">\(\hat{\pi}_{k+1} \mapsto \pi_{k+1}\)</span> from forecast to filtering distribution is defined by the action of conditioning on the data <span class="math inline">\(y_{k+1}\)</span>. In the additive noise case (1), this entails the following application of Bayes’ theorem, <span class="math display">\[
+\begin{align}
+\pi_{k+1}(v_{k+1})
+&amp;\propto \mathcal{N}(y_{k+1}|h(v_{k+1}), R)\mathcal{N}(v_{k+1}|\hat{m}_{k+1}, \hat{C}_{k+1}).
+\end{align}
+\]</span> Although everything is Gaussian here, the nonlinear function <span class="math inline">\(h\)</span> breaks the Gaussianity of <span class="math inline">\(\pi_{k+1}\)</span> in general. One idea to deal with this might be to run MCMC and invoke the approximation <span class="math inline">\(v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})\)</span> with <span class="math inline">\(m_{k+1}\)</span> and <span class="math inline">\(C_{k+1}\)</span> set to their empirical estimates computed from the MCMC samples. This has the distinct disadvantage of requiring an MCMC run at every time step.</p>
+<p>In order to discover alternative approximation methods, it is useful to recall the joint Gaussian view of the analysis step, which I discuss in <a href="https://arob5.github.io/blog/2024/02/15/Kalman-Filter/">this</a> post. The idea here was that, in the linear Gaussian setting, <span class="math inline">\((v_{k+1}, y_{k+1})|Y_k\)</span> has a joint Gaussian distribution. The filtering distribution <span class="math inline">\(v_{k+1}|Y_{k+1} = v_{k+1}|y_{k+1}, Y_k\)</span> is then obtained as a conditional distribution of the joint Gaussian, which is available in closed-form. In the present setting of the additive noise model (1) this joint distribution is given by</p>
+<p><span class="math display">\[
+\begin{align}
+\begin{bmatrix} v_{k+1} \newline y_{k+1} \end{bmatrix} \bigg| Y_k
+&amp;= \begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{v}_{k+1}) + \epsilon_{k+1} \end{bmatrix},
+&amp;&amp; \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})
+\end{align}
+\]</span></p>
+<p>which is again generally non-Gaussian due to <span class="math inline">\(h\)</span>. This perspective points to the idea of approximating this joint distribution as a Gaussian, so that an approximation of the filtering distribution then falls out as a conditional. Notice that we have found ourselves in a very similar situation to the analysis step, in that we again want to approximate the nonlinear mapping of a Gaussian with a Gaussian. The problem is thus to furnish a Gaussian approximation of <span class="math display">\[
+\begin{align}
+\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1}) &amp;= \begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{v}_{k+1}) + \epsilon_{k+1} \end{bmatrix},
+&amp;&amp; \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1}), \ \epsilon_{k+1} \sim \mathcal{N}(0, R). \tag{5}
+\end{align}
+\]</span> In the non-additive error case (2), <span class="math inline">\(h(\hat{v}_{k+1}, \epsilon_{k+1})\)</span> replaces <span class="math inline">\(h(\hat{v}_{k+1}) + \epsilon_{k+1}\)</span> in the above expression. Note that the independence assumptions imply that <span class="math inline">\((\hat{v}_{k+1}, \epsilon_{k+1})\)</span> is joint Gaussian so <span class="math inline">\(\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1})\)</span> is indeed a nonlinear map of a Gaussian.</p>
+</section>
+</section>
+<section id="the-generic-problem-setting" class="level2">
+<h2 class="anchored" data-anchor-id="the-generic-problem-setting">The Generic Problem Setting</h2>
+<p>Now that we have identified the fundamental issues in the context of nonlinear filtering, we state the problem in generic terms. The notation used in this section should be viewed anew, not to be confused with the state space notation used above. The task is to provide a Gaussian approximation to a random variable <span class="math inline">\(u = f(v)\)</span>, where <span class="math inline">\(v\)</span> is Gaussian-distributed and <span class="math inline">\(f\)</span> is a nonlinear function; more precisely, <span class="math display">\[
+\begin{align}
+u &amp;= f(v), &amp;&amp; v \sim \mathcal{N}(m, C), \quad f: \mathbb{R}^n \to \mathbb{R}^m. \tag{6}
+\end{align}
+\]</span> In the filtering context, the forecast step represented an instantiation of this problem where <span class="math inline">\(f = g\)</span> and hence a special case where the dimensions of the domain and codomain of <span class="math inline">\(f\)</span> are equal. In the analysis step, <span class="math inline">\(f\)</span> is given by the map <span class="math inline">\(v \mapsto (v, h(v))^\top\)</span> (ignoring the <span class="math inline">\(\eta/\epsilon\)</span> for now) and thus represents the case where <span class="math inline">\(m &gt; n\)</span>. Although both of these cases are subsumed by (4), it is also helpful to consider them separately, as the second case has special structure which can present a more challenging problem. We thus define <span class="math display">\[
+\begin{align}
+\tilde{u} &amp;= \tilde{f}(v) := \begin{bmatrix} v \newline f(v) \end{bmatrix}, \tag{7}
+\end{align}
+\]</span> which captures this special case. With the generic problem stated, we now proceed to discuss specific methods which utilize different notions of linearization to produce Gaussian approximations of the distribution of <span class="math inline">\(u\)</span> and <span class="math inline">\(\tilde{u}\)</span>.</p>
+</section>
+<section id="taylor-series-approximations" class="level2">
+<h2 class="anchored" data-anchor-id="taylor-series-approximations">Taylor Series Approximations</h2>
+<p>The first approach we consider leverages a Taylor series approximation of the nonlinear function <span class="math inline">\(f\)</span>. When applied to the filtering problem, the resulting algorithm is known as the <em>extended Kalman filter</em>. We note that higher order Taylor approximations are also possible in certain settings, but we restrict to first order approximations here.</p>
+<section id="the-generic-method" class="level3">
+<h3 class="anchored" data-anchor-id="the-generic-method">The Generic Method</h3>
+<p>We consider approximating the nonlinear function <span class="math inline">\(f\)</span> with a local linear approximation, given by the Taylor series expansion around the current mean <span class="math inline">\(m\)</span>, <span class="math display">\[
+\begin{align}
+f(v) \approx f(m) + Df(m)[v - m].
+\end{align}
+\]</span> Note that I am applying the Jacobian notation so that <span class="math inline">\(Df(m) \in \mathbb{R}^{m \times n}\)</span>. Under this approximation we use the fact that <span class="math inline">\(v \sim \mathcal{N}(m, C)\)</span> to obtain <span class="math display">\[
+\begin{align}
+u = f(v) &amp; \approx f(m) + Df(m)[v - m] \tag{8} \newline
+&amp;\sim \mathcal{N}(f(m), [Df(m)]C [Df(m)]^\top).
+\end{align}
+\]</span></p>
+<p>The situation for <span class="math inline">\(\tilde{f}\)</span> is quite similar: <span class="math display">\[
+\begin{align}
+\tilde{f}(v) &amp;\approx \tilde{f}(m) + D\tilde{f}(m)[v - m] \tag{9} \newline
+&amp;= \begin{bmatrix} m \newline f(m) \end{bmatrix} + \begin{bmatrix} I \newline Df(m) \end{bmatrix}[v-m] \newline
+&amp;\sim
+\mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
+\begin{bmatrix} I \newline Df(m) \end{bmatrix} C \begin{bmatrix} I \newline Df(m) \end{bmatrix}^\top \right) \newline
+&amp;= \mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
+\begin{bmatrix} C &amp; C[Df(m)]^\top \newline [Df(m)]C &amp; [Df(m)]C[Df(m)]^\top \end{bmatrix} \right)
+\end{align}
+\]</span> where the last equality is in distribution. It is important to stress that these are <em>local</em> approximations; the linearization is constructed using only the local derivative information at the point <span class="math inline">\(m\)</span>. Thus, we would expect the quality of the approximation to decay for points farther from <span class="math inline">\(m\)</span>, and this decay to be more severe for <span class="math inline">\(f\)</span> which are highly nonlinear. Thus, intuitively we would expect the approximation (8) to be reasonable when the distribution of <span class="math inline">\(v\)</span> is tightly clustered around its mean. Distributions that are more diffuse will naturally lead to poorer approximations given that more of the probability mass exists in regions where the local linear approximation is not adequate. The situation in (9) presents an even greater concern; the quality of this approximation relies on the <em>joint</em> distribution of <span class="math inline">\((v, f(v))\)</span> staying close to its mean. Not only does this require the current distribution of <span class="math inline">\(v\)</span> to be concentrated about <span class="math inline">\(m\)</span>, but also the image <span class="math inline">\(f(v)\)</span> to be clustered about <span class="math inline">\(f(m)\)</span>. Thus, even if <span class="math inline">\(v\)</span> is tightly bound to its mean, highly nonlinear maps <span class="math inline">\(f\)</span> have the potential to yield a large spread of points in the codomain and thus reduce the quality of the approximation.</p>
+</section>
+<section id="application-the-extended-kalman-filter" class="level3">
+<h3 class="anchored" data-anchor-id="application-the-extended-kalman-filter">Application: The Extended Kalman Filter</h3>
+<p>We now apply these generic equations to the filtering settings (1) and (2), again breaking the problem into the forecast and analysis steps. The resulting approximate filtering algorithm is called the <strong>extended Kalman filter</strong> (EKF).</p>
+<section id="forecast-1" class="level4">
+<h4 class="anchored" data-anchor-id="forecast-1">Forecast</h4>
+<p>Assume the filtering distribution at time <span class="math inline">\(k\)</span> is given by <span class="math inline">\(v_k \sim \mathcal{N}(m_k, C_k)\)</span>. Starting with the additive noise model (1), we see that we must approximate the distribution <span class="math inline">\(g(v_k)\)</span>. Applying (8) and then adding the independent Gaussian <span class="math inline">\(\eta_{k+1}\)</span> yields the approximate forecast distribution <span class="math display">\[
+\begin{align}
+\hat{v}_{k+1} := v_{v+1}|Y_k \sim \mathcal{N}(g(m_k), [Dg(m_k)]C_k [Dg(m_k)]^\top + Q). \tag{10}
+\end{align}
+\]</span> This is quite similar to the forecast distribution for the Kalman filter, which is <span class="math inline">\(\mathcal{N}(Gm_k, GC_k G^\top + Q)\)</span> corresponding to the linear forward model <span class="math inline">\(g(v) = Gv\)</span>. We see that the EKF forecast covariance is equivalent to that obtained from the Kalman filter applied with the linear forward model <span class="math inline">\(G := Dg(m_k)\)</span>.</p>
+<p>The case of the non-additive noise (4) is similar, but now we must approximate <span class="math inline">\(g(v_k, \eta_{k+1})\)</span>. Recall that <span class="math inline">\((v_k, \eta_{k+1})\)</span> is joint Gaussian distributed, with mean <span class="math inline">\((m_k, 0)\)</span>. Applying (8) thus yields <span class="math display">\[
+\begin{align}
+v_{v+1}|Y_k &amp;\sim
+\mathcal{N}\left(g(m_k,0), [Dg(m_k,0)]\begin{bmatrix} C_k &amp; 0 \newline 0 &amp; Q \end{bmatrix} [Dg(m_k,0)]^\top\right) \newline
+&amp;= \mathcal{N}\left(g(m_k,0), [D_vg(m_k,0)]C_k [D_vg(m_k,0)]^\top + [D_{\eta}g(m_k,0)]Q [D_{\eta}g(m_k,0)]^\top\right), \tag{11}
+\end{align}
+\]</span> where the equality is in distribution and the subscripts <span class="math inline">\(D_v\)</span>, <span class="math inline">\(D_{\eta}\)</span> indicate the respective partial derivatives. Note the similarity between (10) and (11). The general form is the same, but the non-additive case requires derivatives with respect to the noise <span class="math inline">\(\eta\)</span> in order to approximate the effect of pushing <span class="math inline">\(\eta\)</span> through the nonlinear forward model. Following our intuition on when we expect the Taylor series linearization to be reasonable, we now observe that the approximation may deteriorate when either the current state <span class="math inline">\(v_k\)</span> or the stochastic noise <span class="math inline">\(\eta_{k+1}\)</span> is highly variable, in which case significant probability mass may be present in regions far from the point <span class="math inline">\((m_k, 0)\)</span> about which the Taylor series is expanded.</p>
+</section>
+<section id="analysis-1" class="level4">
+<h4 class="anchored" data-anchor-id="analysis-1">Analysis</h4>
+<p>Starting with the additive noise model, we recall that the analysis step requires approximation of (5). To this end, we apply (9) with <span class="math inline">\(\tilde{f}(\hat{v}_{k+1}) = (\hat{v}_{k+1}, h(\hat{v}_{k+1}))^\top\)</span> where <span class="math inline">\(\hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>. We actually require approximation of <span class="math inline">\((\hat{v}_{k+1}, y_{k+1})^\top = (\hat{v}_{k+1}, h(\hat{v}_{k+1}) + \epsilon_{k+1})^\top\)</span> but due to independence we can simply add <span class="math inline">\((0, \epsilon_{k+1})^\top\)</span> post-hoc. The combination of (9) with the addition of the noise term gives <span class="math display">\[
+\begin{align}
+\begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{m}_{k+1}) + \epsilon_{k+1} \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} \hat{m}_{k+1} \newline h(\hat{m}_{k+1}) \end{bmatrix},
+\begin{bmatrix} \hat{C}_{k+1} &amp; \hat{C}_{k+1}[Dh(\hat{m}_{k+1})]^\top \newline
+[Dh(\hat{m}_{k+1})]\hat{C}_{k+1} &amp; [Dh(\hat{m}_{k+1})]\hat{C}_{k+1} [Dh(\hat{m}_{k+1})]^\top + R \end{bmatrix} \right) \tag{12}
+\end{align}
+\]</span></p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

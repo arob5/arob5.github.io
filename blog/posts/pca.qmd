@@ -1,6 +1,6 @@
 ---
 title: "Principal Components Analysis"
-subtitle: A deep dive into PCA.
+description: A deep dive into PCA.
 date: 2023-12-15
 categories: [Statistics, Linear-Algebra]
 ---
