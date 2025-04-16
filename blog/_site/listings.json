@@ -2,11 +2,9 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/macro_test.html",
       "/posts/reversed-Cholesky.html",
       "/posts/ls-psd-cov.html",
       "/posts/nonlinear-LS.html",
-      "/posts/eki_1/eki_introduction.html",
       "/posts/2024-02-15-nonlinear-maps-of-Gaussians.html",
       "/posts/gp-specifications.html",
       "/posts/MH-update-from-kernel.html",

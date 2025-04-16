@@ -33,6 +33,7 @@ $$
 \newcommand{\parSpace}{\mathcal{U}}
 \newcommand{\misfit}{\Phi}
 \newcommand{\misfitReg}{\Phi_R}
+\newcommand{\misfitPost}{\Phi_{\pi}}
 \newcommand{\priorDens}{\pi_0}
 \newcommand{\postDens}{\pi}
 \newcommand{\normCst}{Z}
@@ -74,12 +75,12 @@ between the data and the model prediction.
 Define the **least squares model-data misfit function**
 $$
 \misfit(u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} := \frac{1}{2}(\yobs - \fwd(\u))^\top \covObs^{-1}(\yobs - \fwd(\u)),
-$$
+$$ {#eq-misfit}
 weighted by a positive definite matrix $\covObs$. The (nonlinear) least squares
 minimization problem is then given by
 $$
 u_{\star} \in \text{argmin}_{u \in \parSpace} \ \misfit(\u).
-$$
+$$ {#eq-ls-opt}
 :::
 
 The above definition also serves to define the notation we will be using throughout
@@ -95,11 +96,11 @@ respectively.
 Define the **Tikhonov-regularized least squares function** by
 $$
 \misfitReg(\u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} + \frac{1}{2}\lVert \u - m\rVert^2_{\covMat}.
-$$
+$$ {#eq-misfit-reg}
 The Tikhonov-regularized least squares optimization problem is given by
 $$
 u_{\star} \in \text{argmin}_{u \in \parSpace} \misfitReg(\u).
-$$
+$$ {#eq-reg-ls-opt}
 :::
 The Tikhonov loss function balances the model fit to the data with the
 requirement to keep $\u$ "close" to $m$, where the relative weights of these
@@ -125,7 +126,7 @@ $$
 \u &\sim \priorDens \newline
 \noise &\sim \Gaussian(0, \covObs),
 \end{align}
-$$
+$$ {#eq-bip}
 where $\priorDens$ is a prior distribution on the parameter, and $\covObs$
 is the fixed (known) covariance of the additive Gaussian noise. The EnKF
 methodology we will discuss is particularly well-suited to such additive
@@ -134,69 +135,72 @@ relaxing these restrictions. The above model defines a joint distribution
 on $(\u,\y)$ via the product of densities
 $$
 p(\u,\y) := p(\y \given \u) \priorDens(\u) = \Gaussian(\y \given \fwd(\u), \covObs)\priorDens(\u),
-$$
+$$ {#eq-joint-dens}
 with the posterior density given by Bayes' theorem
 $$
 \begin{align}
-\postDens(\u) &:= \frac{1}{\normCst}\Gaussian(\yobs \given \fwd(\u), \covObs)\priorDens(\u),
-&&&\normCst := \int_{\parSpace} \Gaussian(\yobs \given \fwd(\u), \covObs)\priorDens(\u) d\u.
+\postDens(\u) &:= p(\u \given \y) = \frac{1}{\normCst}\Gaussian(\yobs \given \fwd(\u), \covObs)\priorDens(\u),
+&&\normCst := \int_{\parSpace} \Gaussian(\yobs \given \fwd(\u), \covObs)\priorDens(\u) d\u.
 \end{align}
+$$ {#eq-Bayes-thm}
+We omit the dependence on $\yobs$ in the notation $\postDens(\u)$ and $Z$.
+
+::: {.callout-note title="Goal 3: Posterior Sampling"}
+The sampling goal is to draw samples from the posterior distribution
+$\u \given \yobs$ under the model @eq-bip. We can phrase this as the task
+of sampling the probability distribution with density
 $$
-We omit the dependence on $\yobs$ in the notation $\postDens(\u)$.
+\postDens(\u) \propto \exp\left\{\misfitPost(\u)\right\},
+$$ {#eq-post-dens}
+where
+$$
+\misfitPost(\u) := -\log \postDens(\u)
+= -\log p(\y \given \u) - \log \priorDens(\u)
+= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} - \log \priorDens(\u) + C,
+$$ {#eq-misfit-post}
+is the (unnormalized) negative log posterior density,
+up to an additive constant $C$ that is independent of $\u$.
+:::
+
+We introduce the notation $\misfitPost(\u)$ in order to draw a connection with
+the optimization goals. Indeed, note that the log-likelihood term in
+@eq-misfit-post is precisely the least squares misfit function @eq-misfit
+(up to an additive constant). Moreover, if we choose Gaussian prior
+$\priorDens(\u) = \Gaussian(\u \given m, \covMat)$, then $\misfitPost(\u)$
+agrees with $\misfitReg(\u)$, up to an additive constant. We will explore
+certain algorithms that assume the prior is Gaussian, but in general we
+will allow $\priorDens$ to be non-Gaussian.
+
+## Roadmap
+With the setup and goals established, we will now take steps towards practical
+algorithms. It is important to recognize that the application of EnKF methodology
+to the optimization and sampling problems will yield *approximate* algorithms
+in general. The methods will be exact (in a manner which will be made precise)
+in the linear Gaussian setting, where the forward model $\fwd$ is linear and
+the prior $\priorDens$ is Gaussian. The EKI algorithms we consider are
+derivative-free, suitable for the black-box setting whereby we can only
+evaluate $\fwd(\cdot)$ pointwise. In typical applications, function
+evaluations $\fwd(\cdot)$ may be quite computationally expensive; e.g., they
+might require numerically solving partial differential equations. Another benefit
+of the EnKF methodology is that they allow for many model evaluations to be
+performed in parallel. These features will become clear as we dive into the
+methods. We start in this post by focusing on the sampling problem; the
+optimization setting will be explored in future posts.
+
+# Joint Gaussian Approximation
 
 
-whereby the task is to recover a parameter $u \in \mathcal{U}$ from noisy
-observations $y \in \mathbb{R}^p$ resulting from the mapping of $u$ through
-a forward model $\mathcal{G}: \mathcal{U} \to \mathbb{R}^p$. The Bayesian
-approach to inverse problems treats $u$ as a random variable, such that the
-statistical model (1) defines a joint distribution over the random vector
-$(u,y)$. The solution of the Bayesian inverse problem is then defined to be
-the conditional distribution of $u|y$; i.e., the *posterior distribution*. The
-model (1) defines the joint distribution by separately defining the two components
-in the product
+# Appendix
+
+## Notation
+We write
 $$
-p(u,y) = p(y|u)p(u). \tag{2}
-$$
-We note that the model (1) implicitly assumes a priori independence between the
-noise $\epsilon$ and parameter $u$.
-The first term $p(y|u)$ in (2), when viewed as a
-function of $u$ is called the *likelihood*. For convenience later on, we will
-introduce notation for (up to a constant) the negative log-likelihood
-$$
-\Phi(u) := -\log p(u|y) + C, \tag{3}
-$$
-which is sometimes also called the *potential* or *model-data misfit*.
-Throughout most of this post,
-we restrict to the choice of a Gaussian likelihood (as in (1)), in which case
-$$
-\begin{align}
--\log p(y|u)
-&= -\log \mathcal{N}(y|\mathcal{G}(u),\Sigma) \newline
-&= \frac{1}{2}\log\det(2\pi \Sigma) + \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2\_{\Sigma} \tag{4}
-\end{align}
-$$
-and
-$$
-\begin{align}
-&\Phi(u) = \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2\_{\Sigma}, &&C = \frac{1}{2}\log\det(2\pi \Sigma). \tag{5}
-\end{align}
-$$
-As above, we will use the notation
-$$
-\lVert x \rVert^2_A := \langle x, x\rangle_A := x^\top A^{-1}x \tag{5}
+\lVert x \rVert^2_A := \langle x, x\rangle_A := x^\top A^{-1}x
 $$
 to denote the Euclidean norm weighted by the inverse of a positive definite matrix
-$A$. The second term in (2), $p(u)$, is called the *prior*. In this post, we will
-restrict to the setting $\mathcal{U} \subseteq \mathbb{R}^d$ and assume that the prior
-distribution is given by a density $\pi_0(u)$. We denote the resulting posterior
-density (the density describing the distribution of $u|y$) by $\pi(u)$.
-The methods discussed below
-can be generalized to settings where $\mathcal{U}$ may be a function space; e.g.,
-the prior distribution may be given by a Gaussian process.
-
+$A$.
 
 # Background: Joint Gaussian Conditioning
-
 
 ## Joint Gaussian Assumption
 We now begin by considering approximation of the posterior $u|y$ by way of
