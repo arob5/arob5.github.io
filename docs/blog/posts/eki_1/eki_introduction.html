@@ -22,7 +22,27 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
@@ -187,7 +207,10 @@ window.Quarto = {
   <li><a href="#sampling" id="toc-sampling" class="nav-link" data-scroll-target="#sampling">Sampling</a></li>
   <li><a href="#roadmap" id="toc-roadmap" class="nav-link" data-scroll-target="#roadmap">Roadmap</a></li>
   </ul></li>
-  <li><a href="#joint-gaussian-approximation" id="toc-joint-gaussian-approximation" class="nav-link" data-scroll-target="#joint-gaussian-approximation">Joint Gaussian Approximation</a></li>
+  <li><a href="#joint-gaussian-approximation" id="toc-joint-gaussian-approximation" class="nav-link" data-scroll-target="#joint-gaussian-approximation">Joint Gaussian Approximation</a>
+  <ul class="collapse">
+  <li><a href="#gaussian-projection" id="toc-gaussian-projection" class="nav-link" data-scroll-target="#gaussian-projection">Gaussian Projection</a></li>
+  </ul></li>
   <li><a href="#appendix" id="toc-appendix" class="nav-link" data-scroll-target="#appendix">Appendix</a>
   <ul class="collapse">
   <li><a href="#notation" id="toc-notation" class="nav-link" data-scroll-target="#notation">Notation</a></li>
@@ -233,7 +256,8 @@ window.Quarto = {
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Pr}{\mathbb{P}}
 \newcommand{\given}{\mid}
-\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\Def}{:=}
+\newcommand{\Cov}{\mathrm{Cov}}
 \newcommand{\Var}{\mathrm{Var}}
 \newcommand{\Gaussian}{\mathcal{N}}
 \newcommand{\fwd}{\mathcal{G}}
@@ -241,7 +265,8 @@ window.Quarto = {
 \newcommand{\yobs}{y^{\dagger}}
 \newcommand{\y}{y}
 \newcommand{\noise}{\epsilon}
-\newcommand{\covObs}{\Sigma}
+\newcommand{\covNoise}{\Sigma}
+\newcommand{\meanVec}{m}
 \newcommand{\covMat}{C}
 \newcommand{\dimObs}{n}
 \newcommand{\dimPar}{d}
@@ -249,9 +274,17 @@ window.Quarto = {
 \newcommand{\misfit}{\Phi}
 \newcommand{\misfitReg}{\Phi_R}
 \newcommand{\misfitPost}{\Phi_{\pi}}
+\newcommand{\covPrior}{\covMat}
+\newcommand{\meanPrior}{\meanVec}
 \newcommand{\priorDens}{\pi_0}
 \newcommand{\postDens}{\pi}
 \newcommand{\normCst}{Z}
+\newcommand{\joint}{\overline{\pi}}
+\newcommand{\meanObs}{\meanVec^{\y}}
+\newcommand{\covObs}{\covMat^{\y}}
+\newcommand{\covCross}{\covMat^{\u \y}}
+\newcommand{\tcovCross}{\covMat^{\y \u}}
+\newcommand{\GaussProj}{\mathcal{P}_{\Gaussian}}
 \]</span></p>
 </div>
 <p>The ensemble Kalman filter (EnKF) is a well-established algorithm for state estimation in high-dimensional state space models. More recently, it has gained popularity as a general-purpose derivative-free tool for optimization and approximate posterior sampling; i.e., for the solution of inverse problems. The label <em>ensemble Kalman inversion (EKI)</em> is generally used to refer to the class of algorithms that adapt the EnKF methodology for such purposes. While these algorithms are typically quite simple – mostly relying on slight modifications of the standard EnKF update formula – there are quite a few subtleties required in designing and analyzing EKI methods. In particular, while much of the EKI literature is focused on optimization, small modifications of optimization-focused algorithms can be made to instead target the goal of posterior sampling. In a series of posts, we will walk through these subtleties, exploring the potential of the EnKF both as a derivative-free (approximate) optimizer and sampler. We start in this post by outlining the basic setup and goals, and then proceed to introduce a basic EnKF algorithm for approximate posterior sampling.</p>
@@ -272,8 +305,8 @@ Goal 1: Least-squares minimization
 </div>
 <div class="callout-body-container callout-body">
 <p>Define the <strong>least squares model-data misfit function</strong> <span id="eq-misfit"><span class="math display">\[
-\misfit(u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} := \frac{1}{2}(\yobs - \fwd(\u))^\top \covObs^{-1}(\yobs - \fwd(\u)),
-\tag{1}\]</span></span> weighted by a positive definite matrix <span class="math inline">\(\covObs\)</span>. The (nonlinear) least squares minimization problem is then given by <span id="eq-ls-opt"><span class="math display">\[
+\misfit(u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} := \frac{1}{2}(\yobs - \fwd(\u))^\top \covNoise^{-1}(\yobs - \fwd(\u)),
+\tag{1}\]</span></span> weighted by a positive definite matrix <span class="math inline">\(\covNoise\)</span>. The (nonlinear) least squares minimization problem is then given by <span id="eq-ls-opt"><span class="math display">\[
 u_{\star} \in \text{argmin}_{u \in \parSpace} \ \misfit(\u).
 \tag{2}\]</span></span></p>
 </div>
@@ -290,13 +323,13 @@ Goal 2: Tikhonov-regularized Least-squares minimization
 </div>
 <div class="callout-body-container callout-body">
 <p>Define the <strong>Tikhonov-regularized least squares function</strong> by <span id="eq-misfit-reg"><span class="math display">\[
-\misfitReg(\u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} + \frac{1}{2}\lVert \u - m\rVert^2_{\covMat}.
+\misfitReg(\u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} + \frac{1}{2}\lVert \u - \meanPrior\rVert^2_{\covPrior}.
 \tag{3}\]</span></span> The Tikhonov-regularized least squares optimization problem is given by <span id="eq-reg-ls-opt"><span class="math display">\[
 u_{\star} \in \text{argmin}_{u \in \parSpace} \misfitReg(\u).
 \tag{4}\]</span></span></p>
 </div>
 </div>
-<p>The Tikhonov loss function balances the model fit to the data with the requirement to keep <span class="math inline">\(\u\)</span> “close” to <span class="math inline">\(m\)</span>, where the relative weights of these objectives are determined by the (positive definite) covariances <span class="math inline">\(\covObs\)</span> and <span class="math inline">\(\covMat\)</span>.</p>
+<p>The Tikhonov loss function balances the model fit to the data with the requirement to keep <span class="math inline">\(\u\)</span> “close” to <span class="math inline">\(\meanPrior\)</span>, where the relative weights of these objectives are determined by the (positive definite) covariances <span class="math inline">\(\covNoise\)</span> and <span class="math inline">\(\covPrior\)</span>.</p>
 </section>
 <section id="sampling" class="level2">
 <h2 class="anchored" data-anchor-id="sampling">Sampling</h2>
@@ -305,14 +338,14 @@ u_{\star} \in \text{argmin}_{u \in \parSpace} \misfitReg(\u).
 \begin{align}
 \y &amp;= \fwd(\u) + \noise \newline
 \u &amp;\sim \priorDens \newline
-\noise &amp;\sim \Gaussian(0, \covObs),
+\noise &amp;\sim \Gaussian(0, \covNoise),
 \end{align}
-\tag{5}\]</span></span> where <span class="math inline">\(\priorDens\)</span> is a prior distribution on the parameter, and <span class="math inline">\(\covObs\)</span> is the fixed (known) covariance of the additive Gaussian noise. The EnKF methodology we will discuss is particularly well-suited to such additive Gaussian models with known noise covariance, but there has been work on relaxing these restrictions. The above model defines a joint distribution on <span class="math inline">\((\u,\y)\)</span> via the product of densities <span id="eq-joint-dens"><span class="math display">\[
-p(\u,\y) := p(\y \given \u) \priorDens(\u) = \Gaussian(\y \given \fwd(\u), \covObs)\priorDens(\u),
+\tag{5}\]</span></span> where <span class="math inline">\(\priorDens\)</span> is a prior distribution on the parameter, and <span class="math inline">\(\covNoise\)</span> is the fixed (known) covariance of the additive Gaussian noise. The EnKF methodology we will discuss is particularly well-suited to such additive Gaussian models with known noise covariance, but there has been work on relaxing these restrictions. The above model defines a joint distribution <span class="math inline">\(\joint\)</span> on <span class="math inline">\((\u,\y)\)</span> via the product of densities <span id="eq-joint-dens"><span class="math display">\[
+p(\u,\y) := p(\y \given \u) \priorDens(\u) = \Gaussian(\y \given \fwd(\u), \covNoise)\priorDens(\u),
 \tag{6}\]</span></span> with the posterior density given by Bayes’ theorem <span id="eq-Bayes-thm"><span class="math display">\[
 \begin{align}
-\postDens(\u) &amp;:= p(\u \given \y) = \frac{1}{\normCst}\Gaussian(\yobs \given \fwd(\u), \covObs)\priorDens(\u),
-&amp;&amp;\normCst := \int_{\parSpace} \Gaussian(\yobs \given \fwd(\u), \covObs)\priorDens(\u) d\u.
+\postDens(\u) &amp;:= p(\u \given \yobs) = \frac{1}{\normCst}\Gaussian(\yobs \given \fwd(\u), \covNoise)\priorDens(\u),
+&amp;&amp;\normCst := \int_{\parSpace} \Gaussian(\yobs \given \fwd(\u), \covNoise)\priorDens(\u) d\u.
 \end{align}
 \tag{7}\]</span></span> We omit the dependence on <span class="math inline">\(\yobs\)</span> in the notation <span class="math inline">\(\postDens(\u)\)</span> and <span class="math inline">\(Z\)</span>.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Goal 3: Posterior Sampling">
@@ -330,11 +363,11 @@ Goal 3: Posterior Sampling
 \tag{8}\]</span></span> where <span id="eq-misfit-post"><span class="math display">\[
 \misfitPost(\u) := -\log \postDens(\u)
 = -\log p(\y \given \u) - \log \priorDens(\u)
-= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} - \log \priorDens(\u) + C,
+= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} - \log \priorDens(\u) + C,
 \tag{9}\]</span></span> is the (unnormalized) negative log posterior density, up to an additive constant <span class="math inline">\(C\)</span> that is independent of <span class="math inline">\(\u\)</span>.</p>
 </div>
 </div>
-<p>We introduce the notation <span class="math inline">\(\misfitPost(\u)\)</span> in order to draw a connection with the optimization goals. Indeed, note that the log-likelihood term in <a href="#eq-misfit-post" class="quarto-xref">Equation&nbsp;9</a> is precisely the least squares misfit function <a href="#eq-misfit" class="quarto-xref">Equation&nbsp;1</a> (up to an additive constant). Moreover, if we choose Gaussian prior <span class="math inline">\(\priorDens(\u) = \Gaussian(\u \given m, \covMat)\)</span>, then <span class="math inline">\(\misfitPost(\u)\)</span> agrees with <span class="math inline">\(\misfitReg(\u)\)</span>, up to an additive constant. We will explore certain algorithms that assume the prior is Gaussian, but in general we will allow <span class="math inline">\(\priorDens\)</span> to be non-Gaussian.</p>
+<p>We introduce the notation <span class="math inline">\(\misfitPost(\u)\)</span> in order to draw a connection with the optimization goals. Indeed, note that the log-likelihood term in <a href="#eq-misfit-post" class="quarto-xref">Equation&nbsp;9</a> is precisely the least squares misfit function <a href="#eq-misfit" class="quarto-xref">Equation&nbsp;1</a> (up to an additive constant). Moreover, if we choose Gaussian prior <span class="math inline">\(\priorDens(\u) = \Gaussian(\u \given \meanPrior, \covPrior)\)</span>, then <span class="math inline">\(\misfitPost(\u)\)</span> agrees with <span class="math inline">\(\misfitReg(\u)\)</span> (again, up to an additive constant). We will explore certain algorithms that assume the prior is Gaussian, but in general we will allow <span class="math inline">\(\priorDens\)</span> to be non-Gaussian.</p>
 </section>
 <section id="roadmap" class="level2">
 <h2 class="anchored" data-anchor-id="roadmap">Roadmap</h2>
@@ -343,6 +376,35 @@ Goal 3: Posterior Sampling
 </section>
 <section id="joint-gaussian-approximation" class="level1">
 <h1>Joint Gaussian Approximation</h1>
+<p>We start by introducing the notion of approximate conditioning using Gaussian distributions, a core idea underlying many Kalman methods. A slight extension of this notion yields the classic EnKF update.</p>
+<section id="gaussian-projection" class="level2">
+<h2 class="anchored" data-anchor-id="gaussian-projection">Gaussian Projection</h2>
+<p>Recall that we write <span class="math inline">\(\joint\)</span> to denote the joint distribution of <span class="math inline">\((\u,\y)\)</span> under <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>. In general, this distribution will be non-Gaussian, rendering the conditioning <span class="math inline">\(u \given \yobs\)</span> a challenging task. A simple idea is to consider approximating <span class="math inline">\(\joint\)</span> with a Gaussian, which is a distribution for which conditioning is easy. To this end, consider the approximation <span id="eq-Gaussian-proj"><span class="math display">\[
+\begin{align}
+\GaussProj\joint \Def
+\Gaussian\left(
+\begin{bmatrix} \meanPrior \newline \meanObs \end{bmatrix},
+\begin{bmatrix} \covPrior &amp; \covCross \newline
+                \tcovCross &amp; \covObs \end{bmatrix},
+\right)
+\end{align}
+\tag{10}\]</span></span> where the means and covariances are simply given by the first two moments of <span class="math inline">\((\u, \y)\)</span>. In particular, <span id="eq-par-moments"><span class="math display">\[
+\begin{align}
+&amp;\meanPrior \Def \E[\u], &amp;&amp;\covPrior \Def \Cov[\u]
+\end{align}
+\tag{11}\]</span></span></p>
+<p>are the moments of the <span class="math inline">\(\u\)</span>-marginal, and <span id="eq-obs-moments"><span class="math display">\[
+\begin{align}
+&amp;\meanObs \Def \E[\y], &amp;&amp;\covObs \Def \Cov[\y]
+\end{align}
+\tag{12}\]</span></span></p>
+<p>are the moments for the <span class="math inline">\(\y\)</span>-marginal. Finally, <span id="eq-cross-cov"><span class="math display">\[
+\begin{align}
+&amp;\covCross \Def \Cov[\u,\y], &amp;&amp;\tcovCross \Def [\covCross]^\top
+\end{align}
+\tag{13}\]</span></span></p>
+<p>is the cross-covariance between <span class="math inline">\(\u\)</span> and <span class="math inline">\(\y\)</span>. Following <span class="citation" data-cites="meanField">(<a href="#ref-meanField" role="doc-biblioref">Calvello, Reich, and Stuart 2024</a>)</span>, we refer to <span class="math inline">\(\GaussProj\joint\)</span> as the Gaussian “projection” of <span class="math inline">\(\joint\)</span>.</p>
+</section>
 </section>
 <section id="appendix" class="level1">
 <h1>Appendix</h1>
@@ -594,9 +656,14 @@ We have now considered a couple options to formulate the Bayesian inverse proble
 
 
 
+
 </section>
 
-</main> <!-- /main -->
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-meanField" class="csl-entry" role="listitem">
+Calvello, Edoardo, Sebastian Reich, and Andrew M. Stuart. 2024. <span>“Ensemble Kalman Methods: A Mean Field Perspective.”</span> <a href="https://arxiv.org/abs/2209.11371">https://arxiv.org/abs/2209.11371</a>.
+</div>
+</div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

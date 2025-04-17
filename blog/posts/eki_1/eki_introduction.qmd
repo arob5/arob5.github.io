@@ -5,6 +5,7 @@ description: The first post in a series on using Ensemble Kalman methods to appr
 layout: default
 date: 2024-10-05
 draft: true
+bibliography: eki_references.bib
 categories: [Inverse-Problem, Data-Assimilation, Optimization, Sampling, Computational Statistics, EKI]
 format:
   html:
@@ -18,7 +19,8 @@ $$
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Pr}{\mathbb{P}}
 \newcommand{\given}{\mid}
-\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\Def}{:=}
+\newcommand{\Cov}{\mathrm{Cov}}
 \newcommand{\Var}{\mathrm{Var}}
 \newcommand{\Gaussian}{\mathcal{N}}
 \newcommand{\fwd}{\mathcal{G}}
@@ -26,7 +28,8 @@ $$
 \newcommand{\yobs}{y^{\dagger}}
 \newcommand{\y}{y}
 \newcommand{\noise}{\epsilon}
-\newcommand{\covObs}{\Sigma}
+\newcommand{\covNoise}{\Sigma}
+\newcommand{\meanVec}{m}
 \newcommand{\covMat}{C}
 \newcommand{\dimObs}{n}
 \newcommand{\dimPar}{d}
@@ -34,9 +37,17 @@ $$
 \newcommand{\misfit}{\Phi}
 \newcommand{\misfitReg}{\Phi_R}
 \newcommand{\misfitPost}{\Phi_{\pi}}
+\newcommand{\covPrior}{\covMat}
+\newcommand{\meanPrior}{\meanVec}
 \newcommand{\priorDens}{\pi_0}
 \newcommand{\postDens}{\pi}
 \newcommand{\normCst}{Z}
+\newcommand{\joint}{\overline{\pi}}
+\newcommand{\meanObs}{\meanVec^{\y}}
+\newcommand{\covObs}{\covMat^{\y}}
+\newcommand{\covCross}{\covMat^{\u \y}}
+\newcommand{\tcovCross}{\covMat^{\y \u}}
+\newcommand{\GaussProj}{\mathcal{P}_{\Gaussian}}
 $$
 </div>
 
@@ -74,9 +85,9 @@ between the data and the model prediction.
 ::: {.callout-note title="Goal 1: Least-squares minimization"}
 Define the **least squares model-data misfit function**
 $$
-\misfit(u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} := \frac{1}{2}(\yobs - \fwd(\u))^\top \covObs^{-1}(\yobs - \fwd(\u)),
+\misfit(u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} := \frac{1}{2}(\yobs - \fwd(\u))^\top \covNoise^{-1}(\yobs - \fwd(\u)),
 $$ {#eq-misfit}
-weighted by a positive definite matrix $\covObs$. The (nonlinear) least squares
+weighted by a positive definite matrix $\covNoise$. The (nonlinear) least squares
 minimization problem is then given by
 $$
 u_{\star} \in \text{argmin}_{u \in \parSpace} \ \misfit(\u).
@@ -95,7 +106,7 @@ respectively.
 ::: {.callout-note title="Goal 2: Tikhonov-regularized Least-squares minimization"}
 Define the **Tikhonov-regularized least squares function** by
 $$
-\misfitReg(\u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} + \frac{1}{2}\lVert \u - m\rVert^2_{\covMat}.
+\misfitReg(\u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} + \frac{1}{2}\lVert \u - \meanPrior\rVert^2_{\covPrior}.
 $$ {#eq-misfit-reg}
 The Tikhonov-regularized least squares optimization problem is given by
 $$
@@ -103,9 +114,9 @@ u_{\star} \in \text{argmin}_{u \in \parSpace} \misfitReg(\u).
 $$ {#eq-reg-ls-opt}
 :::
 The Tikhonov loss function balances the model fit to the data with the
-requirement to keep $\u$ "close" to $m$, where the relative weights of these
-objectives are determined by the (positive definite) covariances
-$\covObs$ and $\covMat$.
+requirement to keep $\u$ "close" to $\meanPrior$, where the relative weights
+of these objectives are determined by the (positive definite) covariances
+$\covNoise$ and $\covPrior$.
 
 ## Sampling
 We next consider the Bayesian formulation of the inverse problem, whereby
@@ -124,23 +135,23 @@ $$
 \begin{align}
 \y &= \fwd(\u) + \noise \newline
 \u &\sim \priorDens \newline
-\noise &\sim \Gaussian(0, \covObs),
+\noise &\sim \Gaussian(0, \covNoise),
 \end{align}
 $$ {#eq-bip}
-where $\priorDens$ is a prior distribution on the parameter, and $\covObs$
+where $\priorDens$ is a prior distribution on the parameter, and $\covNoise$
 is the fixed (known) covariance of the additive Gaussian noise. The EnKF
 methodology we will discuss is particularly well-suited to such additive
 Gaussian models with known noise covariance, but there has been work on
 relaxing these restrictions. The above model defines a joint distribution
-on $(\u,\y)$ via the product of densities
+$\joint$ on $(\u,\y)$ via the product of densities
 $$
-p(\u,\y) := p(\y \given \u) \priorDens(\u) = \Gaussian(\y \given \fwd(\u), \covObs)\priorDens(\u),
+p(\u,\y) := p(\y \given \u) \priorDens(\u) = \Gaussian(\y \given \fwd(\u), \covNoise)\priorDens(\u),
 $$ {#eq-joint-dens}
 with the posterior density given by Bayes' theorem
 $$
 \begin{align}
-\postDens(\u) &:= p(\u \given \y) = \frac{1}{\normCst}\Gaussian(\yobs \given \fwd(\u), \covObs)\priorDens(\u),
-&&\normCst := \int_{\parSpace} \Gaussian(\yobs \given \fwd(\u), \covObs)\priorDens(\u) d\u.
+\postDens(\u) &:= p(\u \given \yobs) = \frac{1}{\normCst}\Gaussian(\yobs \given \fwd(\u), \covNoise)\priorDens(\u),
+&&\normCst := \int_{\parSpace} \Gaussian(\yobs \given \fwd(\u), \covNoise)\priorDens(\u) d\u.
 \end{align}
 $$ {#eq-Bayes-thm}
 We omit the dependence on $\yobs$ in the notation $\postDens(\u)$ and $Z$.
@@ -156,7 +167,7 @@ where
 $$
 \misfitPost(\u) := -\log \postDens(\u)
 = -\log p(\y \given \u) - \log \priorDens(\u)
-= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covObs} - \log \priorDens(\u) + C,
+= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} - \log \priorDens(\u) + C,
 $$ {#eq-misfit-post}
 is the (unnormalized) negative log posterior density,
 up to an additive constant $C$ that is independent of $\u$.
@@ -166,8 +177,8 @@ We introduce the notation $\misfitPost(\u)$ in order to draw a connection with
 the optimization goals. Indeed, note that the log-likelihood term in
 @eq-misfit-post is precisely the least squares misfit function @eq-misfit
 (up to an additive constant). Moreover, if we choose Gaussian prior
-$\priorDens(\u) = \Gaussian(\u \given m, \covMat)$, then $\misfitPost(\u)$
-agrees with $\misfitReg(\u)$, up to an additive constant. We will explore
+$\priorDens(\u) = \Gaussian(\u \given \meanPrior, \covPrior)$, then $\misfitPost(\u)$
+agrees with $\misfitReg(\u)$ (again, up to an additive constant). We will explore
 certain algorithms that assume the prior is Gaussian, but in general we
 will allow $\priorDens$ to be non-Gaussian.
 
@@ -188,7 +199,53 @@ methods. We start in this post by focusing on the sampling problem; the
 optimization setting will be explored in future posts.
 
 # Joint Gaussian Approximation
+We start by introducing the notion of approximate conditioning
+using Gaussian distributions, a core idea underlying many Kalman
+methods. A slight extension of this notion yields the classic
+EnKF update.
 
+## Gaussian Projection
+Recall that we write $\joint$ to denote the joint distribution of
+$(\u,\y)$ under @eq-bip. In general, this distribution will be non-Gaussian,
+rendering the conditioning $u \given \yobs$ a challenging
+task. A simple idea is to consider approximating $\joint$ with
+a Gaussian, which is a distribution for which conditioning is easy.
+To this end, consider the approximation
+$$
+\begin{align}
+\GaussProj\joint \Def
+\Gaussian\left(
+\begin{bmatrix} \meanPrior \newline \meanObs \end{bmatrix},
+\begin{bmatrix} \covPrior & \covCross \newline
+                \tcovCross & \covObs \end{bmatrix}
+\right)
+\end{align}
+$$ {#eq-Gaussian-proj}
+where the means and covariances are simply given by the first two
+moments of $(\u, \y)$. In particular,
+$$
+\begin{align}
+&\meanPrior \Def \E[\u], &&\covPrior \Def \Cov[\u]
+\end{align}
+$$ {#eq-par-moments}
+
+are the moments of the $\u$-marginal, and
+$$
+\begin{align}
+&\meanObs \Def \E[\y], &&\covObs \Def \Cov[\y]
+\end{align}
+$$ {#eq-obs-moments}
+
+are the moments for the $\y$-marginal. Finally,
+$$
+\begin{align}
+&\covCross \Def \Cov[\u,\y], &&\tcovCross \Def [\covCross]^\top
+\end{align}
+$$ {#eq-cross-cov}
+
+is the cross-covariance between $\u$ and $\y$.
+Following [@meanField], we refer to $\GaussProj\joint$ as
+the Gaussian "projection" of $\joint$.
 
 # Appendix
 

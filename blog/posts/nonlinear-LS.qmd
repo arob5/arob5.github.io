@@ -242,6 +242,7 @@ where $y_k := y - \mathcal{G}(u_k) + G_k u_k$.
 
 # TODO
 - Show alternative form of Gauss-Newton update by applying Woodbury (should show connection to EnKF).
+- View G-N as line search method
 
 # References
 - Nonlinear Least Squares (neos Guide)
