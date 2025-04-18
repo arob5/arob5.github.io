@@ -51,6 +51,7 @@ $$
 \newcommand{\meanPost}{\meanVec_{\star}}
 \newcommand{\covPost}{\covMat_{\star}}
 \newcommand{\transport}{T}
+\newcommand{\nens}{J}
 $$
 </div>
 
@@ -386,6 +387,27 @@ The methods presented above do not yet constitute algorithms, as we have
 not specified how to compute the moments defining the Gaussian projection
 @eq-Gaussian-proj. By replacing the exact moments with Monte Carlo estimates,
 we obtain the following algorithms.
+
+::: {.callout-note title="Algorithm: Single Step EKI"}
+$$
+\begin{array}{ll}
+\textbf{Input:} & \text{Sample size } \nens \\
+\textbf{Output:} & \text{Approximate posterior samples } \{\u_{\star}^{(j)}\}_{j=1}^{\nens} \\
+\hline
+\textbf{1:} & \text{Sample prior: } &&\u^{(j)} \overset{\text{iid}}{\sim} \priorDens \\
+\textbf{2:} & \text{Sample likelihood: } &&\y^{(j)} \Def \fwd(\u^{(j)}) + \noise^{(j)}, \ \noise^{(j)} \overset{\text{iid}}{\sim} \Gaussian(0, \covNoise) \\
+\textbf{3:} & \text{Estimate moments: } &&\meanPrior, \covPrior, \meanObs, \covObs \\
+\textbf{4:} & \text{Transport samples: } &&\u_{\star}^{(j)} \Def \u^{(j)} + \covCross [\covObs]^{-1}(\yobs - \y^{(j)})
+\end{array}
+$$
+:::
+
+Other considerations:
+  - If prior is Gaussian, then no need to estimate m, C
+  - Reducing sampling bias in covariance estimate of Cy.
+  - Gaussian algorithm algorithm can be defined by returning conditional moments.
+  - Cite Higdon paper.
+
 
 # Generalizing to Iterative Algorithms
 

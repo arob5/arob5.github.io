@@ -291,6 +291,7 @@ window.Quarto = {
 \newcommand{\meanPost}{\meanVec_{\star}}
 \newcommand{\covPost}{\covMat_{\star}}
 \newcommand{\transport}{T}
+\newcommand{\nens}{J}
 \]</span></p>
 </div>
 <p>The ensemble Kalman filter (EnKF) is a well-established algorithm for state estimation in high-dimensional state space models. More recently, it has gained popularity as a general-purpose derivative-free tool for optimization and approximate posterior sampling; i.e., for the solution of inverse problems. The label <em>ensemble Kalman inversion (EKI)</em> is generally used to refer to the class of algorithms that adapt the EnKF methodology for such purposes. While these algorithms are typically quite simple – mostly relying on slight modifications of the standard EnKF update formula – there are quite a few subtleties required in designing and analyzing EKI methods. In particular, while much of the EKI literature is focused on optimization, small modifications of optimization-focused algorithms can be made to instead target the goal of posterior sampling. In a series of posts, we will walk through these subtleties, exploring the potential of the EnKF both as a derivative-free (approximate) optimizer and sampler. We start in this post by outlining the basic setup and goals, and then proceed to introduce a basic EnKF algorithm for approximate posterior sampling.</p>
@@ -485,7 +486,7 @@ Proof
 </div>
 </div>
 </div>
-<p>The map <span class="math inline">\(\transport(\cdot, \cdot)\)</span> is a deterministic function that <em>transports</em> samples from the joint Gaussian to its conditional distribution. Note that this map depends on the first two moments of <span class="math inline">\((\tilde{\u}, \tilde{\y})\)</span>.</p>
+<p>The map <span class="math inline">\(\transport(\cdot, \cdot)\)</span> is a deterministic function that <em>transports</em> samples from the joint Gaussian to its conditional distribution. Note that this map depends on the first two moments of <span class="math inline">\(\GaussProj\joint\)</span>.</p>
 <p>We next consider a slight adjustment to the Matheron update, which results in (potentially) non-Gaussian approximate posterior samples. This yields the classical EnKF update equation.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="EnKF Update: Conditional Simulation">
 <div class="callout-header d-flex align-content-center">
@@ -510,7 +511,7 @@ EnKF Update: Conditional Simulation
 \tag{17}\]</span></span></p>
 </div>
 </div>
-<p>Note that the difference between the two above algorithms is that the former samples <span class="math inline">\((u^\prime, \y^\prime)\)</span> from the Gaussian projection <span class="math inline">\(\GaussProj\joint\)</span>, while the latter samples from the true joint distribution <span class="math inline">\(\joint\)</span>. In both cases, the form of the transport map <span class="math inline">\(\transport\)</span> is derived from the Gaussian approximation <span class="math inline">\(\GaussProj\joint\)</span>. The EnKF update thus combines exact Monte Carlo sampling from the joint distribution with approximate conditioning motivated by a Gaussian ansatz. Since the samples <span class="math inline">\((u^\prime, \y^\prime)\)</span> are no longer Gaussian in general, then the approximate conditional samples <span class="math inline">\(\transport(u^\prime, \y^\prime)\)</span> can also be non-Gaussian. One might hope that this additional flexibility leads to an improved approximation.</p>
+<p>Note that the difference between the two above algorithms is that the former samples <span class="math inline">\((u^\prime, \y^\prime)\)</span> from the Gaussian projection <span class="math inline">\(\GaussProj\joint\)</span>, while the latter samples from the true joint distribution <span class="math inline">\(\joint\)</span>. In both cases, the form of the transport map <span class="math inline">\(\transport\)</span> is derived from the Gaussian approximation <span class="math inline">\(\GaussProj\joint\)</span>. The EnKF update thus combines exact Monte Carlo sampling from the joint distribution with approximate conditioning motivated by a Gaussian ansatz. Since the samples <span class="math inline">\((u^\prime, \y^\prime)\)</span> are no longer Gaussian in general, then the approximate conditional samples <span class="math inline">\(\transport(u^\prime, \y^\prime)\)</span> can also be non-Gaussian. One might hope that this additional flexibility leads to an improved approximation. We conclude this section by defining the Kalman gain, which forms the core of the Matheron transport map.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Kalman Gain">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -521,17 +522,42 @@ Kalman Gain
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The <strong>Kalman gain</strong> with respect to inverse problem in <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a> is defined as <span id="eq-Kalman-gain"><span class="math display">\[
+<p>The <strong>Kalman gain</strong> associated with the inverse problem in <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a> is defined as <span id="eq-Kalman-gain"><span class="math display">\[
 K := \covCross [\covObs]^{-1}.
-\tag{18}\]</span></span> The transport map <a href="#eq-Matheron-transport" class="quarto-xref">Equation&nbsp;16</a> can thus be written as <span id="eq-Matheron-transport-Kalman"><span class="math display">\[
+\tag{18}\]</span></span> The transport map in <a href="#eq-Matheron-transport" class="quarto-xref">Equation&nbsp;16</a> can thus be written as <span id="eq-Matheron-transport-Kalman"><span class="math display">\[
 \transport(\u^\prime, \y^\prime) = \u^\prime + K(\yobs - \y^\prime).
 \tag{19}\]</span></span></p>
 </div>
 </div>
+<p>We thus see that the transport map takes the prior sample <span class="math inline">\(\u^\prime\)</span> and adds a “correction” term based on the data. The correction is the linear map <span class="math inline">\(K\)</span> applied to the residual <span class="math inline">\(\yobs - \y^\prime\)</span> (i.e., the difference between the observed and predicted data).</p>
 </section>
 <section id="practical-algorithms" class="level2">
 <h2 class="anchored" data-anchor-id="practical-algorithms">Practical Algorithms</h2>
-<p>The methods presented above do not yet constitute algorithms, as we have not specified how to compute the moments defining the Gaussian projection <a href="#eq-Gaussian-proj" class="quarto-xref">Equation&nbsp;10</a>.</p>
+<p>The methods presented above do not yet constitute algorithms, as we have not specified how to compute the moments defining the Gaussian projection <a href="#eq-Gaussian-proj" class="quarto-xref">Equation&nbsp;10</a>. By replacing the exact moments with Monte Carlo estimates, we obtain the following algorithms.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Algorithm: Single Step EKI">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Algorithm: Single Step EKI
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math display">\[
+\begin{array}{ll}
+\textbf{Input:} &amp; \text{Sample size } \nens \\
+\textbf{Output:} &amp; \text{Approximate posterior samples } \{\u_{\star}^{(j)}\}_{j=1}^{\nens} \\
+\hline
+\textbf{1:} &amp; \text{Sample prior } &amp;&amp;\u^{(j)} \overset{\text{iid}}{\sim} \priorDens \\
+\textbf{2:} &amp; \text{Sample likelihood: } &amp;&amp;\y^{(j)} \Def \fwd(\u^{(j)}) + \noise^{(j)}, \ \noise^{(j)} \overset{\text{iid}}{\sim} \Gaussian(0, \covNoise) \\
+\textbf{3:} &amp; \text{Estimate moments: } &amp;&amp;\meanPrior, \covPrior, \meanObs, \covObs \\
+\textbf{3:} &amp; \text{Transport samples: } &amp;&amp;\u_{\star}^{(j)} \Def \u^{(j)} + \covCross [\covObs]^{-1}(\yobs - \y^{(j)})
+\end{array}
+\]</span></p>
+</div>
+</div>
+<p>Other considerations: - If prior is Gaussian, then no need to estimate m, C - Reducing sampling bias in covariance estimate of Cy.</p>
 </section>
 </section>
 <section id="generalizing-to-iterative-algorithms" class="level1">
