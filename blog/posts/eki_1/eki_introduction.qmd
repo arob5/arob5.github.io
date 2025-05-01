@@ -9,6 +9,10 @@ bibliography: eki_references.bib
 categories: [Inverse-Problem, Data-Assimilation, Optimization, Sampling, Computational Statistics, EKI]
 format:
   html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
     math:
       method: mathjax
 ---
@@ -39,6 +43,7 @@ $$
 \newcommand{\misfitPost}{\Phi_{\pi}}
 \newcommand{\covPrior}{\covMat}
 \newcommand{\meanPrior}{\meanVec}
+\newcommand{\dens}{\pi}
 \newcommand{\priorDens}{\pi_0}
 \newcommand{\postDens}{\pi}
 \newcommand{\normCst}{Z}
@@ -364,7 +369,7 @@ $(u^\prime, \y^\prime)$ are no longer Gaussian in general, then the approximate
 conditional samples $\transport(u^\prime, \y^\prime)$ can also be non-Gaussian.
 One might hope that this additional flexibility leads to an improved approximation.
 We conclude this section by defining the Kalman gain, which forms the core of
-the Matheron transport map.
+the Matheron transport map $\transport$.
 
 ::: {.callout-note title="Kalman Gain"}
 The **Kalman gain** associated with the inverse problem in @eq-bip is defined as
@@ -386,20 +391,44 @@ the observed and predicted data).
 The methods presented above do not yet constitute algorithms, as we have
 not specified how to compute the moments defining the Gaussian projection
 @eq-Gaussian-proj. By replacing the exact moments with Monte Carlo estimates,
-we obtain the following algorithms.
+we obtain an algorithm which we will refer to as *single-step ensemble
+Kalman inversion (EKI)*. Given samples,
+$\{u^{(j)}, \y^{(j)}\}_{j=1}^{\nens} \sim \joint$,
+we can estimate the required moments via the standard Monte Carlo estimates:
+$$
+\begin{align}
+&\meanPrior \Def \frac{1}{\nens} \sum_{j=1}^{\nens} \u^{(j)},
+&&\covPrior \Def \frac{1}{\nens-1} \sum_{j=1}^{\nens} (\u^{(j)}-\meanPrior)(\u^{(j)}-\meanPrior)^\top \newline
+&\meanObs \Def \frac{1}{\nens} \sum_{j=1}^{\nens} \y^{(j)},
+&&\covObs \Def \frac{1}{\nens-1} \sum_{j=1}^{\nens} (\y^{(j)}-\meanObs)(\y^{(j)}-\meanObs)^\top
+\end{align}
+$$ {#eq-empirical-moments}
 
-::: {.callout-note title="Algorithm: Single Step EKI"}
+$$
+\begin{equation}
+\covCross \Def \frac{1}{\nens-1} \sum_{j=1}^{\nens} (\u^{(j)}-\meanPrior)(\y^{(j)}-\meanObs)^\top
+\end{equation}
+$$
+
+Note that we utilize the same notation for the exact moments and their
+empirical estimates; the precise meaning of the notation will be made clear
+from context.
+
+::: {.algo-box .algorithm #alg-single-step-eki}
+**Algorithm: Single Step EKI**
 $$
 \begin{array}{ll}
 \textbf{Input:} & \text{Sample size } \nens \\
 \textbf{Output:} & \text{Approximate posterior samples } \{\u_{\star}^{(j)}\}_{j=1}^{\nens} \\
 \hline
-\textbf{1:} & \text{Sample prior: } &&\u^{(j)} \overset{\text{iid}}{\sim} \priorDens \\
+\textbf{1:} & \text{Sample prior: } &&\u^{(j)} \overset{\text{iid}}{\sim} \priorDens, \ j = 1, \dots, \nens \\
 \textbf{2:} & \text{Sample likelihood: } &&\y^{(j)} \Def \fwd(\u^{(j)}) + \noise^{(j)}, \ \noise^{(j)} \overset{\text{iid}}{\sim} \Gaussian(0, \covNoise) \\
 \textbf{3:} & \text{Estimate moments: } &&\meanPrior, \covPrior, \meanObs, \covObs \\
 \textbf{4:} & \text{Transport samples: } &&\u_{\star}^{(j)} \Def \u^{(j)} + \covCross [\covObs]^{-1}(\yobs - \y^{(j)})
 \end{array}
 $$
+
+The definition of the empirical moments is given in @eq-empirical-moments.
 :::
 
 Other considerations:
@@ -408,9 +437,166 @@ Other considerations:
   - Gaussian algorithm algorithm can be defined by returning conditional moments.
   - Cite Higdon paper.
 
-
 # Generalizing to Iterative Algorithms
+In the previous section, we developed an algorithm for approximate posterior
+sampling that essentially represents a single application of the EnKF
+update formula. Since this update stems from a Gaussian ansatz, we would
+expect its performance to degrade for highly nonlinear $\fwd$ or non-Gaussian
+$\priorDens$. One approach to deal with this issue is to break the problem
+into a sequence of easier problems. In particular, we will consider breaking
+the prior-to-posterior map $\priorDens \mapsto \postDens$ into a composition
+of maps
+$$
+\priorDens \mapsto \dens_1 \mapsto \cdots \mapsto \dens_K = \postDens.
+$$ {#dist-sequence}
 
+We will now apply the EnKF update $K$ times in order to track these intermediate
+distributions, and hopefully end up with a better approximation of the posterior.
+The intuition here is that the intermediate maps $\dens_k \mapsto \dens_{k+1}$
+should represent relatively smaller changes, and small changes may be
+more amenable to linear-Gaussian approximation.
+
+## Interpolating between probability densities
+There are many ways to
+interpolate between two probability distributions, but we will start by
+considering the following basic tempering schedule.
+
+::: {.callout-note title="Prior-to-Posterior Map in Finite Time"}
+Let $\priorDens(\u)$ and $\postDens(\u) = \frac{1}{\normCst}\tilde{\dens}(\u)$
+be two probability
+densities on $\parSpace$. For a positive integer $K$, define the sequence of
+densities $\dens_0, \dens_1, \dots, \dens_K$ recursively by
+
+$$
+\begin{align}
+\dens_{k+1}(\u) &:= \frac{1}{\normCst_{k+1}}\dens_k(\u)L(\u)^{1/K},
+&&\normCst_{k+1} := \int \dens_k(\u)L(\u)^{1/K} d\u,
+\end{align}
+$$ {#eq-tempering-sequence}
+
+for $k = 0, \dots, K-1$, where
+$$
+L(\u) \Def \frac{\tilde{\dens}(\u)}{\priorDens(\u)}
+$$ {#eq-dens-ratio}
+Then the final density satisfies $\dens_K = \postDens$.
+:::
+
+::: {.callout-note title="Proof" collapse=true}
+To start, note that the density ratio @eq-dens-ratio can be written as
+$$
+L(\u) = \frac{\tilde{\dens}(\u)}{\priorDens(\u)}
+= \frac{Z \postDens(\u)}{\priorDens(\u)}.
+$$
+
+We use this fact, and the recursion @eq-tempering-sequence to obtain
+$$
+\begin{align}
+\normCst_K
+&= \int \dens_{K-1}(\u)L(\u)^{1/K} d\u \\
+&= \int \dens_{0}(\u)L(\u)^{1/K} \prod_{k=1}^{K-1} \frac{L(\u)^{1/K}}{Z_k} d\u \\
+&= \frac{1}{\normCst_1 \cdots \normCst_{K-1}} \int \priorDens(\u)L(\u) d\u \\
+&= \frac{1}{\normCst_1 \cdots \normCst_{K-1}} \int \priorDens(\u)\frac{\normCst \postDens(\u)}{\priorDens(\u)} d\u \\
+&= \frac{\normCst}{\normCst_1 \cdots \normCst_{K-1}}  \int \postDens(\u) d\u \\
+&= \frac{\normCst}{\normCst_1 \cdots \normCst_{K-1}}.
+\end{align}
+$$
+
+The density recursion similarly yields
+$$
+\begin{align}
+\dens_K(\u)
+&= \frac{1}{\normCst_{K}}\dens_{K-1}(\u)L(\u)^{1/K} \\
+&= \frac{\normCst_1 \cdots \normCst_{K-1}}{\normCst} \priorDens(\u)\frac{L(\u)}{\normCst_1 \cdots \normCst_{K-1}} \\
+&= \frac{1}{\normCst} \priorDens(\u) L(\u) \\
+&= \postDens(\u),
+\end{align}
+$$
+where we have plugged in the expressions for $\normCst_K$ and
+$L(\u)$ derived above.
+□
+:::
+
+
+
+::: {.callout-note title="Prior-to-Posterior Map in Finite Time"}
+Let $\priorDens(\u)$ and $\postDens(\u) = \frac{1}{\normCst}$ be two probability
+densities on $\parSpace$. For a positive integer $K$, define the sequence of
+densities $\dens_0, \dens_1, \dots, \dens_K$ recursively by
+$$
+\begin{align}
+\dens_{k+1}(\Par) &:= \frac{1}{\normCst_{k+1}}\dens_k(\Par)\exp\left(-\frac{1}{K}\Phi(u)\right),
+&&\normCst_{k+1} := \int \dens_k(\Par)\exp\left(-\frac{1}{K}\Phi(\Par)\right) d\Par,
+\end{align}
+$$
+for $k = 0, \dots, K-1$. Then the final density satisfies $\dens_K = \postDens$,
+where $\postDens$ is defined in @bip.
+:::
+
+
+**Proof.** We first consider the normalizing constant at the final iteration:
+$$
+\begin{align}
+Z_K
+&= \int \pi_{K-1}(u)\exp\left(-\frac{1}{K}\Phi(u)\right) du \newline
+&= \int \pi_{0}(u)\frac{1}{Z_{K-1} \cdots Z_1}\exp\left(-\frac{1}{K}\Phi(u)\right)^K du \newline
+&= \frac{1}{Z_{K-1} \cdots Z_1} \int \pi_{0}(u)\exp\left(-\Phi(u)\right) du \newline
+&= \frac{Z}{Z_1 \cdots Z_{K-1}},
+\end{align}
+$$
+where the second equality simply iterates the recursion (29). Rearranging, we
+see that
+$$
+Z = \prod_{k=1}^{K} Z_k. \tag{30}
+$$
+
+We similarly
+iterate the recursion for $\pi_K$:
+$$
+\begin{align}
+\pi_K(u)
+&= \frac{1}{Z_K} \pi_{K-1}(u) \exp\left(-\frac{1}{K}\Phi(u)\right) \newline
+&= \frac{1}{Z_K Z_{K-1} \cdots Z_1} \pi_{0}(u) \exp\left(-\frac{1}{K}\Phi(u)\right)^K \newline
+&= \frac{1}{Z} \pi_{0}(u) \exp\left(-\Phi(u)\right) \newline
+&= \pi(u) \qquad\qquad\qquad\qquad\qquad \blacksquare
+\end{align}
+$$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+As noted above, the approximation algorithm summarized in (27) can be viewed as
+performing an iteration of the EnKF algorithm. In this section, we take this idea
+further by encoding the structure of the inverse problem (1) in a dynamical
+system. Once these artificial dynamics are introduced, we can then consider
+applying standard algorithms for Bayesian estimation of time-evolving systems
+(e.g., the EnKF) to solve the inverse problem. We emphasize that (1),
+the original problem we are trying to solve, is static. The dynamics we
+introduce here are purely artificial, introduced for the purpose of making
+a mathematical connection with the vast field of time-varying systems. This
+allows us to port methods that have demonstrated success in the time-varying
+domain to our current problem of interest.
+
+## Prior-to-Posterior Map in Finite Time
+We start by generically considering how to construct a sequence of probability
+distributions that maps from the prior $\pi_0$ to the posterior $\pi$ in
+a finite number of steps. We will find it convenient to write the likelihood
+with respect to the potential $\Phi(u)$ defined in (3), such that the
+posterior distribution solving (1) is given by
 
 
 
