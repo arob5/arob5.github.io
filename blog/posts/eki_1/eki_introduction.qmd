@@ -448,7 +448,7 @@ the prior-to-posterior map $\priorDens \mapsto \postDens$ into a composition
 of maps
 $$
 \priorDens \mapsto \dens_1 \mapsto \cdots \mapsto \dens_K = \postDens.
-$$ {#dist-sequence}
+$$ {#eq-dist-sequence}
 
 We will now apply the EnKF update $K$ times in order to track these intermediate
 distributions, and hopefully end up with a better approximation of the posterior.
@@ -457,11 +457,13 @@ should represent relatively smaller changes, and small changes may be
 more amenable to linear-Gaussian approximation.
 
 ## Interpolating between probability densities
-There are many ways to
-interpolate between two probability distributions, but we will start by
-considering the following basic tempering schedule.
+There are many ways to construct the sequence @eq-dist-sequence; i.e.,
+to interpolate between two probability distributions $\priorDens$ and
+$\postDens$. We will start by considering the following basic tempering schedule.
+We start with a generic result for two arbitrary densities, and then specialize
+to our particular setting.
 
-::: {.callout-note title="Prior-to-Posterior Map in Finite Time"}
+::: {.callout-note title="Interpolating between two densities"}
 Let $\priorDens(\u)$ and $\postDens(\u) = \frac{1}{\normCst}\tilde{\dens}(\u)$
 be two probability
 densities on $\parSpace$. For a positive integer $K$, define the sequence of
@@ -476,7 +478,7 @@ $$ {#eq-tempering-sequence}
 
 for $k = 0, \dots, K-1$, where
 $$
-L(\u) \Def \frac{\tilde{\dens}(\u)}{\priorDens(\u)}
+L(\u) \Def \frac{\tilde{\dens}(\u)}{\priorDens(\u)}.
 $$ {#eq-dens-ratio}
 Then the final density satisfies $\dens_K = \postDens$.
 :::
@@ -516,60 +518,83 @@ $L(\u)$ derived above.
 □
 :::
 
-
+The above result constructs a sequence between two arbitrary densities
+$\priorDens$ and $\postDens$. If we choose these to be the prior and posterior
+distributions, then we obtain a prior-to-posterior map as a corollary.
 
 ::: {.callout-note title="Prior-to-Posterior Map in Finite Time"}
-Let $\priorDens(\u)$ and $\postDens(\u) = \frac{1}{\normCst}$ be two probability
-densities on $\parSpace$. For a positive integer $K$, define the sequence of
-densities $\dens_0, \dens_1, \dots, \dens_K$ recursively by
+Consider a Bayesian joint distribution $p(\u, \y) = \priorDens(\u)p(\y \given \u)$
+with posterior $\postDens(\u) \Def \frac{1}{\normCst} \priorDens(\u) p(\yobs \given \u)$
+where $\normCst = p(\y)$.
+Then the sequence $\dens_0, \dens_1, \dots, \dens_K$ defined by
 $$
 \begin{align}
-\dens_{k+1}(\Par) &:= \frac{1}{\normCst_{k+1}}\dens_k(\Par)\exp\left(-\frac{1}{K}\Phi(u)\right),
-&&\normCst_{k+1} := \int \dens_k(\Par)\exp\left(-\frac{1}{K}\Phi(\Par)\right) d\Par,
+\dens_{k+1}(\u) &:= \frac{1}{\normCst_{k+1}}\dens_k(\u)p(\yobs \given \u)^{1/K},
+&&\normCst_{k+1} := \int \dens_k(\u)p(\yobs \given \u)^{1/K} d\u,
 \end{align}
-$$
-for $k = 0, \dots, K-1$. Then the final density satisfies $\dens_K = \postDens$,
-where $\postDens$ is defined in @bip.
+$$ {#eq-prior-to-post}
+for $k = 0, \dots, K-1$, satisfies $\dens_{K} = \postDens$.
 :::
 
+::: {.callout-note title="Proof" collapse=true}
+This is a special case of @eq-tempering-sequence where
+$\tilde{\postDens}(\u) = \priorDens(\u)p(\yobs \given \u)$.
+Thus, the density ratio simplifies to
+$$
+L(\u) = \frac{\priorDens(\u)p(\yobs \given \u)}{\priorDens(\u)} = p(\yobs \given \u).
+$$
+□
+:::
 
-**Proof.** We first consider the normalizing constant at the final iteration:
+We conclude this section with another corollary that specializes the result
+even further to the particular Bayesian inverse problem @eq-bip.
+
+::: {.callout-note title="Prior-to-Posterior Map with Gaussian Likelihood"}
+Consider the particular Bayesian joint distribution $p(\u, \y)$ defined by
+the model in @eq-bip. Then the updates in @eq-prior-to-post take the particular
+form
 $$
 \begin{align}
-Z_K
-&= \int \pi_{K-1}(u)\exp\left(-\frac{1}{K}\Phi(u)\right) du \newline
-&= \int \pi_{0}(u)\frac{1}{Z_{K-1} \cdots Z_1}\exp\left(-\frac{1}{K}\Phi(u)\right)^K du \newline
-&= \frac{1}{Z_{K-1} \cdots Z_1} \int \pi_{0}(u)\exp\left(-\Phi(u)\right) du \newline
-&= \frac{Z}{Z_1 \cdots Z_{K-1}},
+\dens_{k+1}(\u) &:= \frac{1}{\normCst_{k+1}}\dens_k(\u)\Gaussian(\yobs \given \fwd(\u), K\covNoise),
+&&\normCst_{k+1} := \int \dens_k(\u)\Gaussian(\yobs \given \fwd(\u), K\covNoise) d\u.
 \end{align}
-$$
-where the second equality simply iterates the recursion (29). Rearranging, we
-see that
-$$
-Z = \prod_{k=1}^{K} Z_k. \tag{30}
-$$
+$$ {#eq-prior-to-post-bip}
 
-We similarly
-iterate the recursion for $\pi_K$:
+This update can equivalently be written as
 $$
 \begin{align}
-\pi_K(u)
-&= \frac{1}{Z_K} \pi_{K-1}(u) \exp\left(-\frac{1}{K}\Phi(u)\right) \newline
-&= \frac{1}{Z_K Z_{K-1} \cdots Z_1} \pi_{0}(u) \exp\left(-\frac{1}{K}\Phi(u)\right)^K \newline
-&= \frac{1}{Z} \pi_{0}(u) \exp\left(-\Phi(u)\right) \newline
-&= \pi(u) \qquad\qquad\qquad\qquad\qquad \blacksquare
+\dens_{k+1}(\u) &:= \frac{1}{\normCst_{k+1}}\dens_k(\u)\exp\left\{-\frac{1}{K}\misfit(\u) \right\},
+&&\normCst_{k+1} := \int \dens_k(\u)\exp\left\{-\frac{1}{K}\misfit(\u) \right\} d\u,
+\end{align}
+$$ {#eq-prior-to-post-bip2}
+where $\misfit(\u)$ is defined in @eq-misfit.
+In either case, $\dens_{K} = \postDens$.
+:::
+
+::: {.callout-note title="Proof" collapse=true}
+Recall the Gaussian density
+$$
+\begin{align}
+&\Gaussian(\y \given \fwd(\u), \covNoise) =
+\text{det}(2\pi\covNoise)^{-1/2} \exp\left\{-\misfit(\u) \right\},
+&&\misfit(\u) = \frac{1}{2} \lVert \y - \fwd(\u)\rVert^2_{\covNoise}.
 \end{align}
 $$
 
-
-
-
-
-
-
-
-
-
+Raising this density to the power $K^{-1}$ thus gives
+$$
+\begin{align}
+\Gaussian(\y \given \fwd(\u), \covNoise)^{1/K}
+&= \text{det}(2\pi K \covNoise)^{-1/2} \exp\left\{-\frac{1}{K}\misfit(\u) \right\}, \\
+&= \text{det}(2\pi K \covNoise)^{-1/2} \exp\left\{-\frac{1}{2} \lVert \y - \fwd(\u)\rVert^2_{K \covNoise} \right\} \\
+&= \Gaussian(\yobs \given \fwd(\u), K \covNoise).
+\end{align}
+$$
+The two updates @eq-prior-to-post-bip thus follow, and differ only in whether
+we treat the determinant term as part of the normalizing constant $\normCst$
+or the likelihood.
+□
+:::
 
 
 

@@ -572,20 +572,20 @@ K := \covCross [\covObs]^{-1}.
 </section>
 <section id="generalizing-to-iterative-algorithms" class="level1" data-number="3">
 <h1 data-number="3"><span class="header-section-number">3</span> Generalizing to Iterative Algorithms</h1>
-<p>In the previous section, we developed an algorithm for approximate posterior sampling that essentially represents a single application of the EnKF update formula. Since this update stems from a Gaussian ansatz, we would expect its performance to degrade for highly nonlinear <span class="math inline">\(\fwd\)</span> or non-Gaussian <span class="math inline">\(\priorDens\)</span>. One approach to deal with this issue is to break the problem into a sequence of easier problems. In particular, we will consider breaking the prior-to-posterior map <span class="math inline">\(\priorDens \mapsto \postDens\)</span> into a composition of maps <span class="math display">\[
+<p>In the previous section, we developed an algorithm for approximate posterior sampling that essentially represents a single application of the EnKF update formula. Since this update stems from a Gaussian ansatz, we would expect its performance to degrade for highly nonlinear <span class="math inline">\(\fwd\)</span> or non-Gaussian <span class="math inline">\(\priorDens\)</span>. One approach to deal with this issue is to break the problem into a sequence of easier problems. In particular, we will consider breaking the prior-to-posterior map <span class="math inline">\(\priorDens \mapsto \postDens\)</span> into a composition of maps <span id="eq-dist-sequence"><span class="math display">\[
 \priorDens \mapsto \dens_1 \mapsto \cdots \mapsto \dens_K = \postDens.
-\]</span> {#dist-sequence}</p>
+\tag{21}\]</span></span></p>
 <p>We will now apply the EnKF update <span class="math inline">\(K\)</span> times in order to track these intermediate distributions, and hopefully end up with a better approximation of the posterior. The intuition here is that the intermediate maps <span class="math inline">\(\dens_k \mapsto \dens_{k+1}\)</span> should represent relatively smaller changes, and small changes may be more amenable to linear-Gaussian approximation.</p>
 <section id="interpolating-between-probability-densities" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="interpolating-between-probability-densities"><span class="header-section-number">3.1</span> Interpolating between probability densities</h2>
-<p>There are many ways to interpolate between two probability distributions, but we will start by considering the following basic tempering schedule.</p>
-<div class="callout callout-style-default callout-note callout-titled" title="Prior-to-Posterior Map in Finite Time">
+<p>There are many ways to construct the sequence <a href="#eq-dist-sequence" class="quarto-xref">Equation&nbsp;21</a>; i.e., to interpolate between two probability distributions <span class="math inline">\(\priorDens\)</span> and <span class="math inline">\(\postDens\)</span>. We will start by considering the following basic tempering schedule. We start with a generic result for two arbitrary densities, and then specialize to our particular setting.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Interpolating between two densities">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-Prior-to-Posterior Map in Finite Time
+Interpolating between two densities
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -595,10 +595,10 @@ Prior-to-Posterior Map in Finite Time
 \dens_{k+1}(\u) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\u)L(\u)^{1/K},
 &amp;&amp;\normCst_{k+1} := \int \dens_k(\u)L(\u)^{1/K} d\u,
 \end{align}
-\tag{21}\]</span></span></p>
+\tag{22}\]</span></span></p>
 <p>for <span class="math inline">\(k = 0, \dots, K-1\)</span>, where <span id="eq-dens-ratio"><span class="math display">\[
-L(\u) \Def \frac{\tilde{\dens}(\u)}{\priorDens(\u)}
-\tag{22}\]</span></span> Then the final density satisfies <span class="math inline">\(\dens_K = \postDens\)</span>.</p>
+L(\u) \Def \frac{\tilde{\dens}(\u)}{\priorDens(\u)}.
+\tag{23}\]</span></span> Then the final density satisfies <span class="math inline">\(\dens_K = \postDens\)</span>.</p>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled" title="Proof">
@@ -613,11 +613,11 @@ Proof
 </div>
 <div id="callout-10" class="callout-10-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>To start, note that the density ratio <span class="citation" data-cites="dens-ratio">(<a href="#ref-dens-ratio" role="doc-biblioref"><strong>dens-ratio?</strong></a>)</span> can be written as <span class="math display">\[
+<p>To start, note that the density ratio <a href="#eq-dens-ratio" class="quarto-xref">Equation&nbsp;23</a> can be written as <span class="math display">\[
 L(\u) = \frac{\tilde{\dens}(\u)}{\priorDens(\u)}
 = \frac{Z \postDens(\u)}{\priorDens(\u)}.
 \]</span></p>
-<p>We use this fact, and the recursion <span class="citation" data-cites="tempering-sequence">(<a href="#ref-tempering-sequence" role="doc-biblioref"><strong>tempering-sequence?</strong></a>)</span> to obtain <span class="math display">\[
+<p>We use this fact, and the recursion <a href="#eq-tempering-sequence" class="quarto-xref">Equation&nbsp;22</a> to obtain <span class="math display">\[
 \begin{align}
 \normCst_K
 &amp;= \int \dens_{K-1}(\u)L(\u)^{1/K} d\u \\
@@ -640,6 +640,7 @@ L(\u) = \frac{\tilde{\dens}(\u)}{\priorDens(\u)}
 </div>
 </div>
 </div>
+<p>The above result constructs a sequence between two arbitrary densities <span class="math inline">\(\priorDens\)</span> and <span class="math inline">\(\postDens\)</span>. If we choose these to be the prior and posterior distributions, then we obtain a prior-to-posterior map as a corollary.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Prior-to-Posterior Map in Finite Time">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -650,34 +651,83 @@ Prior-to-Posterior Map in Finite Time
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Let <span class="math inline">\(\priorDens(\u)\)</span> and <span class="math inline">\(\postDens(\u) = \frac{1}{\normCst}\)</span> be two probability densities on <span class="math inline">\(\parSpace\)</span>. For a positive integer <span class="math inline">\(K\)</span>, define the sequence of densities <span class="math inline">\(\dens_0, \dens_1, \dots, \dens_K\)</span> recursively by <span class="math display">\[
+<p>Consider a Bayesian joint distribution <span class="math inline">\(p(\u, \y) = \priorDens(\u)p(\y \given \u)\)</span> with posterior <span class="math inline">\(\postDens(\u) \Def \frac{1}{\normCst} \priorDens(\u) p(\yobs \given \u)\)</span> where <span class="math inline">\(\normCst = p(\y)\)</span>. Then the sequence <span class="math inline">\(\dens_0, \dens_1, \dots, \dens_K\)</span> defined by <span id="eq-prior-to-post"><span class="math display">\[
 \begin{align}
-\dens_{k+1}(\Par) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\Par)\exp\left(-\frac{1}{K}\Phi(u)\right),
-&amp;&amp;\normCst_{k+1} := \int \dens_k(\Par)\exp\left(-\frac{1}{K}\Phi(\Par)\right) d\Par,
+\dens_{k+1}(\u) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\u)p(\yobs \given \u)^{1/K},
+&amp;&amp;\normCst_{k+1} := \int \dens_k(\u)p(\yobs \given \u)^{1/K} d\u,
 \end{align}
-\]</span> for <span class="math inline">\(k = 0, \dots, K-1\)</span>. Then the final density satisfies <span class="math inline">\(\dens_K = \postDens\)</span>, where <span class="math inline">\(\postDens\)</span> is defined in <span class="citation" data-cites="bip">(<a href="#ref-bip" role="doc-biblioref"><strong>bip?</strong></a>)</span>.</p>
+\tag{24}\]</span></span> for <span class="math inline">\(k = 0, \dots, K-1\)</span>, satisfies <span class="math inline">\(\dens_{K} = \postDens\)</span>.</p>
 </div>
 </div>
-<p><strong>Proof.</strong> We first consider the normalizing constant at the final iteration: <span class="math display">\[
+<div class="callout callout-style-default callout-note callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Proof
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>This is a special case of <a href="#eq-tempering-sequence" class="quarto-xref">Equation&nbsp;22</a> where <span class="math inline">\(\tilde{\postDens}(\u) = \priorDens(\u)p(\yobs \given \u)\)</span>. Thus, the density ratio simplifies to <span class="math display">\[
+L(\u) = \frac{\priorDens(\u)p(\yobs \given \u)}{\priorDens(\u)} = p(\yobs \given \u).
+\]</span> □</p>
+</div>
+</div>
+</div>
+<p>We conclude this section with another corollary that specializes the result even further to the particular Bayesian inverse problem <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Prior-to-Posterior Map with Gaussian Likelihood">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Prior-to-Posterior Map with Gaussian Likelihood
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Consider the particular Bayesian joint distribution <span class="math inline">\(p(\u, \y)\)</span> defined by the model in <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>. Then the updates in <a href="#eq-prior-to-post" class="quarto-xref">Equation&nbsp;24</a> take the particular form <span id="eq-prior-to-post-bip"><span class="math display">\[
 \begin{align}
-Z_K
-&amp;= \int \pi_{K-1}(u)\exp\left(-\frac{1}{K}\Phi(u)\right) du \newline
-&amp;= \int \pi_{0}(u)\frac{1}{Z_{K-1} \cdots Z_1}\exp\left(-\frac{1}{K}\Phi(u)\right)^K du \newline
-&amp;= \frac{1}{Z_{K-1} \cdots Z_1} \int \pi_{0}(u)\exp\left(-\Phi(u)\right) du \newline
-&amp;= \frac{Z}{Z_1 \cdots Z_{K-1}},
+\dens_{k+1}(\u) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\u)\Gaussian(\yobs \given \fwd(\u), K\covNoise),
+&amp;&amp;\normCst_{k+1} := \int \dens_k(\u)\Gaussian(\yobs \given \fwd(\u), K\covNoise) d\u,
 \end{align}
-\]</span> where the second equality simply iterates the recursion (29). Rearranging, we see that <span class="math display">\[
-Z = \prod_{k=1}^{K} Z_k. \tag{30}
-\]</span></p>
-<p>We similarly iterate the recursion for <span class="math inline">\(\pi_K\)</span>: <span class="math display">\[
+\tag{25}\]</span></span></p>
+<p>This update can equivalently be written as <span id="eq-prior-to-post-bip2"><span class="math display">\[
 \begin{align}
-\pi_K(u)
-&amp;= \frac{1}{Z_K} \pi_{K-1}(u) \exp\left(-\frac{1}{K}\Phi(u)\right) \newline
-&amp;= \frac{1}{Z_K Z_{K-1} \cdots Z_1} \pi_{0}(u) \exp\left(-\frac{1}{K}\Phi(u)\right)^K \newline
-&amp;= \frac{1}{Z} \pi_{0}(u) \exp\left(-\Phi(u)\right) \newline
-&amp;= \pi(u) \qquad\qquad\qquad\qquad\qquad \blacksquare
+\dens_{k+1}(\u) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\u)\exp\left\{-\frac{1}{K}\misfit(\u) \right\},
+&amp;&amp;\normCst_{k+1} := \int \dens_k(\u)\exp\left\{-\frac{1}{K}\misfit(\u) \right\} d\u,
 \end{align}
-\]</span></p>
+\tag{26}\]</span></span> where <span class="math inline">\(\misfit(\u)\)</span> is defined in <a href="#eq-misfit" class="quarto-xref">Equation&nbsp;1</a>. In either case, <span class="math inline">\(\dens_{K} = \postDens\)</span>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Proof
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Recall the Gaussian density <span class="math display">\[
+\Gaussian(\y \given \fwd(\u), \covObs) =
+\text{det}(2\pi\covObs)^{-1/2} \exp\left\{-\misfit(\u) \right\},
+\]</span> where <span class="math inline">\(\misfit(\u) = \frac{1}{2} \lVert \y - \fwd(\u)\rVert^2_{\covObs}\)</span>. Thus, <span class="math display">\[
+\begin{align}
+\Gaussian(\y \given \fwd(\u), \covObs)^{1/K}
+&amp;= \text{det}(2\piK\covObs)^{-1/2} \exp\left\{-\frac{1}{K}\misfit(\u) \right\}, \\
+&amp;= \text{det}(2\piK\covObs)^{-1/2} \exp\left\{-\frac{1}{2} \lVert \y - \fwd(\u)\rVert^2_{K\covObs} \right\} \\
+&amp;= \Gaussian(\yobs \given \fwd(\u), K\covNoise).
+\end{align}
+\]</span> The two updates <a href="#eq-prior-to-post-bip" class="quarto-xref">Equation&nbsp;25</a> thus follow, and differ only in whether we treat the determinant term as part of the normalizing constant <span class="math inline">\(\normCst\)</span> or the likelihood. □</p>
+</div>
+</div>
+</div>
 <p>As noted above, the approximation algorithm summarized in (27) can be viewed as performing an iteration of the EnKF algorithm. In this section, we take this idea further by encoding the structure of the inverse problem (1) in a dynamical system. Once these artificial dynamics are introduced, we can then consider applying standard algorithms for Bayesian estimation of time-evolving systems (e.g., the EnKF) to solve the inverse problem. We emphasize that (1), the original problem we are trying to solve, is static. The dynamics we introduce here are purely artificial, introduced for the purpose of making a mathematical connection with the vast field of time-varying systems. This allows us to port methods that have demonstrated success in the time-varying domain to our current problem of interest.</p>
 </section>
 <section id="prior-to-posterior-map-in-finite-time" class="level2" data-number="3.2">
