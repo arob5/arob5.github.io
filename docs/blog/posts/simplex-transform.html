@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-02-15">
-<meta name="description" content="I discuss the generic problem of approximating the distribution resulting from a non-linear transformation of a Gaussian random variable, and then show how this leads to extensions of the Kalman filter which yield approximate filtering algorithms in the non-linear setting.">
+<meta name="dcterms.date" content="2025-03-07">
+<meta name="description" content="Walking through Stan’s parameter transformation for parameters that sum to one.">
 
-<title>Approximating Nonlinear Functions of Gaussians – Andrew G. Roberts</title>
+<title>Transforming Simplex-values Parameters – Andrew G. Roberts</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -139,15 +139,14 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Approximating Nonlinear Functions of Gaussians</h1>
-            <p class="subtitle lead">And the Extended Kalman Filter</p>
+      <h1 class="title">Transforming Simplex-values Parameters</h1>
                   <div>
         <div class="description">
-          I discuss the generic problem of approximating the distribution resulting from a non-linear transformation of a Gaussian random variable, and then show how this leads to extensions of the Kalman filter which yield approximate filtering algorithms in the non-linear setting.
+          Walking through Stan’s parameter transformation for parameters that sum to one.
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">Data-Assimilation</div>
+                <div class="quarto-category">Statistics</div>
               </div>
                   </div>
   </div>
@@ -159,7 +158,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">February 15, 2024</p>
+        <p class="date">March 7, 2025</p>
       </div>
     </div>
     
@@ -175,17 +174,14 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#motivating-the-generic-problem" id="toc-motivating-the-generic-problem" class="nav-link active" data-scroll-target="#motivating-the-generic-problem">Motivating the Generic Problem</a>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#the-inverse-transformation" id="toc-the-inverse-transformation" class="nav-link" data-scroll-target="#the-inverse-transformation">The Inverse Transformation</a>
   <ul class="collapse">
-  <li><a href="#forecast" id="toc-forecast" class="nav-link" data-scroll-target="#forecast">Forecast</a></li>
-  <li><a href="#analysis" id="toc-analysis" class="nav-link" data-scroll-target="#analysis">Analysis</a></li>
+  <li><a href="#defining-phi_1-1-stick-breaking-procedure" id="toc-defining-phi_1-1-stick-breaking-procedure" class="nav-link" data-scroll-target="#defining-phi_1-1-stick-breaking-procedure">Defining <span class="math inline">\(\phi_1^{-1}\)</span>: Stick-breaking procedure</a></li>
+  <li><a href="#defining-phi_2-1-logit-transformation" id="toc-defining-phi_2-1-logit-transformation" class="nav-link" data-scroll-target="#defining-phi_2-1-logit-transformation">Defining <span class="math inline">\(\phi_2^{-1}\)</span>: Logit transformation</a></li>
+  <li><a href="#density-of-y" id="toc-density-of-y" class="nav-link" data-scroll-target="#density-of-y">Density of <span class="math inline">\(y\)</span></a></li>
   </ul></li>
-  <li><a href="#the-generic-problem-setting" id="toc-the-generic-problem-setting" class="nav-link" data-scroll-target="#the-generic-problem-setting">The Generic Problem Setting</a></li>
-  <li><a href="#taylor-series-approximations" id="toc-taylor-series-approximations" class="nav-link" data-scroll-target="#taylor-series-approximations">Taylor Series Approximations</a>
-  <ul class="collapse">
-  <li><a href="#the-generic-method" id="toc-the-generic-method" class="nav-link" data-scroll-target="#the-generic-method">The Generic Method</a></li>
-  <li><a href="#application-the-extended-kalman-filter" id="toc-application-the-extended-kalman-filter" class="nav-link" data-scroll-target="#application-the-extended-kalman-filter">Application: The Extended Kalman Filter</a></li>
-  </ul></li>
+  <li><a href="#the-forward-transformation" id="toc-the-forward-transformation" class="nav-link" data-scroll-target="#the-forward-transformation">The Forward Transformation</a></li>
   </ul>
 </nav>
     </div>
@@ -196,137 +192,110 @@ window.Quarto = {
 
 
 
-<p>In a previous <a href="https://arob5.github.io/blog/2024/02/15/Kalman-Filter/">post</a>, I discussed the Kalman filter (KF), which provides the closed-form mean and covariance recursions characterizing the Gaussian filtering distributions for linear Gaussian hidden Markov models. In this post, we retain the Gaussian noise assumption, but generalize to nonlinear dynamics and observation operators. Our primary focus is the additive noise model <span class="math display">\[
-\begin{align}
-v_{k+1} &amp;= g(v_k) + \eta_{k+1} &amp;&amp; \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{1} \newline
-y_{k+1} &amp;= h(v_{k+1}) + \epsilon_{k+1}, &amp;&amp; \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
-v_0 &amp;\sim \mathcal{N}(m_0, C_0), &amp;&amp;\{\epsilon_k\} \perp \{\eta_k\} \perp v_0
-\end{align}
-\]</span> but we will also touch on the case where the noise is also subject to nonlinear mapping; i.e.,</p>
-<p><span class="math display">\[
-\begin{align}
-v_{k+1} &amp;= g(v_k, \eta_{k+1}) &amp;&amp; \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{2} \newline
-y_{k+1} &amp;= h(v_{k+1}, \epsilon_{k+1}) &amp;&amp; \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
-v_0 &amp;\sim \mathcal{N}(m_0, C_0), &amp;&amp;\{\epsilon_k\} \perp \{\eta_k\} \perp v_0
-\end{align}
-\]</span></p>
-<p>Note even this more general formulation is still a special case of the generic Bayesian filtering problem, since we are restricting to the setting with Gaussian noise and a Gaussian initial condition.</p>
-<p>Let <span class="math inline">\(Y_k := \{y_1, \dots, y_k\}\)</span> denote the set of observations up through time step <span class="math inline">\(k\)</span>. We seek to characterize the filtering distributions <span class="math inline">\(v_k|Y_k\)</span>, and update them in an online fashion as more data arrives. I will denote the density of <span class="math inline">\(v_k|Y_k\)</span> by <span class="math inline">\(\pi_k(v_k) = p(v_k|Y_k)\)</span>. In the linear Gaussian setting these distributions are Gaussian, and can be computed analytically. The introduction of nonlinearity renders the filtering distributions non-Gaussian and not analytically tractable in general, motivating the need for approximations. Certain methods, such as particle filters, are designed to handle the situation where the departure from Gaussianity is severe. The methods discussed in this post, however, are applicable when Gaussian approximations are still reasonable. Given this, the algorithms discussed here all proceed by approximating the current filtering distribution by a Gaussian <span class="math inline">\(v_k|Y_k \sim \mathcal{N}(m_k, C_k)\)</span>. The algorithms differ in the approximations they employ to deal with the nonlinear functions <span class="math inline">\(h\)</span> and <span class="math inline">\(g\)</span> in order to arrive at a Gaussian approximation of the subsequent filtering distribution <span class="math inline">\(v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})\)</span>.</p>
-<p>There are many methods that fit into this general Gaussian approximation framework. In this post we focus on methods rooted in <em>linearization</em> of the nonlinear functions. Alternative approaches employ quadrature-based (e.g., the unscented Kalman filter) or Monte Carlo (e.g., the ensemble Kalman filter) approximations. Although the motivation stems from the filtering problem, we will focus mostly on the underlying fundamental problem here: approximating the distribution of a nonlinear function of a Gaussian random variable. The next section illustrates how this problem arises in the filtering context.</p>
-<section id="motivating-the-generic-problem" class="level2">
-<h2 class="anchored" data-anchor-id="motivating-the-generic-problem">Motivating the Generic Problem</h2>
-<p>We recall from the <a href="https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/">post</a> on Bayesian filtering that the map <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span> naturally decomposes into two steps: the forecast and analysis steps. We assume here the Gaussian approximation <span class="math inline">\(v_k := v_k|Y_k \sim \mathcal{N}(m_k, C_k)\)</span> has been invoked and consider approximating the map <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span>.</p>
-<section id="forecast" class="level3">
-<h3 class="anchored" data-anchor-id="forecast">Forecast</h3>
-<p>The forecast distribution <span class="math inline">\(\hat{\pi}_{k+1}(v_{k+1}) := p(v_{k+1}|Y_k)\)</span> is the distribution implied by feeding <span class="math inline">\(\pi_k\)</span> through the stochastic dynamics model. In the additive noise case (1), we observe that this comes down to approximating the distribution of the random variable <span class="math display">\[
-g(v_k) + \eta_{k+1} , \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{3}
-\]</span> However, since we will be invoking a Gaussian approximation <span class="math inline">\(g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>, in addition to the assumption that <span class="math inline">\(v_k\)</span> and <span class="math inline">\(\eta_{k+1}\)</span> are independent, then we can just focus our attention on the <span class="math inline">\(g(v_k)\)</span> term. Due to independence, once we obtain the approximation <span class="math inline">\(g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>, then <span class="math inline">\(g(v_k) + \eta_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1} + Q)\)</span> is immediate.</p>
-<p>In the non-additive noise case, the problem similarly comes down to approximating the distribution <span class="math display">\[
-g(v_k, \eta_{k+1}), \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{4}
-\]</span> Again, due to the independence assumptions we have that <span class="math inline">\((v_k, \eta_{k+1})\)</span> are jointly distributed <span class="math display">\[
-\begin{align}
-\begin{bmatrix} v_k \newline \eta_{k+1} \end{bmatrix}
-\sim \mathcal{N}\left(\begin{bmatrix} m_k \newline 0 \end{bmatrix},
-  \begin{bmatrix} C_k &amp; 0 \newline 0 &amp; Q \end{bmatrix} \right).
-\end{align}
-\]</span></p>
-<p>Thus, this situation also reduces to approximating the distribution of a nonlinear map of a Gaussian; in this case, the map <span class="math inline">\(g(\tilde{v}_k)\)</span>, where <span class="math inline">\(\tilde{v}_k := (v_k, \eta_{k+1})^\top\)</span> is the Gaussian input.</p>
+<p>In this post we consider a <span class="math inline">\(d\)</span>-dimensional random vector <span class="math inline">\(x\)</span> that is constrained to lie in the unit simplex, <span class="math display">\[
+\Delta_d := \left\{x \in \mathbb{R}^d : x_j \geq 0, \sum_{j=1}^{d} x_j = 1 \right\}. \tag{1}
+\]</span> In words, the <span class="math inline">\(d\)</span> values <span class="math inline">\(x_1, \dots, x_d\)</span> must be nonnegative and sum to one. Performing statistical inference with respect to a parameter <span class="math inline">\(x \in \Delta_d\)</span> can be tricky; a common solution is to consider an invertible transformation <span class="math display">\[
+y = \phi(x) \tag{2}
+\]</span> such that <span class="math inline">\(y\)</span> is unconstrained. Inference can then be performed with respect to <span class="math inline">\(y\)</span> and we can transform back using <span class="math inline">\(\phi^{-1}\)</span> afterwards. This is the approach used by <a href="https://mc-stan.org/docs/reference-manual/transforms.html">Stan</a> for all constrained variables. In this post we walk through the transformation <span class="math inline">\(\phi\)</span> Stan uses for <a href="https://mc-stan.org/docs/reference-manual/transforms.html#simplex-transform.section">simplex</a> constraints. Stan’s linked documentation is already quite detailed; I simply walk through the derivations in a bit more depth for my own benefit.</p>
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>The first thing to note here is that a simplex-valued variable is completely defined by its first <span class="math inline">\(d-1\)</span> entries, since the final value is then immediately given by <span class="math display">\[
+x_d = 1 - \sum_{j=1}^{d-1} x_j. \tag{3}
+\]</span> Geometrically, the set <span class="math inline">\(\Delta_d\)</span> lives within a <span class="math inline">\((d-1)\)</span>-dimensional subspace embedded in <span class="math inline">\(\mathbb{R}^d\)</span>. Practically, this means we can represent the parameter <span class="math inline">\(x\)</span> using <span class="math inline">\(d-1\)</span> numbers. For convenience, we will thus overload notation and write <span class="math display">\[
+x := (x_1, \dots, x_{d-1}) \in \mathbb{R}^{d-1}. \tag{4}
+\]</span> To re-assemble the full parameter, the final value is computed using (3). We will thus consider a transformation <span class="math inline">\(\phi: \Delta_d \to \mathbb{R}^{d-1}\)</span>. Note the slight abuse of notation here, as we are thinking of <span class="math inline">\(\phi\)</span> as acting only on the first <span class="math inline">\(d-1\)</span> entries of the vectors in <span class="math inline">\(\Delta_d\)</span>. The transformation used by Stan takes the form of a composition <span class="math display">\[
+y = \phi(x) := (\phi_2 \circ \phi_1)(x), \tag{5}
+\]</span> where <span class="math inline">\(\phi_1: \Delta_d \to [0,1]^d\)</span> and <span class="math inline">\(\phi_2: [0,1]^d \to \mathbb{R}^d\)</span>. The first map accounts for the sum-to-one constraint by mapping to a set of intermediate variables <span class="math inline">\(z := \phi_1(x) \in [0,1]^d\)</span>, and the second map accounts for the bound constraints on the intermediate variables. Our goals in this post are to (i) define <span class="math inline">\(\phi\)</span>, (ii) derive <span class="math inline">\(\phi^{-1}\)</span>, and (iii) derive the density of the transformed variable <span class="math inline">\(y\)</span>. The latter goal is a key ingredient necessary to leverage the parameter transformation in a Markov chain Monte Carlo (MCMC) algorithm.</p>
 </section>
-<section id="analysis" class="level3">
-<h3 class="anchored" data-anchor-id="analysis">Analysis</h3>
-<p>Let’s now suppose that we have the forecast approximation <span class="math inline">\(\hat{v}_{k+1} := v_{k+1}|Y_k \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span> in hand. The map <span class="math inline">\(\hat{\pi}_{k+1} \mapsto \pi_{k+1}\)</span> from forecast to filtering distribution is defined by the action of conditioning on the data <span class="math inline">\(y_{k+1}\)</span>. In the additive noise case (1), this entails the following application of Bayes’ theorem, <span class="math display">\[
-\begin{align}
-\pi_{k+1}(v_{k+1})
-&amp;\propto \mathcal{N}(y_{k+1}|h(v_{k+1}), R)\mathcal{N}(v_{k+1}|\hat{m}_{k+1}, \hat{C}_{k+1}).
-\end{align}
-\]</span> Although everything is Gaussian here, the nonlinear function <span class="math inline">\(h\)</span> breaks the Gaussianity of <span class="math inline">\(\pi_{k+1}\)</span> in general. One idea to deal with this might be to run MCMC and invoke the approximation <span class="math inline">\(v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})\)</span> with <span class="math inline">\(m_{k+1}\)</span> and <span class="math inline">\(C_{k+1}\)</span> set to their empirical estimates computed from the MCMC samples. This has the distinct disadvantage of requiring an MCMC run at every time step.</p>
-<p>In order to discover alternative approximation methods, it is useful to recall the joint Gaussian view of the analysis step, which I discuss in <a href="https://arob5.github.io/blog/2024/02/15/Kalman-Filter/">this</a> post. The idea here was that, in the linear Gaussian setting, <span class="math inline">\((v_{k+1}, y_{k+1})|Y_k\)</span> has a joint Gaussian distribution. The filtering distribution <span class="math inline">\(v_{k+1}|Y_{k+1} = v_{k+1}|y_{k+1}, Y_k\)</span> is then obtained as a conditional distribution of the joint Gaussian, which is available in closed-form. In the present setting of the additive noise model (1) this joint distribution is given by</p>
-<p><span class="math display">\[
-\begin{align}
-\begin{bmatrix} v_{k+1} \newline y_{k+1} \end{bmatrix} \bigg| Y_k
-&amp;= \begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{v}_{k+1}) + \epsilon_{k+1} \end{bmatrix},
-&amp;&amp; \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})
-\end{align}
-\]</span></p>
-<p>which is again generally non-Gaussian due to <span class="math inline">\(h\)</span>. This perspective points to the idea of approximating this joint distribution as a Gaussian, so that an approximation of the filtering distribution then falls out as a conditional. Notice that we have found ourselves in a very similar situation to the analysis step, in that we again want to approximate the nonlinear mapping of a Gaussian with a Gaussian. The problem is thus to furnish a Gaussian approximation of <span class="math display">\[
-\begin{align}
-\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1}) &amp;= \begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{v}_{k+1}) + \epsilon_{k+1} \end{bmatrix},
-&amp;&amp; \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1}), \ \epsilon_{k+1} \sim \mathcal{N}(0, R). \tag{5}
-\end{align}
-\]</span> In the non-additive error case (2), <span class="math inline">\(h(\hat{v}_{k+1}, \epsilon_{k+1})\)</span> replaces <span class="math inline">\(h(\hat{v}_{k+1}) + \epsilon_{k+1}\)</span> in the above expression. Note that the independence assumptions imply that <span class="math inline">\((\hat{v}_{k+1}, \epsilon_{k+1})\)</span> is joint Gaussian so <span class="math inline">\(\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1})\)</span> is indeed a nonlinear map of a Gaussian.</p>
+<section id="the-inverse-transformation" class="level1">
+<h1>The Inverse Transformation</h1>
+<p>We start by defining <span class="math inline">\(\phi^{-1}\)</span>. It will be then be straightforward to invert this map to obtain <span class="math inline">\(\phi\)</span>.</p>
+<section id="defining-phi_1-1-stick-breaking-procedure" class="level2">
+<h2 class="anchored" data-anchor-id="defining-phi_1-1-stick-breaking-procedure">Defining <span class="math inline">\(\phi_1^{-1}\)</span>: Stick-breaking procedure</h2>
+<p>The first part of the transformation <span class="math inline">\(\phi_1^{-1}\)</span> arises naturally when viewing simplex-valued variables through a stick-breaking procedure: 1. Start with a stick of length one. 2. Break off a portion of the stick, and let <span class="math inline">\(x_1\)</span> denote the length of this portion. 3. From the remaining piece, break off another portion and let <span class="math inline">\(x_2\)</span> denote its length. 4. Repeat the procedure to obain <span class="math inline">\(x_1, \dots, x_{d-1}\)</span>. 5. Set <span class="math inline">\(x_d := 1-\sum_{j=1}^{d-1} x_j\)</span>, the length of the final remaining piece.</p>
+<p>The nice thing about this viewpoint is that it enforces the sum-to-one constraint by construction. To take advantage of this, we define intermediate variables <span class="math inline">\(z_1, \dots, z_{d-1}\)</span> where <span class="math inline">\(z_j\)</span> represents the proportion of the <span class="math inline">\(j^{\text{th}}\)</span> broken piece, relative to the size of the stick from which it was broken. Note that this is in contrast to <span class="math inline">\(x_j\)</span>, which is the proportion relative to the size of the original unit length stick. Mathematically, <span class="math display">\[\begin{align}
+&amp;x_1 = z_1, &amp;&amp;x_j = \left(1 - \sum_{i=1}^{j-1} x_i \right)z_j, \qquad j=1,\dots,d-1. \tag{6}
+\end{align}\]</span> As they are proportions, these intermediate variables are constrained to lie in <span class="math inline">\([0,1]\)</span> but are not subject to any sum constraints. The equations in (6) provide the definition for the first part of the inverse map: <span class="math inline">\(x = \phi_1^{-1}(z)\)</span>.</p>
+</section>
+<section id="defining-phi_2-1-logit-transformation" class="level2">
+<h2 class="anchored" data-anchor-id="defining-phi_2-1-logit-transformation">Defining <span class="math inline">\(\phi_2^{-1}\)</span>: Logit transformation</h2>
+<p>We now define the second portion of the inverse map, <span class="math inline">\(z = \phi_2^{-1}(y)\)</span>. Dealing with the bound constraints <span class="math inline">\(z_j \in [0,1]\)</span> is straightforward; a standard approach involves using the <a href="https://mc-stan.org/docs/reference-manual/transforms.html#logit-transform-jacobian.section">logit</a> map <span class="math inline">\(\text{logit}: (0,1) \to \mathbb{R}\)</span>, defined by <span class="math display">\[
+\text{logit}(t) := \log \frac{t}{1-t}, \qquad t \in (0,1). \tag{7}
+\]</span> The inverse <span class="math inline">\(\text{logit}^{-1}: \mathbb{R} \to (0,1)\)</span> is given by the sigmoid <span class="math display">\[
+\text{logit}^{-1}(t) = \frac{1}{1+e^{-t}}. \tag{8}
+\]</span> At this point, we could define <span class="math inline">\(z := \text{logit}^{-1}(y)\)</span> (where the inverse logit map is applied elementwise). This would be fine, but note that the zero vector <span class="math inline">\(y=0\)</span> would map to <span class="math inline">\(z = (1/2, \dots, 1/2)\)</span>. This corresponds to all of the cut proportions, relative to the piece from which they are cut, being equal. This implies stick lengths <span class="math inline">\(x_1=\frac{1}{2}\)</span>, <span class="math inline">\(x_2=\frac{1}{4}\)</span>, etc. Since <span class="math inline">\(y=0\)</span> corresponds to a sort of “middle” value for <span class="math inline">\(y\)</span>, it would be nice for this to correspond to the balanced case where <span class="math inline">\(x_j=\frac{1}{d}\)</span> for <span class="math inline">\(j=1, \dots, d\)</span> (i.e., the case where all of the pieces are equal length). To achieve this, we need only make the slight adjustment <span class="math display">\[
+z_j := \text{logit}^{-1}\left(y_j + \log\left(\frac{1}{d-j}\right) \right),
+\qquad j=1, \dots, d-1. \tag{9}
+\]</span> Notice that the correction term can also be written as a logit, since <span class="math display">\[\begin{align}
+\text{logit}([d-j+1]^{-1})
+= \log\left(\frac{[d-j+1]^{-1}}{1-[d-j+1]^{-1}}\right)
+&amp;= \log\left(\frac{1}{(d-j+1)-1}\right) \newline
+&amp;= \log\left(\frac{1}{d-j}\right). \tag{10}
+\end{align}\]</span></p>
+<p>This adjustment implies that the zero vector <span class="math inline">\(y=0\)</span> maps to the relative cut proportions <span class="math display">\[\begin{align}
+z_1 &amp;= \text{logit}^{-1}\left(\text{logit}\left(\frac{1}{d}\right) \right) = \frac{1}{d} \newline
+z_2 &amp;= \text{logit}^{-1}\left(\text{logit}\left(\frac{1}{d-1}\right) \right) = \frac{1}{d-1} \tag{11} \newline
+&amp;\vdots
+\end{align}\]</span> Feeding these values back through the map (6), we then see that <span class="math inline">\(y=0\)</span> maps to <span class="math inline">\(x=(1/d, \dots, 1/d)\)</span>, as desired.</p>
+</section>
+<section id="density-of-y" class="level2">
+<h2 class="anchored" data-anchor-id="density-of-y">Density of <span class="math inline">\(y\)</span></h2>
+<p>Let <span class="math inline">\(p_x(x)\)</span> denote a probability density on <span class="math inline">\(x\)</span>. The density of <span class="math inline">\(y = \phi(x)\)</span> (where <span class="math inline">\(\phi\)</span> is invertible and differentiable) is then given by the change-of-variables formula <span class="math display">\[
+p_y(y) = p_x(\phi^{-1}(y)) \lvert \text{det} D\phi^{-1}(y) \rvert. \tag{12}
+\]</span> Thus, we must compute the determinant of the Jacobian of the inverse transformation. In our present setting, notice that the stick-breaking procedure implies that <span class="math inline">\(x_j\)</span> depends only on <span class="math inline">\(y_1, \dots, y_{j-1}\)</span>. This means that <span class="math inline">\(D\phi^{-1}(y)\)</span> is a <span class="math inline">\((d-1) \times (d-1)\)</span> lower-triangular matrix. The determinant term is therefore given by <span class="math display">\[
+\text{det} D\phi^{-1}(y)
+= \prod_{j=1}^{d} [D\phi^{-1}(y)]_{jj}
+= \prod_{j=1}^{d} \frac{\partial x_j}{\partial y_j}
+= \prod_{j=1}^{d} \frac{\partial x_j}{\partial z_j} \frac{\partial z_j}{\partial y_j}, \tag{13}
+\]</span> where we have used the fact that the determinant of a triangular matrix is the product of its diagonal entries. The final step is an application of the chain rule for derivatives. We therefore need only concern ourselves with the diagonal entries of the Jacobian. The partial derivatives in (13) are computed as <span class="math display">\[\begin{align}
+\frac{\partial x_j}{\partial z_j}
+&amp;= \frac{\partial}{\partial z_j}\left[\left(1 - \sum_{i=1}^{j-1} x_i \right)z_j \right]
+= \left(1 - \sum_{i=1}^{j-1} x_i \right) \tag{14}
+\end{align}\]</span> and <span class="math display">\[
+\frac{\partial z_j}{\partial y_j}
+= \frac{\partial}{\partial y_j}\left[\text{logit}^{-1}\left(y_j + \log\left(\frac{1}{d-j}\right) \right) \right]
+= z_j(1-z_j). \tag{15}
+\]</span> In (14) we have used the fact that <span class="math inline">\(x_i\)</span> does not depend on <span class="math inline">\(z_j\)</span> for <span class="math inline">\(i &lt; j\)</span>. In the <span class="math inline">\(j=1\)</span> case we treat the summation as equaling zero, so that the derivative is one (recall that <span class="math inline">\(x_1=z_1\)</span>). In (15) we have used the fact that the derivative of the inverse logit is itself times one minus itself. Putting these two expressions together, we obtain <span class="math display">\[
+\frac{\partial x_j}{\partial y_j}
+= \left(1 - \sum_{i=1}^{j-1} x_i \right)z_j(1-z_j). \tag{16}
+\]</span> This expression can then be combined with (12) and (13) to compute the density <span class="math inline">\(p_y(y)\)</span>. Notice that (16) is defined recursively with respect to the intermediate variables <span class="math inline">\(z_j\)</span>. We now provide an algorithm for computing both <span class="math inline">\(x\)</span> and these partial derivatives. The helper variable <span class="math inline">\(\ell\)</span> tracks the length remaining from the original stick.</p>
+<blockquote class="blockquote">
+<p>
+</p><p><strong>Algorithmic implementation of <span class="math inline">\(\phi^{-1}\)</span> and its derivative.</strong> <br><br></p>
+<p><strong>Input:</strong> $ y = (y_1, , y_{d-1})$. <br> <strong>Returns:</strong> <span class="math inline">\(x=\phi^{-1}(y)\)</span>, <span class="math inline">\(g := \text{diag}\{D\phi^{-1}(y)\}\)</span>. <br></p>
+<ol>
+<li>
+<span class="math inline">\(z := \phi_2^{-1}(y)\)</span>, using (9).
+</li>
+<li>
+<span class="math inline">\(x_1 := z_1\)</span> and <span class="math inline">\(g_1 := 1\)</span>.
+</li>
+<li>
+<span class="math inline">\(\ell := 1-x_1\)</span>.
+</li>
+<li>
+For <span class="math inline">\(j=2, \dots, d-1\)</span>:
+</li>
+<pre><code>&lt;ol type="i"&gt;
+        &lt;li&gt;$x_j := \ell z_j$.&lt;/li&gt;
+        &lt;li&gt;$g_j := \ell z_j(1-z_j)$&lt;/li&gt;
+        &lt;li&gt;$\ell := \ell - x_j$&lt;/li&gt;
+    &lt;/ol&gt;
+&lt;li&gt;Return $x, g$.&lt;/li&gt;</code></pre>
+</ol>
+<p></p>
+</blockquote>
 </section>
 </section>
-<section id="the-generic-problem-setting" class="level2">
-<h2 class="anchored" data-anchor-id="the-generic-problem-setting">The Generic Problem Setting</h2>
-<p>Now that we have identified the fundamental issues in the context of nonlinear filtering, we state the problem in generic terms. The notation used in this section should be viewed anew, not to be confused with the state space notation used above. The task is to provide a Gaussian approximation to a random variable <span class="math inline">\(u = f(v)\)</span>, where <span class="math inline">\(v\)</span> is Gaussian-distributed and <span class="math inline">\(f\)</span> is a nonlinear function; more precisely, <span class="math display">\[
-\begin{align}
-u &amp;= f(v), &amp;&amp; v \sim \mathcal{N}(m, C), \quad f: \mathbb{R}^n \to \mathbb{R}^m. \tag{6}
-\end{align}
-\]</span> In the filtering context, the forecast step represented an instantiation of this problem where <span class="math inline">\(f = g\)</span> and hence a special case where the dimensions of the domain and codomain of <span class="math inline">\(f\)</span> are equal. In the analysis step, <span class="math inline">\(f\)</span> is given by the map <span class="math inline">\(v \mapsto (v, h(v))^\top\)</span> (ignoring the <span class="math inline">\(\eta/\epsilon\)</span> for now) and thus represents the case where <span class="math inline">\(m &gt; n\)</span>. Although both of these cases are subsumed by (4), it is also helpful to consider them separately, as the second case has special structure which can present a more challenging problem. We thus define <span class="math display">\[
-\begin{align}
-\tilde{u} &amp;= \tilde{f}(v) := \begin{bmatrix} v \newline f(v) \end{bmatrix}, \tag{7}
-\end{align}
-\]</span> which captures this special case. With the generic problem stated, we now proceed to discuss specific methods which utilize different notions of linearization to produce Gaussian approximations of the distribution of <span class="math inline">\(u\)</span> and <span class="math inline">\(\tilde{u}\)</span>.</p>
-</section>
-<section id="taylor-series-approximations" class="level2">
-<h2 class="anchored" data-anchor-id="taylor-series-approximations">Taylor Series Approximations</h2>
-<p>The first approach we consider leverages a Taylor series approximation of the nonlinear function <span class="math inline">\(f\)</span>. When applied to the filtering problem, the resulting algorithm is known as the <em>extended Kalman filter</em>. We note that higher order Taylor approximations are also possible in certain settings, but we restrict to first order approximations here.</p>
-<section id="the-generic-method" class="level3">
-<h3 class="anchored" data-anchor-id="the-generic-method">The Generic Method</h3>
-<p>We consider approximating the nonlinear function <span class="math inline">\(f\)</span> with a local linear approximation, given by the Taylor series expansion around the current mean <span class="math inline">\(m\)</span>, <span class="math display">\[
-\begin{align}
-f(v) \approx f(m) + Df(m)[v - m].
-\end{align}
-\]</span> Note that I am applying the Jacobian notation so that <span class="math inline">\(Df(m) \in \mathbb{R}^{m \times n}\)</span>. Under this approximation we use the fact that <span class="math inline">\(v \sim \mathcal{N}(m, C)\)</span> to obtain <span class="math display">\[
-\begin{align}
-u = f(v) &amp; \approx f(m) + Df(m)[v - m] \tag{8} \newline
-&amp;\sim \mathcal{N}(f(m), [Df(m)]C [Df(m)]^\top).
-\end{align}
-\]</span></p>
-<p>The situation for <span class="math inline">\(\tilde{f}\)</span> is quite similar: <span class="math display">\[
-\begin{align}
-\tilde{f}(v) &amp;\approx \tilde{f}(m) + D\tilde{f}(m)[v - m] \tag{9} \newline
-&amp;= \begin{bmatrix} m \newline f(m) \end{bmatrix} + \begin{bmatrix} I \newline Df(m) \end{bmatrix}[v-m] \newline
-&amp;\sim
-\mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
-\begin{bmatrix} I \newline Df(m) \end{bmatrix} C \begin{bmatrix} I \newline Df(m) \end{bmatrix}^\top \right) \newline
-&amp;= \mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
-\begin{bmatrix} C &amp; C[Df(m)]^\top \newline [Df(m)]C &amp; [Df(m)]C[Df(m)]^\top \end{bmatrix} \right)
-\end{align}
-\]</span> where the last equality is in distribution. It is important to stress that these are <em>local</em> approximations; the linearization is constructed using only the local derivative information at the point <span class="math inline">\(m\)</span>. Thus, we would expect the quality of the approximation to decay for points farther from <span class="math inline">\(m\)</span>, and this decay to be more severe for <span class="math inline">\(f\)</span> which are highly nonlinear. Thus, intuitively we would expect the approximation (8) to be reasonable when the distribution of <span class="math inline">\(v\)</span> is tightly clustered around its mean. Distributions that are more diffuse will naturally lead to poorer approximations given that more of the probability mass exists in regions where the local linear approximation is not adequate. The situation in (9) presents an even greater concern; the quality of this approximation relies on the <em>joint</em> distribution of <span class="math inline">\((v, f(v))\)</span> staying close to its mean. Not only does this require the current distribution of <span class="math inline">\(v\)</span> to be concentrated about <span class="math inline">\(m\)</span>, but also the image <span class="math inline">\(f(v)\)</span> to be clustered about <span class="math inline">\(f(m)\)</span>. Thus, even if <span class="math inline">\(v\)</span> is tightly bound to its mean, highly nonlinear maps <span class="math inline">\(f\)</span> have the potential to yield a large spread of points in the codomain and thus reduce the quality of the approximation.</p>
-</section>
-<section id="application-the-extended-kalman-filter" class="level3">
-<h3 class="anchored" data-anchor-id="application-the-extended-kalman-filter">Application: The Extended Kalman Filter</h3>
-<p>We now apply these generic equations to the filtering settings (1) and (2), again breaking the problem into the forecast and analysis steps. The resulting approximate filtering algorithm is called the <strong>extended Kalman filter</strong> (EKF).</p>
-<section id="forecast-1" class="level4">
-<h4 class="anchored" data-anchor-id="forecast-1">Forecast</h4>
-<p>Assume the filtering distribution at time <span class="math inline">\(k\)</span> is given by <span class="math inline">\(v_k \sim \mathcal{N}(m_k, C_k)\)</span>. Starting with the additive noise model (1), we see that we must approximate the distribution <span class="math inline">\(g(v_k)\)</span>. Applying (8) and then adding the independent Gaussian <span class="math inline">\(\eta_{k+1}\)</span> yields the approximate forecast distribution <span class="math display">\[
-\begin{align}
-\hat{v}_{k+1} := v_{v+1}|Y_k \sim \mathcal{N}(g(m_k), [Dg(m_k)]C_k [Dg(m_k)]^\top + Q). \tag{10}
-\end{align}
-\]</span> This is quite similar to the forecast distribution for the Kalman filter, which is <span class="math inline">\(\mathcal{N}(Gm_k, GC_k G^\top + Q)\)</span> corresponding to the linear forward model <span class="math inline">\(g(v) = Gv\)</span>. We see that the EKF forecast covariance is equivalent to that obtained from the Kalman filter applied with the linear forward model <span class="math inline">\(G := Dg(m_k)\)</span>.</p>
-<p>The case of the non-additive noise (4) is similar, but now we must approximate <span class="math inline">\(g(v_k, \eta_{k+1})\)</span>. Recall that <span class="math inline">\((v_k, \eta_{k+1})\)</span> is joint Gaussian distributed, with mean <span class="math inline">\((m_k, 0)\)</span>. Applying (8) thus yields <span class="math display">\[
-\begin{align}
-v_{v+1}|Y_k &amp;\sim
-\mathcal{N}\left(g(m_k,0), [Dg(m_k,0)]\begin{bmatrix} C_k &amp; 0 \newline 0 &amp; Q \end{bmatrix} [Dg(m_k,0)]^\top\right) \newline
-&amp;= \mathcal{N}\left(g(m_k,0), [D_vg(m_k,0)]C_k [D_vg(m_k,0)]^\top + [D_{\eta}g(m_k,0)]Q [D_{\eta}g(m_k,0)]^\top\right), \tag{11}
-\end{align}
-\]</span> where the equality is in distribution and the subscripts <span class="math inline">\(D_v\)</span>, <span class="math inline">\(D_{\eta}\)</span> indicate the respective partial derivatives. Note the similarity between (10) and (11). The general form is the same, but the non-additive case requires derivatives with respect to the noise <span class="math inline">\(\eta\)</span> in order to approximate the effect of pushing <span class="math inline">\(\eta\)</span> through the nonlinear forward model. Following our intuition on when we expect the Taylor series linearization to be reasonable, we now observe that the approximation may deteriorate when either the current state <span class="math inline">\(v_k\)</span> or the stochastic noise <span class="math inline">\(\eta_{k+1}\)</span> is highly variable, in which case significant probability mass may be present in regions far from the point <span class="math inline">\((m_k, 0)\)</span> about which the Taylor series is expanded.</p>
-</section>
-<section id="analysis-1" class="level4">
-<h4 class="anchored" data-anchor-id="analysis-1">Analysis</h4>
-<p>Starting with the additive noise model, we recall that the analysis step requires approximation of (5). To this end, we apply (9) with <span class="math inline">\(\tilde{f}(\hat{v}_{k+1}) = (\hat{v}_{k+1}, h(\hat{v}_{k+1}))^\top\)</span> where <span class="math inline">\(\hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>. We actually require approximation of <span class="math inline">\((\hat{v}_{k+1}, y_{k+1})^\top = (\hat{v}_{k+1}, h(\hat{v}_{k+1}) + \epsilon_{k+1})^\top\)</span> but due to independence we can simply add <span class="math inline">\((0, \epsilon_{k+1})^\top\)</span> post-hoc. The combination of (9) with the addition of the noise term gives <span class="math display">\[
-\begin{align}
-\begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{m}_{k+1}) + \epsilon_{k+1} \end{bmatrix}
-\sim \mathcal{N}\left(\begin{bmatrix} \hat{m}_{k+1} \newline h(\hat{m}_{k+1}) \end{bmatrix},
-\begin{bmatrix} \hat{C}_{k+1} &amp; \hat{C}_{k+1}[Dh(\hat{m}_{k+1})]^\top \newline
-[Dh(\hat{m}_{k+1})]\hat{C}_{k+1} &amp; [Dh(\hat{m}_{k+1})]\hat{C}_{k+1} [Dh(\hat{m}_{k+1})]^\top + R \end{bmatrix} \right) \tag{12}
-\end{align}
-\]</span></p>
+<section id="the-forward-transformation" class="level1">
+<h1>The Forward Transformation</h1>
+<p>We finish up by writing out the forward transformation <span class="math inline">\(\phi\)</span>. For <span class="math inline">\(\phi_1\)</span>, we invert (6) to obtain <span class="math display">\[\begin{align}
+&amp;z_1 = x_1, &amp;&amp;z_j = \left(1 - \sum_{i=1}^{j-1} x_i \right)^{-1}x_j, \qquad j=1,\dots,d-1. \tag{17}
+\end{align}\]</span> For <span class="math inline">\(\phi_2\)</span>, we invert (9), which yields <span class="math display">\[
+y_j = \text{logit}(z_j) - \log\left(\frac{1}{d-j}\right), \qquad j=1, \dots, d-1. \tag{18}
+\]</span> Given <span class="math inline">\(x\)</span>, we can first compute <span class="math inline">\(z\)</span> in an iterative fashion using (17), and then compute <span class="math inline">\(y\)</span> by applying (18).</p>
 
 
-</section>
-</section>
 </section>
 
 </main> <!-- /main -->
