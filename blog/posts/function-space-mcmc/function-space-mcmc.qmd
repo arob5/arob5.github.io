@@ -1,0 +1,26 @@
+---
+title: "MCMC in Infinite Dimensions"
+subtitle: An introduction to function space Markov Chain Monte Carlo.
+layout: default
+date: 2024-09-03
+draft: true
+bibliography: function_space_mcmc_references.bib
+categories: [MCMC, Sampling, Computational Statistics]
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+# Reinterpreting Metropolis-Hastings in Finite Dimensions
+
+
+
+
+# References
+- Proposals which speed up function-space MCMC (Law)
+-
