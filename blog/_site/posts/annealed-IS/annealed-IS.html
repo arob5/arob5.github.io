@@ -209,8 +209,21 @@ window.Quarto = {
 &amp;&amp;0 = \beta_0 &lt; \beta_1 &lt; \cdots &lt; \beta_K = 1.
 \end{align}
 \tag{2}\]</span></span></p>
+<div class="callout callout-style-default callout-note callout-titled" title="Remark">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Remark
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If <span class="math inline">\(\pi_0\)</span> is a (potentially improper) uniform distribution, then the geometric path simplifies to <span class="math inline">\(f_k(x) := f(x)^{\beta_k}\)</span>. This is a common path used in simulated annealing algorithms for optimizing <span class="math inline">\(f\)</span>, motivating the word “annealed” in annealed importance sampling.</p>
+</div>
+</div>
 <p>As we will see below, we require the bridging distributions to satisfy <span id="eq-abs-cont"><span class="math display">\[
-f_k(x) = 0 \implies f_{k+1}(x) = 0
+f_k(x) = 0 \implies f_{k+1}(x) = 0.
 \tag{3}\]</span></span> In other words, the supports of the distributions cannot be growing as <span class="math inline">\(\pi_0\)</span> evolves to <span class="math inline">\(\pi_K\)</span>. This assumption is often denoted by <span class="math inline">\(\pi_K \ll \pi_{K-1} \ll \cdots \ll \pi_0\)</span>, where <span class="math inline">\(\pi_{k+1} \ll \pi_{k}\)</span> is defined by <a href="#eq-abs-cont" class="quarto-xref">Equation&nbsp;3</a> and read “<span class="math inline">\(\pi_{k+1}\)</span> is absolutely continuous with respect to <span class="math inline">\(\pi_{k}\)</span>”.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Remark">
 <div class="callout-header d-flex align-content-center">
@@ -239,37 +252,35 @@ Remark
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>In general, the final Markov kernel <span class="math inline">\(F_K\)</span> need not be <span class="math inline">\(\pi\)</span>-invariant. There is actually no <span class="math inline">\(F_K\)</span> is Neal’s original formulation. However, in most applications I am aware of it is included, presumably to push samples closer to <span class="math inline">\(\pi\)</span>.</p>
+<p>In general, the final Markov kernel <span class="math inline">\(F_K\)</span> need not be <span class="math inline">\(\pi\)</span>-invariant, a fact that will emerge as we derive the algorithm. There is actually no <span class="math inline">\(F_K\)</span> is Neal’s original formulation. However, in most applications I am aware of it is included.</p>
 </div>
 </div>
 <p>An IS proposal can then be generated via <span id="eq-prop-gen"><span class="math display">\[
 \begin{align}
-&amp;x_0 \sim \pi_0, &amp;&amp;x_k \sim F(x_{k-1}, \cdot), \qquad k = 1, 2, \dots, K.
+&amp;x_0 \sim \pi_0, &amp;&amp;x_k \sim F_k(x_{k-1}, \cdot), \qquad k = 1, 2, \dots, K.
 \end{align}
 \tag{4}\]</span></span> The resulting vector <span class="math inline">\(x_{0:K} := (x_0, \dots, x_K)\)</span> has joint distribution <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <span id="eq-prop-dens"><span class="math display">\[
 \begin{align}
 &amp;q(x_{0:K}) := \frac{f^q(x_{0:K})}{Z_0}
-&amp;&amp;f^q(x_{0:K}) := f_0(x_0)\prod_{k=1}^{K} F(x_{k-1}, x_k).
+&amp;&amp;f^q(x_{0:K}) := f_0(x_0)\prod_{k=1}^{K} F_k(x_{k-1}, x_k).
 \end{align}
 \tag{5}\]</span></span> Letting <span class="math inline">\(q_k\)</span> denote the <span class="math inline">\(k^{\text{th}}\)</span> univariate marginal of <span class="math inline">\(q\)</span>, we see that <span id="eq-prop-dens-marg"><span class="math display">\[
-q_K(x_K) := \int \pi_0(x_0)\prod_{k=1}^{K} F(x_{k-1}, x_k) \ dx_{0:K-1}
-\tag{6}\]</span></span> is the marginal distribution of <span class="math inline">\(x_K\)</span>. This final marginal can be viewed as the best approximation <span class="math inline">\(\pi\)</span>. If we view the final entry <span class="math inline">\(x_K\)</span> of <span class="math inline">\(x_{0:K}\)</span> as a standard IS proposal, then we would have to compute the importance weight <span class="math inline">\(f(x_K)/q_K(x_K)\)</span>. In light of <a href="#eq-prop-dens-marg" class="quarto-xref">Equation&nbsp;6</a>, the denominator is typically intractable, and we appear out of luck.</p>
+q_K(x_K) := \int \pi_0(x_0)\prod_{k=1}^{K} F_k(x_{k-1}, x_k) \ dx_{0:K-1}
+\tag{6}\]</span></span> is the marginal distribution of <span class="math inline">\(x_K\)</span>. This final marginal can be viewed as the best approximation to <span class="math inline">\(\pi\)</span>. If we view the final entry <span class="math inline">\(x_K\)</span> of <span class="math inline">\(x_{0:K}\)</span> as a standard IS proposal, then we would have to compute the importance weight <span class="math inline">\(f(x_K)/f^q_K(x_K)\)</span>. In light of <a href="#eq-prop-dens-marg" class="quarto-xref">Equation&nbsp;6</a>, the denominator is typically intractable, and we appear out of luck.</p>
 </section>
 <section id="extended-state-space" class="level2" data-number="1.3">
 <h2 data-number="1.3" class="anchored" data-anchor-id="extended-state-space"><span class="header-section-number">1.3</span> Extended State Space</h2>
-<p>A clever way around this issue is to view <a href="#eq-prop-gen" class="quarto-xref">Equation&nbsp;4</a> as an IS proposal in an extended state space over <span class="math inline">\((x_0, \dots, x_K)\)</span>. The joint density <span class="math inline">\(q_K(x_K)\)</span> in <a href="#eq-prop-dens-marg" class="quarto-xref">Equation&nbsp;6</a> is thus the associated proposal density. The question now becomes how to define the target distribution <span class="math inline">\(p(x) = f^p(x)/Z^p\)</span> over the extended state space. Most importantly, we will define the target such that it admits <span class="math inline">\(\pi\)</span> as a marginal. This implies that if we formulate a valid IS algorithm in the extended state space, then we will have solved the original problem by simply extracting the relevant component from samples of the extended state. We will also choose <span class="math inline">\(p\)</span> to have a specific Markov structure that leads <span class="math inline">\(f^p(x_{0:K})/q(x_{0:K})\)</span> to have a convenient, computable form. To this end, consider <span id="eq-target-ext"><span class="math display">\[
+<p>A clever way around this issue is to view <a href="#eq-prop-gen" class="quarto-xref">Equation&nbsp;4</a> as an IS proposal in an extended state space over <span class="math inline">\((x_0, \dots, x_K)\)</span>. The joint density <span class="math inline">\(q_K(x_K)\)</span> in <a href="#eq-prop-dens-marg" class="quarto-xref">Equation&nbsp;6</a> is thus the associated proposal density. The question now becomes how to define the target distribution <span class="math inline">\(p(x_{0:K}) = f^p(x_{0:K})/Z^p\)</span> over the extended state space. Most importantly, we will define the target such that it admits <span class="math inline">\(\pi\)</span> as a marginal. This implies that if we formulate a valid IS algorithm in the extended state space, then we will have solved the original problem by simply extracting the relevant component from samples of the extended state. We will also choose <span class="math inline">\(p\)</span> to have a specific Markov structure that leads <span class="math inline">\(f^p(x_{0:K})/f^q(x_{0:K})\)</span> to have a convenient, computable form. To this end, consider <span id="eq-target-ext"><span class="math display">\[
 p(x_{0:K}) := \frac{1}{Z^p} f(x_K) \prod_{k=0}^{K-1} R_k(x_{k+1}, x_k),
 \tag{7}\]</span></span> which admits <span class="math inline">\(\pi\)</span> as the <span class="math inline">\(K^{\text{th}}\)</span> marginal. Here, <span class="math inline">\(R_k\)</span> is another Markov kernel which is the reversal of <span class="math inline">\(F_k\)</span>. The reversed Markov kernel (with respect to invariant distribution <span class="math inline">\(\pi_k\)</span>) is defined by the identity <span id="eq-rev-kernel-id"><span class="math display">\[
 \pi_k(x)F_k(x,x^\prime) = \pi_k(x^\prime) R_k(x^\prime, x)
 \tag{8}\]</span></span> Rearranging <a href="#eq-rev-kernel-id" class="quarto-xref">Equation&nbsp;8</a>, we obtain the explicit expression <span id="eq-rev-kernel"><span class="math display">\[
-\begin{align}
 R_k(x^\prime, x)
-&amp;= \frac{\pi_k(x)}{\pi_k(x^\prime)} F_k(x,x^\prime) \\
-&amp;= \frac{f_k(x)}{f_k(x^\prime)} F_k(x,x^\prime).
-\end{align}
+= \frac{\pi_k(x)}{\pi_k(x^\prime)} F_k(x,x^\prime)
+= \frac{f_k(x)}{f_k(x^\prime)} F_k(x,x^\prime).
 \tag{9}\]</span></span> The kernel <span class="math inline">\(R_k\)</span> defines a valid Markov chain that preserves the stationary distribution <span class="math inline">\(\pi_k\)</span> when run backwards in time.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Proof">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -278,7 +289,7 @@ Proof
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Putting aside measure-theoretic technicalities, we simply verify that <span class="math inline">\(R_k(x^\prime, \cdot)\)</span> defines a valid probability distribution for each <span class="math inline">\(x^\prime\)</span>. This follows from <span class="math display">\[
 \begin{align}
@@ -316,16 +327,16 @@ Remark
 </section>
 <section id="importance-weights" class="level2" data-number="1.4">
 <h2 data-number="1.4" class="anchored" data-anchor-id="importance-weights"><span class="header-section-number">1.4</span> Importance Weights</h2>
-<p>The preceding sections define the target <span class="math inline">\(p\)</span> and proposal <span class="math inline">\(q\)</span> distributions on the extended state space. The IS algorithm in the extended space proceeds via the steps:</p>
+<p>The preceding sections define the target <span class="math inline">\(p\)</span> and proposal <span class="math inline">\(q\)</span> on the extended state space. The IS algorithm in the extended space proceeds via the steps:</p>
 <ol type="1">
 <li>Sample <span class="math inline">\(x_{0:K} \sim q\)</span>.</li>
-<li>Return <span class="math inline">\((x_{0:K},w)\)</span>, where <span class="math inline">\(w := f^p(x_{0:K})/f^q(x_{0:K})\)</span> is the importance weight.</li>
+<li>Return <span class="math inline">\((x_{0:K},w(x_{0:K}))\)</span>, where <span class="math inline">\(w(x_{0:K}) := f^p(x_{0:K})/f^q(x_{0:K})\)</span> is the importance weight.</li>
 </ol>
 <p>This algorithm will only be useful if we can easily compute the importance weight. The Markov structure in <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> yields a very convenient form for <span class="math inline">\(w\)</span>. To see this, we start by applying <a href="#eq-rev-kernel" class="quarto-xref">Equation&nbsp;9</a> to write <span class="math inline">\(f^p\)</span> as <span id="eq-rev-joint-rewrite"><span class="math display">\[
 f^p(x_{0:K}) = f^q(x_{0:K}) \frac{f(x_K)}{f_0(x_0)} \prod_{k=1}^{K} \frac{f_k(x_{k-1})}{f_k(x_k)}
 \tag{10}\]</span></span></p>
 <div class="callout callout-style-default callout-note callout-titled" title="Derivation">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -334,7 +345,7 @@ Derivation
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p><span class="math display">\[
 \begin{align}
@@ -350,10 +361,10 @@ f^p(x_{0:K})
 </div>
 </div>
 <p>The importance weight thus simplifies to <span id="eq-importance-weight"><span class="math display">\[
-\frac{f^p(x_{0:K})}{f^q(x_{0:K})} = \prod_{k=0}^{K-1} \frac{f_{k+1}(x_k)}{f_k(x_k)} .
+w(x_{0:K}) = \frac{f^p(x_{0:K})}{f^q(x_{0:K})} = \prod_{k=0}^{K-1} \frac{f_{k+1}(x_k)}{f_k(x_k)} .
 \tag{11}\]</span></span></p>
 <div class="callout callout-style-default callout-note callout-titled" title="Derivation">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -362,7 +373,7 @@ Derivation
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Using <a href="#eq-rev-joint-rewrite" class="quarto-xref">Equation&nbsp;10</a>, we have <span class="math display">\[
 \begin{align}
@@ -384,8 +395,29 @@ Remark
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Notice that the final value <span class="math inline">\(x_K\)</span> from the proposal <span class="math inline">\(x_{0:K} \sim q\)</span> does not appear in the importance weight. This was hinted at by an earlier remark, which claimed that the algorithm would still be valid in the absence of the last kernel <span class="math inline">\(F_K\)</span>. Implicitly, this kernel contributes the term <span class="math inline">\(f_K(x_K)/f_K(x_K)\)</span> in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a>.</p>
+<p>Notice that the final value <span class="math inline">\(x_K\)</span> from the proposal <span class="math inline">\(x_{0:K} \sim q\)</span> does not appear in the importance weight in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a>. This was hinted at by an earlier remark, which claimed that the algorithm would still be valid in the absence of the last kernel <span class="math inline">\(F_K\)</span>. Implicitly, this kernel contributes the term <span class="math inline">\(f_K(x_K)/f_K(x_K)\)</span> in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a>.</p>
 </div>
+</div>
+</section>
+<section id="algorithm" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="algorithm"><span class="header-section-number">1.5</span> Algorithm</h2>
+<p>The core of the AIS algorithm is the generation of independent weighted samples <span class="math inline">\((x^{(n)}_{0:K}, w(x_{0:K}^{(n)}))\)</span>. We discuss the use of these samples for estimating expectations and normalizing constants in the next section. Here, we summarize the above derivations in an algorithm. The procedure simply requires sampling <span class="math inline">\(x_{0:K} \sim q\)</span> and then computing the weight in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a>. As seen below, this can be done in an online fashion, which shoes that AIS can be viewed as alternating between MCMC steps and IS updates. Note that the logarithm actually returns the logarithm of the importance weight for numerical stability.</p>
+<div id="alg-single-step-eki" class="algo-box algorithm">
+<p><strong>Algorithm 1: Calculate AIS weighted sample</strong> <span class="math display">\[
+\begin{array}{ll}
+&amp;\textbf{Input:} \qquad (f_k)_{k=1}^K, \ (F_k)_{k=1}^K \\
+&amp; \textbf{Output:} \text{Weighted sample } \{x_{0:K}, \log w(x_{0:K})\} \\
+\hline \\[0.1em]
+&amp; x_0 \sim \pi_0 \\
+&amp; \ell_w \gets 0 \\
+&amp; \textbf{for } k = 1 \textbf{ to } K \textbf{ do} \\
+&amp; \quad \ell_w \gets \ell_w + \log f_k(x_{k-1}) - \log f_{k-1}(x_{k-1}) \\
+&amp; \quad x_k \sim F_{k+1}(x_{k-1}, \cdot) \\
+&amp; \textbf{end for} \\[0.1em]
+&amp; x \gets (x_0, \dots, x_K) \\
+&amp; \textbf{Return:} (x, \ell_w)
+\end{array}
+\]</span></p>
 </div>
 
 

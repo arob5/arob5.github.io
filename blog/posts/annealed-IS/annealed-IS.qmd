@@ -53,9 +53,16 @@ $$
 \end{align}
 $$ {#eq-geometric-path}
 
+::: {.callout-note title="Remark"}
+If $\pi_0$ is a (potentially improper) uniform distribution, then the
+geometric path simplifies to $f_k(x) := f(x)^{\beta_k}$. This is a common
+path used in simulated annealing algorithms for optimizing $f$, motivating the
+word "annealed" in annealed importance sampling.
+:::
+
 As we will see below, we require the bridging distributions to satisfy
 $$
-f_k(x) = 0 \implies f_{k+1}(x) = 0
+f_k(x) = 0 \implies f_{k+1}(x) = 0.
 $$ {#eq-abs-cont}
 In other words, the supports of the distributions cannot be growing as
 $\pi_0$ evolves to $\pi_K$. This assumption is often denoted by
@@ -81,15 +88,16 @@ Markov kernels such that $F_k$ is $\pi_k$-invariant. In particular, the target
 $\pi$ is the stationary distribution of $F_K$.
 
 ::: {.callout-note title="Remark"}
-In general, the final Markov kernel $F_K$ need not be $\pi$-invariant. There
-is actually no $F_K$ is Neal's original formulation. However, in most applications
-I am aware of it is included, presumably to push samples closer to $\pi$.
+In general, the final Markov kernel $F_K$ need not be $\pi$-invariant,
+a fact that will emerge as we derive the algorithm.
+There is actually no $F_K$ is Neal's original formulation. However, in most
+applications I am aware of it is included.
 :::
 
 An IS proposal can then be generated via
 $$
 \begin{align}
-&x_0 \sim \pi_0, &&x_k \sim F(x_{k-1}, \cdot), \qquad k = 1, 2, \dots, K.
+&x_0 \sim \pi_0, &&x_k \sim F_k(x_{k-1}, \cdot), \qquad k = 1, 2, \dots, K.
 \end{align}
 $$ {#eq-prop-gen}
 The resulting vector $x_{0:K} := (x_0, \dots, x_K)$ has joint distribution
@@ -99,30 +107,30 @@ the Lebesgue measure).]
 $$
 \begin{align}
 &q(x_{0:K}) := \frac{f^q(x_{0:K})}{Z_0}
-&&f^q(x_{0:K}) := f_0(x_0)\prod_{k=1}^{K} F(x_{k-1}, x_k).
+&&f^q(x_{0:K}) := f_0(x_0)\prod_{k=1}^{K} F_k(x_{k-1}, x_k).
 \end{align}
 $$ {#eq-prop-dens}
 Letting $q_k$ denote the $k^{\text{th}}$ univariate marginal of $q$, we see that
 $$
-q_K(x_K) := \int \pi_0(x_0)\prod_{k=1}^{K} F(x_{k-1}, x_k) \ dx_{0:K-1}
+q_K(x_K) := \int \pi_0(x_0)\prod_{k=1}^{K} F_k(x_{k-1}, x_k) \ dx_{0:K-1}
 $$ {#eq-prop-dens-marg}
 is the marginal distribution of $x_K$. This final marginal can be viewed as the
-best approximation $\pi$. If we view the final entry $x_K$ of
+best approximation to $\pi$. If we view the final entry $x_K$ of
 $x_{0:K}$ as a standard IS proposal, then we would have to compute the
-importance weight $f(x_K)/q_K(x_K)$. In light of @eq-prop-dens-marg, the
+importance weight $f(x_K)/f^q_K(x_K)$. In light of @eq-prop-dens-marg, the
 denominator is typically intractable, and we appear out of luck.
 
 ## Extended State Space
 A clever way around this issue is to view @eq-prop-gen as an IS proposal in
 an extended state space over $(x_0, \dots, x_K)$. The joint density $q_K(x_K)$
 in @eq-prop-dens-marg is thus the associated proposal density. The question
-now becomes how to define the target distribution $p(x) = f^p(x)/Z^p$
-over the extended state space.
+now becomes how to define the target distribution
+$p(x_{0:K}) = f^p(x_{0:K})/Z^p$ over the extended state space.
 Most importantly, we will define the target such that it admits $\pi$ as a marginal.
 This implies that if we formulate a valid IS algorithm in the extended state space, then we
 will have solved the original problem by simply extracting the relevant component
 from samples of the extended state. We will also choose $p$ to have
-a specific Markov structure that leads $f^p(x_{0:K})/q(x_{0:K})$ to have a
+a specific Markov structure that leads $f^p(x_{0:K})/f^q(x_{0:K})$ to have a
 convenient, computable form. To this end, consider
 $$
 p(x_{0:K}) := \frac{1}{Z^p} f(x_K) \prod_{k=0}^{K-1} R_k(x_{k+1}, x_k),
@@ -137,11 +145,9 @@ $$ {#eq-rev-kernel-id}
 Rearranging @eq-rev-kernel-id,
 we obtain the explicit expression
 $$
-\begin{align}
 R_k(x^\prime, x)
-&= \frac{\pi_k(x)}{\pi_k(x^\prime)} F_k(x,x^\prime) \\
-&= \frac{f_k(x)}{f_k(x^\prime)} F_k(x,x^\prime).
-\end{align}
+= \frac{\pi_k(x)}{\pi_k(x^\prime)} F_k(x,x^\prime)
+= \frac{f_k(x)}{f_k(x^\prime)} F_k(x,x^\prime).
 $$ {#eq-rev-kernel}
 The kernel $R_k$ defines a valid Markov chain that preserves the stationary
 distribution $\pi_k$ when run backwards in time.
@@ -183,11 +189,11 @@ construct a kernel that preserves the stationary distribution when run in revers
 
 ## Importance Weights
 The preceding sections define the target $p$ and proposal $q$
-distributions on the extended state space. The IS algorithm in the
+on the extended state space. The IS algorithm in the
 extended space proceeds via the steps:
 
   1. Sample $x_{0:K} \sim q$.
-  2. Return $(x_{0:K},w)$, where $w := f^p(x_{0:K})/f^q(x_{0:K})$ is the importance weight.
+  2. Return $(x_{0:K},w(x_{0:K}))$, where $w(x_{0:K}) := f^p(x_{0:K})/f^q(x_{0:K})$ is the importance weight.
 
 This algorithm will only be useful if we can easily compute the importance
 weight. The Markov structure in $p$ and $q$ yields a very convenient form
@@ -212,7 +218,7 @@ $$
 
 The importance weight thus simplifies to
 $$
-\frac{f^p(x_{0:K})}{f^q(x_{0:K})} = \prod_{k=0}^{K-1} \frac{f_{k+1}(x_k)}{f_k(x_k)} .
+w(x_{0:K}) = \frac{f^p(x_{0:K})}{f^q(x_{0:K})} = \prod_{k=0}^{K-1} \frac{f_{k+1}(x_k)}{f_k(x_k)} .
 $$ {#eq-importance-weight}
 
 ::: {.callout-note title="Derivation" collapse=true}
@@ -231,8 +237,39 @@ zero in density ratios, ensuring the importance weight is well-defined.
 
 ::: {.callout-note title="Remark"}
 Notice that the final value $x_K$ from the proposal $x_{0:K} \sim q$ does
-not appear in the importance weight. This was hinted at by an earlier remark,
-which claimed that the algorithm would still be valid in the absence of the
-last kernel $F_K$. Implicitly, this kernel contributes the term
-$f_K(x_K)/f_K(x_K)$ in @eq-importance-weight.
+not appear in the importance weight in @eq-importance-weight. This was
+hinted at by an earlier remark, which claimed that the algorithm would
+still be valid in the absence of the last kernel $F_K$. Implicitly, this
+kernel contributes the term $f_K(x_K)/f_K(x_K)$ in @eq-importance-weight.
+:::
+
+## Algorithm
+The core of the AIS algorithm is the generation of independent weighted
+samples $(x^{(n)}_{0:K}, w(x_{0:K}^{(n)}))$. We discuss the use of these
+samples for estimating expectations and normalizing constants in the next
+section. Here, we summarize the above derivations in an algorithm.
+The procedure simply requires sampling $x_{0:K} \sim q$ and then
+computing the weight in @eq-importance-weight. As seen below, this can
+be done in an online fashion, which shoes that AIS
+can be viewed as alternating between MCMC steps and IS updates.
+Note that the logarithm actually returns the logarithm of the importance weight
+for numerical stability.
+
+::: {.algo-box .algorithm #alg-single-step-eki}
+**Algorithm 1: Calculate AIS weighted sample**
+$$
+\begin{array}{ll}
+&\textbf{Input:} && (f_k)_{k=1}^K, \ (F_k)_{k=1}^K \\
+& \textbf{Output:} && \text{Weighted sample } \{x_{0:K}, \log w(x_{0:K})\} \\
+\hline \\[0.1em]
+& x_0 \sim \pi_0 \\
+& \ell_w \gets 0 \\
+& \textbf{for } k = 1 \textbf{ to } K \textbf{ do} \\
+& \quad \ell_w \gets \ell_w + \log f_k(x_{k-1}) - \log f_{k-1}(x_{k-1}) \\
+& \quad x_k \sim F_{k+1}(x_{k-1}, \cdot) \\
+& \textbf{end for} \\[0.1em]
+& x \gets (x_0, \dots, x_K) \\
+& \textbf{Return:} \ (x, \ell_w)
+\end{array}
+$$
 :::
