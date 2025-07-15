@@ -89,7 +89,6 @@ div.csl-indent {
     "search-label": "Search"
   }
 }</script>
-<meta name="quarto:status" content="draft">
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -128,7 +127,7 @@ window.Quarto = {
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -416,7 +415,7 @@ Goal 3: Posterior Sampling
 &amp;\covCross \Def \Cov[\u,\y], &amp;&amp;\tcovCross \Def [\covCross]^\top
 \end{align}
 \tag{13}\]</span></span></p>
-<p>is the cross-covariance between <span class="math inline">\(\u\)</span> and <span class="math inline">\(\y\)</span>. Following <span class="citation" data-cites="meanField">(<a href="#ref-meanField" role="doc-biblioref">Calvello, Reich, and Stuart 2024</a>)</span>, we refer to <span class="math inline">\(\GaussProj\joint\)</span> as the Gaussian “projection” of <span class="math inline">\(\joint\)</span>. This terminology is motivated by the fact that <span class="math inline">\(\GaussProj\joint\)</span> can be seen to minimize the Kullback-Leibler divergence <span class="math inline">\(\text{KL}(\joint \parallel q)\)</span> over the space of Gaussians <span class="math inline">\(q = \Gaussian(\meanVec^\prime, \covMat^\prime)\)</span> (see <span class="citation" data-cites="invProbDA">(<a href="#ref-invProbDA" role="doc-biblioref">Sanz-Alonso, Stuart, and Taeb 2023</a>)</span>, chapter 4 for details).</p>
+<p>is the cross-covariance between <span class="math inline">\(\u\)</span> and <span class="math inline">\(\y\)</span>. Following <span class="citation" data-cites="meanField">Calvello, Reich, and Stuart (<a href="#ref-meanField" role="doc-biblioref">2024</a>)</span>, we refer to <span class="math inline">\(\GaussProj\joint\)</span> as the Gaussian “projection” of <span class="math inline">\(\joint\)</span>. This terminology is motivated by the fact that <span class="math inline">\(\GaussProj\joint\)</span> can be seen to minimize the Kullback-Leibler divergence <span class="math inline">\(\text{KL}(\joint \parallel q)\)</span> over the space of Gaussians <span class="math inline">\(q = \Gaussian(\meanVec^\prime, \covMat^\prime)\)</span> (see <span class="citation" data-cites="invProbDA">Sanz-Alonso, Stuart, and Taeb (<a href="#ref-invProbDA" role="doc-biblioref">2023</a>)</span>, chapter 4 for details).</p>
 <p>Having invoked the joint Gaussian approximation in <a href="#eq-Gaussian-proj" class="quarto-xref">Equation&nbsp;10</a>, we can now approximate <span class="math inline">\(\u \given \yobs\)</span> with the Gaussian conditional. Gaussian conditionals are also Gaussian, and are thus characterized by the well-known conditional mean and covariance formulas given below.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Posterior Approximation: Gaussian Conditional">
 <div class="callout-header d-flex align-content-center">

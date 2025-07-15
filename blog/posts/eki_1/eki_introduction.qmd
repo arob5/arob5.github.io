@@ -4,7 +4,7 @@ subtitle: EKI Part 1
 description: The first post in a series on using Ensemble Kalman methods to approximately solve Bayesian inverse problems.
 layout: default
 date: 2024-10-05
-draft: true
+draft: false
 bibliography: eki_references.bib
 categories: [Inverse-Problem, Data-Assimilation, Optimization, Sampling, Computational Statistics, EKI]
 format:
@@ -254,11 +254,11 @@ $$
 $$ {#eq-cross-cov}
 
 is the cross-covariance between $\u$ and $\y$.
-Following [@meanField], we refer to $\GaussProj\joint$ as
+Following @meanField, we refer to $\GaussProj\joint$ as
 the Gaussian "projection" of $\joint$. This terminology is motivated by the
 fact that $\GaussProj\joint$ can be seen to minimize the Kullback-Leibler
 divergence $\text{KL}(\joint \parallel q)$ over the space of Gaussians
-$q = \Gaussian(\meanVec^\prime, \covMat^\prime)$ (see [@invProbDA], chapter 4
+$q = \Gaussian(\meanVec^\prime, \covMat^\prime)$ (see @invProbDA, chapter 4
 for details).
 
 Having invoked the joint Gaussian approximation in @eq-Gaussian-proj, we can now

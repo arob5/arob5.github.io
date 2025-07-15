@@ -23,4 +23,4 @@ format:
 
 # References
 - Proposals which speed up function-space MCMC (Law)
--
+- Paper that presents generlized pCN proposal

@@ -31,5 +31,14 @@
   },
   "posts/macro_test.qmd": {
     "macro_test.html": "1fddfaca"
+  },
+  "posts/function-space-mcmc/function-space-mcmc.qmd": {
+    "function-space-mcmc.html": "ccf13db8"
+  },
+  "posts/doubly-intractable-mcmc/doubly-intractable.qmd": {
+    "doubly-intractable.html": "4e909c6a"
+  },
+  "posts/annealed-IS/annealed-IS.qmd": {
+    "annealed-IS.html": "bbd8c772"
   }
 }

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-09-28">
+<meta name="description" content="MCMC with an unbiased likelihood approximation.">
+
+<title>Pseudo-Marginal MCMC – Andrew G. Roberts</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../styles.css">
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../headshot_photo.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Andrew G. Roberts</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../blog/index.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+    <a href="https://github.com/arob5/" title="" class="quarto-navigation-tool px-1" aria-label=""><i class="bi bi-github"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Pseudo-Marginal MCMC</h1>
+            <p class="subtitle lead">Pseudo-Marginal MCMC</p>
+                  <div>
+        <div class="description">
+          MCMC with an unbiased likelihood approximation.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">MCMC</div>
+                <div class="quarto-category">Sampling</div>
+                <div class="quarto-category">Computational Statistics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">September 28, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#pseudo-marginal-mcmc-for-bayesian-inference" id="toc-pseudo-marginal-mcmc-for-bayesian-inference" class="nav-link active" data-scroll-target="#pseudo-marginal-mcmc-for-bayesian-inference"><span class="header-section-number">1</span> Pseudo-Marginal MCMC for Bayesian Inference</a></li>
+  <li><a href="#a-more-generic-and-formal-perspective" id="toc-a-more-generic-and-formal-perspective" class="nav-link" data-scroll-target="#a-more-generic-and-formal-perspective"><span class="header-section-number">2</span> A More Generic and Formal Perspective</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">3</span> References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<p>Pseudo-marginal Markov chain Monte Carlo (MCMC) is a variant of the Metropolis-Hastings algorithm that works without the ability to evaluate the unnormalized target density, so long as an unbiased sample of this density can be obtained for any input. In this post, we motivate the algorithm by considering a problem of Bayesian inference where the likelihood function is intractable. We then take a step back to understand why the algorithm works, and discuss the method from a more generic and rigorous viewpoint.</p>
+<section id="pseudo-marginal-mcmc-for-bayesian-inference" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Pseudo-Marginal MCMC for Bayesian Inference</h1>
+<p>We start by considering a standard problem of Bayesian inference for a parameter of interest <span class="math inline">\(u \in \mathcal{U}\)</span>. Given a prior density <span class="math inline">\(\pi_0(u)\)</span> and likelihood function <span class="math inline">\(L(u)\)</span>, the unnormalized posterior density is then obtained as the product of these two quantities: <span class="math display">\[
+\pi(u) := \pi_0(u) L(u). \tag{1}
+\]</span> With the ability to evaluate this unnormalized density, MCMC algorithms can be applied to obtain samples from the posterior distribution. However, suppose we face a situation where <span class="math inline">\(L(u)\)</span> is intractable in the sense that it does not admit an analytic expression that can be computed for any <span class="math inline">\(u\)</span>. Suppose, though, that we can draw an unbiased sample of the quantity <span class="math inline">\(L(u)\)</span> for any input <span class="math inline">\(u\)</span>; that is, <span class="math display">\[
+\begin{align}
+&amp;\ell \sim P(u, \cdot), &amp;&amp;\mathbb{E}[\ell] = L(u), \tag{2}
+\end{align}
+\]</span> where <span class="math inline">\(P(u,\cdot)\)</span> is a probability measure on the sample space <span class="math inline">\([0, \infty)\)</span> for each <span class="math inline">\(u \in \mathcal{U}\)</span> (formally, we can think of <span class="math inline">\(P\)</span> as a Markov kernel). It turns out that this is sufficient to define an MCMC algorithm with target distribution equal to <span class="math inline">\(u\)</span>’s posterior. The algorithm that accomplishes this is referred as <em>pseudo-marginal MCMC</em>. A single step of this algorithm is detailed below.</p>
+<blockquote class="blockquote">
+<p>
+</p><p><strong>Pseudo-Marginal MCMC.</strong> Let <span class="math inline">\(u\)</span> be the current state of the algorithm, with <span class="math inline">\(\ell \sim P(u,\cdot)\)</span> the associated unbiased likelihood sample. Let <span class="math inline">\(Q\)</span> denote the proposal kernel. The next state is then determined as follows. <br></p>
+<ol type="1">
+<li>Propose a new state: <span class="math display">\[
+  \tilde{u} \sim Q(u, \cdot) \tag{3}
+  \]</span></li>
+<li>Draw an unbiased likelihood sample at the proposed state: <span class="math display">\[
+  \tilde{\ell} \sim P(\tilde{u}, \cdot) \tag{4}
+  \]</span></li>
+<li>With probability <span class="math display">\[
+  \alpha(u,\ell; \tilde{u},\tilde{\ell}) := \min\left(1, \frac{\pi_0(\tilde{u})\tilde{\ell}q(\tilde{u},u)}{\pi_0(u)\ell q(u,\tilde{u})} \right), \tag{5}
+  \]</span> set the new state to <span class="math inline">\(\tilde{u}\)</span>. Else set it to the current state <span class="math inline">\(u\)</span>.
+<p></p>
+</li></ol></blockquote>
+
+<p>Notice that the acceptance probability (5) is the typical Metropolis-Hastings acceptance probability but with the unbiased likelihood samples <span class="math inline">\(\ell\)</span> and <span class="math inline">\(\tilde{\ell}\)</span> inserted in place of <span class="math inline">\(L(u)\)</span> and <span class="math inline">\(L(\tilde{u})\)</span>, respectively. The claim is that this algorithm defines a Markov chain with invariant distribution <span class="math inline">\(\pi\)</span>. To see why this is true, the trick is to view the above algorithm as a Metropolis-Hastings scheme operating on the extended state vector <span class="math inline">\((u, \ell)\)</span>. In showing this, I will assume <span class="math inline">\(P(u,\cdot)\)</span> and <span class="math inline">\(Q(u,\cdot)\)</span> admit densities <span class="math inline">\(p(u,\cdot)\)</span> and <span class="math inline">\(q(u,\cdot)\)</span> with respect to the same base measure for which <span class="math inline">\(\pi\)</span> is a density (typically, the Lebesgue or counting measure). Now, to view the above algorithm with respect to the extended state space, start by noticing that (3) and (4) can be interpreted as a joint proposal <span class="math display">\[
+(\tilde{u},\tilde{\ell}) \sim \overline{Q}(u,\ell; \cdot, \cdot), \tag{6}
+\]</span> with <span class="math inline">\(\overline{Q}\)</span> a Markov kernel on the product space <span class="math inline">\(\mathcal{U} \times [0,\infty)\)</span> with density <span class="math display">\[
+\overline{q}(u,\ell; \tilde{u},\tilde{\ell}) := q(u,\tilde{u})p(\tilde{u},\tilde{\ell}). \tag{7}
+\]</span> Notice that <span class="math inline">\(\overline{Q}(u,\ell; \cdot, \cdot)\)</span> is independent of <span class="math inline">\(\ell\)</span>. It now remains to write the acceptance probability (5) in a form that can be interpreted with respect to the extended state space. To this end, consider <span class="math display">\[
+\begin{align}
+\frac{\pi_0(\tilde{u})\tilde{\ell}q(\tilde{u},u)}{\pi_0(u)\ell q(u,\tilde{u})}
+&amp;= \frac{\pi_0(\tilde{u})\tilde{\ell}}{\pi_0(u)\ell}
+\cdot \frac{q(\tilde{u},u)p(u,\ell)}{q(u,\tilde{u})p(\tilde{u},\tilde{\ell})}
+\cdot \frac{p(\tilde{u},\tilde{\ell})}{p(u,\ell)} \newline
+&amp;= \frac{\pi_0(\tilde{u})\tilde{\ell}p(\tilde{u},\tilde{\ell})}{\pi_0(u)\ell p(u,\ell)}
+\cdot \frac{\overline{q}(\tilde{u},\tilde{\ell};u,\ell)}{\overline{q}(u,\ell;\tilde{u},\tilde{\ell})}. \tag{8}
+\end{align}
+\]</span> The second term is the proposal density ratio with respect to extended proposal <span class="math inline">\(\overline{q}\)</span>. Thus, the function appearing in the numerator and denominator of the first term must be the (unnormalized) density targeted by this Metropolis-Hastings scheme. In other words, the invariant distribution implied by the above algorithm has unnormalized density <span class="math display">\[
+\overline{\pi}(u,\ell) := \pi_0(u)p(u,\ell)\ell. \tag{9}
+\]</span> Notice that <span class="math inline">\(\pi_0(u)\ell\)</span> is the unnormalized density (1) with the sample <span class="math inline">\(\ell\)</span> inserted in place of <span class="math inline">\(L(u)\)</span>. This is multiplied by the weight <span class="math inline">\(p(u,\ell)\)</span>, which encodes the probability of sampling <span class="math inline">\(\ell\)</span> at the input <span class="math inline">\(u\)</span>. Our proof of the algorithm’s correctness is concluded by noting that <span class="math inline">\(\overline{\pi}\)</span> admits <span class="math inline">\(\pi\)</span> as a marginal distribution; indeed, <span class="math display">\[
+\begin{align}
+\int \overline{\pi}(u,\ell)d\ell
+&amp;= \int \pi_0(u)p(u,\ell)\ell d\ell
+= \pi_0(u) \int \ell \cdot p(u,\ell) d\ell
+= \pi_0(u) \mathbb{E}[\ell|u]
+= \pi_0(u) L(u), \tag{10}
+\end{align}
+\]</span> following from the unbiasedness of the likelihood sample. This means that, in theory, we can run the above algorithm to obtain joint samples <span class="math inline">\((u,\ell) \sim \overline{\pi}\)</span>, and then simply extract the <span class="math inline">\(u\)</span> portion of these pairs to obtain the desired draws <span class="math inline">\(u \sim \pi\)</span>. One last thing to note is that we don’t actually need to be able to evaluate the density <span class="math inline">\(p(u,\ell)\)</span> appearing in (8); we see in the acceptance probability (5) that we need only be able to sample from <span class="math inline">\(P(u,\cdot)\)</span>. As usual, we need to be able to evaluate the density <span class="math inline">\(q(u,\tilde{u})\)</span>.</p>
+</section>
+<section id="a-more-generic-and-formal-perspective" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> A More Generic and Formal Perspective</h1>
+<p>The above idea of course extends beyond the Bayesian example. In this section, we discuss the pseudo-marginal algorithm from a more generic perspective, and fill in some of the measure-theoretic details. Let’s assume <span class="math inline">\(\Pi\)</span> is some generic target distribution on a measurable space <span class="math inline">\((\mathcal{U}, \mathcal{B}(\mathcal{U}))\)</span>. We write <span class="math inline">\(\mathcal{B}(\mathcal{U})\)</span> to denote the Borel <span class="math inline">\(\sigma\)</span>-algebra; that is, the <span class="math inline">\(\sigma\)</span>-algebra generated by the open sets of <span class="math inline">\(\mathcal{U}\)</span>. We assume <span class="math inline">\(\Pi\)</span> admits a density (i.e., Radon-Nikodym derivative) <span class="math inline">\(\pi\)</span> with respect to some reference measure <span class="math inline">\(\nu\)</span>. The density <span class="math inline">\(\pi\)</span> need not be normalized. All densities considered throughout this section will be with respect to the same reference measure <span class="math inline">\(\nu\)</span>. As before, we consider <span class="math inline">\(\pi(u)\)</span> intractable, but assume we can draw samples from an unbiased estimator. We could define <span class="math inline">\(P(u,\cdot)\)</span> as before such that samples drawn from <span class="math inline">\(P(u,\cdot)\)</span> are unbiased with respect to <span class="math inline">\(\pi(u)\)</span>. However, note that this is equivalent to considering samples <span class="math inline">\(w \sim P(u,\cdot)\)</span> with expectation one, such that <span class="math inline">\(w \cdot \pi(u)\)</span> is unbiased for <span class="math inline">\(\pi(u)\)</span>. This seems to be a roundabout way to go around this, but for the purposes of analysis it turns out to be convenient. This is the definition used in some of the “noisy MCMC” literature (see, e.g., Medina-Aguayo et al, 2018). Thus, let’s go with this definition and define the Markov kernel <span class="math inline">\(P: \mathcal{U} \to [0,1]\)</span> such that (1) <span class="math inline">\(P(u,\cdot)\)</span> is a probability measure on <span class="math inline">\((\mathcal{W},\mathcal{B}(\mathcal{W}))\)</span> for each <span class="math inline">\(u \in \mathcal{U}\)</span>, where <span class="math inline">\(\mathcal{W} \subseteq [0,\infty)\)</span>; and (2) <span class="math inline">\(P\)</span> produces weights with unit expectation: <span class="math display">\[
+\begin{align}
+&amp;w \sim P(u,\cdot), &amp;&amp;\mathbb{E}_{P_u}[w] = 1. \tag{11}
+\end{align}
+\]</span> We use <span class="math inline">\(P_u\)</span> as shorthand for <span class="math inline">\(P(u,\cdot)\)</span> in the subscript. We again emphasize that the sample <span class="math inline">\(w\)</span> from (11) implies that <span class="math inline">\(w\pi(u)\)</span> is an unbiased estimate of <span class="math inline">\(\pi(u)\)</span>. The pseudo-marginal algorithm proceeds exactly as before. We state it again below to emphasize the new notation.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Pseudo-Marginal MCMC.</strong> <br> 1. Propose a new state: <span class="math display">\[
+  \tilde{u} \sim Q(u, \cdot) \tag{12}
+  \]</span> 2. Draw an unbiased weight sample at the proposed state: <span class="math display">\[
+  \tilde{w} \sim P(\tilde{u}, \cdot) \tag{13}
+  \]</span> 3. With probability <span class="math display">\[
+  \alpha(u,w; \tilde{u},\tilde{w}) := \min\left(1, \frac{\pi(\tilde{u})\tilde{w}q(\tilde{u},u)}{\pi(u)w q(u,\tilde{u})} \right), \tag{14}
+  \]</span> set the new state to <span class="math inline">\(\tilde{u}\)</span>. Else set it to the current state <span class="math inline">\(u\)</span>.
+</p>
+</blockquote>
+<p>Of course, we can’t evaluate <span class="math inline">\(\pi(u)\)</span> in (14), but stating the algorithm this way is useful to study its properties. In practice, we can think of drawing a sample to directly approximate <span class="math inline">\(\pi(u)\)</span>. Similar to before, we can think about this algorithm as targeting an invariant distribution on the product space <span class="math inline">\((\mathcal{U} \times \mathcal{W}, \mathcal{B}(\mathcal{U}) \times \mathcal{B}(\mathcal{W}))\)</span>. The steps (12) and (13) represent a draw from the proposal kernel <span class="math inline">\(\overline{Q}: \mathcal{U} \times \mathcal{W} \to [0,1]\)</span> defined by <span class="math display">\[
+\overline{Q}(u,w; U,W) := \int_{U} P(\tilde{u},W)Q(u,d\tilde{u}), \tag{15}
+\]</span> for <span class="math inline">\(U \in \mathcal{B}(\mathcal{U})\)</span> and <span class="math inline">\(W \in \mathcal{B}(\mathcal{W})\)</span>.</p>
+</section>
+<section id="references" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> References</h1>
+<ol type="1">
+<li>The pseudo-marginal approach for efficient Monte Carlo computations (Andrieu and Roberts, 2009)</li>
+<li>Convergence properties of pseudo-marginal Markov chain Monte Carlo algorithms (Andrieu and Vihola, 2015)</li>
+<li>Stability of Noisy Metropolis-Hastings (Medina-Aguayo et al, 2018)</li>
+</ol>
+
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/arob5\.github\.io\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="arob5/arob5.github.io" issue-term="title" theme="body-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2025 Andrew G. Roberts ∙ Made with <a href="https://quarto.org">Quarto</a></p>
+</div>   
+    <div class="nav-footer-center">
+<p><a class="link-dark me-1" href="https://github.com/arob5" title="github" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:github" aria-label="Icon github from fa6-brands Iconify.design set." title="Icon github from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://orcid.org/0009-0002-4274-7914" title="orcid" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:orcid" aria-label="Icon orcid from fa6-brands Iconify.design set." title="Icon orcid from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://scholar.google.com/citations?user=E2erpCwAAAAJ&amp;hl=en" title="Google Scholar" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:google-scholar" aria-label="Icon google-scholar from fa6-brands Iconify.design set." title="Icon google-scholar from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://linkedin.com/in/andrew-roberts5" title="LinkedIn" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:linkedin" aria-label="Icon linkedin from fa6-brands Iconify.design set." title="Icon linkedin from fa6-brands Iconify.design set."></iconify-icon></a></p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

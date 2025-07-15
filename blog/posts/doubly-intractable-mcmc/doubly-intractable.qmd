@@ -3,7 +3,7 @@ title: "Doubly Intractable MCMC"
 subtitle: Doubly intractable MCMC, auxiliary variable methods, and the exchange algorithm.
 description: Exact MCMC with an intractable likelihood.
 layout: default
-date: 2025-02-20
+date: 2025-07-11
 categories: [MCMC, Sampling, Computational Statistics]
 bibliography: doubly_intractable_mcmc_references.bib
 format:
@@ -17,18 +17,18 @@ format:
 ---
 
 A typical Bayesian model consists of a joint probability distribution over
-the parameter $u$ and data $y$ of the form
+a parameter $u$ and data $y$ of the form
 $$
-p(u,y) = \pi_0(u)L(u) \tag{1}
-$$
-where $\pi_0(u)$ is the prior density on $u$ and $L(u) = p(y|u)$ the likelihood.
+p(u,y) = \pi_0(u)L(u)
+$$ {#eq-joint-model}
+where $\pi_0(u)$ is the prior density on $u$ and $L(u) = p(y \mid u)$ the likelihood.
 The posterior distribution is then given by
 $$
-\pi(u) := p(u|y) = \frac{1}{Z}\pi_0(u)L(u) \tag{2}
-$$
+\pi(u) := p(u \mid y) = \frac{1}{Z}\pi_0(u)L(u)
+$$ {#eq-post}
 where $Z$ is a normalizing constant (independent of $u$) that we are not
 typically able to compute. Fortunately, common algorithms for posterior
-inference such as Markov chain Monte Carlo (MCMC) and variational inference (VI)
+inference such as Markov chain Monte Carlo (MCMC)
 only require pointwise evaluations of the *unnormalized* posterior density
 $\pi_0(u)L(u)$.
 
@@ -36,15 +36,183 @@ In this post, we consider a class of Bayesian models that adds an additional
 difficulty, rendering these standard inference algorithms infeasible.
 In particular, we assume a likelihood of the form
 $$
-L(u) = \frac{f(y; u)}{C(u)}, \tag{3}
-$$
+L(u) = \frac{f(y; u)}{C(u)},
+$$ {#eq-intractable-lik}
 such that we can evaluate $f(y;u)$ but not the normalizing function $C(u)$.
-We refer to this as a *function* as it depends on the parameter $u$. The
-posterior density in this setting becomes
+The posterior density in this setting becomes
 $$
-\pi(u) = \frac{1}{ZC(u)}\pi_0(u)f(y;u). \tag{4}
+\pi(u) = \frac{1}{ZC(u)}\pi_0(u)f(y;u).
+$$ {#eq-doubly-intractable-post}
+Distributions of the form @eq-doubly-intractable-post are known as
+*doubly intractable* owing to the two quantities
+we are unable to compute: $Z$ and $C(u)$. While the former does not pose
+a problem for typical inference algorithms, the presence of the latter will
+require specialized methods.
+
+# The Problem
+Recall the basic structure of a Metropolis-Hastings algorithm. If $u$ is the
+current state of the Markov chain, then a new proposed state is sampled as
+$\tilde{u} \sim q(\cdot \mid u)$ from some proposal distribution $q$.
+The proposed state is then accepted with probability
 $$
-Such setups are known as *doubly intractable* owing to the two quantities
-we are unable to compute in (4): $Z$ and $C(u)$. While the former does not pose
-a problem for typical inference algorithms, the latter does since it depends on
-$u$.
+\begin{align}
+&\alpha(\tilde{u} \mid u) = \min\{1, r(\tilde{u} \mid u)\},
+&&r(\tilde{u} \mid u) = \frac{\pi(\tilde{u}) q(u \mid \tilde{u})}{\pi(u) q(\tilde{u} \mid u)}.
+\end{align}
+$$ {#eq-MH-ratio}
+If accepted, the updated state is set to $\tilde{u}$, otherwise the chain remains
+at $u$. A key requirement of the algorithm is the ability to compute
+$r(\tilde{u} \mid u)$. Plugging the density @eq-doubly-intractable-post into this
+expression, we see the ratio simplifies to
+$$
+r(\tilde{u} \mid u)
+= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
+\frac{C(u)}{C(\tilde{u})}.
+$$ {#eq-MH-ratio-intractable}
+The ratio depends on the intractable quantities $C(u)$ and $C(\tilde{u})$,
+and thus we cannot apply the standard Metropolis-Hastings scheme in this
+setting.
+
+# An Auxiliary Variable Method
+In this section we summarize an auxiliary variable MCMC algorithm proposed
+by @Moller to address the doubly intractable problem. The authors show
+that, surprisingly, it is possible for a Markov chain to correctly target the
+exact posterior distribution
+$\pi(u)$, despite the presence of the intractable normalizing function.
+The requirement of their method is the ability to draw independent realizations
+of data given any parameter value; i.e., to sample from the conditional
+$p(y \mid u)$.
+
+## Extending the State Space
+The main idea is to extend the joint probability space over $(u,y)$ in
+@eq-joint-model to a joint model over $(u,x,y)$ for some *auxiliary variable*
+$x$. The auxiliary variable will be defined on the same space as $y$, so
+we might think of it as some sort of "pseudo data". Once we define the
+conditional $p(x \mid u, y)$, then we obtain the extended model
+$$
+p(u, x, y)
+:= p(x \mid u, y)p(y \mid u)p(u)
+= p(x \mid u, y)f(y; u)\pi_0(u) / C(u).
+$$ {#eq-extended-model}
+Notice that $\pi(u) = p(u \mid y)$ is a marginal distribution of
+$p(u,x \mid y)$. Therefore, if we can draw samples
+$(u,x) \sim p(u,x \mid y)$ then the $u$-component of these samples will
+have the desired distribution $\pi$.
+
+We now consider a Metropolis-Hastings algorithm targeting the extended
+posterior $p(u,x \mid y)$. Letting $q(\tilde{u},\tilde{x} \mid u,x)$
+denote a proposal distribution on the extended state space, the
+acceptance ratio assumes the form
+$$
+r(\tilde{u},\tilde{x} \mid u,x)
+= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u,x \mid \tilde{u},\tilde{x})}{\pi_0(u) f(y; u)q(\tilde{u},\tilde{x} \mid u,x)} \cdot
+\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)}.
+$$ {#eq-MH-ratio-ext-intractable}
+At present, the ratio still depends on $C(u)/C(\tilde{u})$ and thus remains
+intractable.
+
+## A clever choice of proposal
+It would be nice to be able to choose $p(x \mid u,y)$ such that the
+dependence of @eq-extended-model on $C(u)$ is eliminated. However,
+as pointed out by @Murray, no such choice of $p(x \mid u,y)$ is known.
+Instead, @Moller show that the proposal
+$q(\tilde{u}, \tilde{x} \mid u, x)$ can be chosen to eliminate the
+normalizing function from the acceptance ratio
+$r(\tilde{u},\tilde{x} \mid u,x)$. We consider a proposal of the form
+$$
+q(\tilde{u}, \tilde{x} \mid u, x) := q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u}),
+$$ {#eq-proposal-ext}
+implying a standard proposal for $u$, followed by a proposal of the auxiliary
+variable that depends on $\tilde{u}$ but not $x$. Given this setup, the
+necessary choice of $q(\tilde{x} \mid \tilde{u})$ to eliminate dependence
+on the normalizing function is
+$$
+q(\tilde{x} \mid \tilde{u}) := f(\tilde{x};\tilde{u}) / C(\tilde{u}).
+$$ {#eq-auxiliary-proposal}
+Indeed, if we plug @eq-auxiliary-proposal into @eq-MH-ratio-ext-intractable to
+obtain
+$$
+r(\tilde{u},\tilde{x} \mid u,x)
+= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
+\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}
+$$ {#eq-MH-ratio-ext-intractable}
+
+::: {.callout-note title="Derivation" collapse=true}
+$$
+\begin{align}
+r(\tilde{u},\tilde{x} \mid u,x)
+&= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) q(x \mid u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u})} \cdot
+\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)} \\
+&= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) f(x;u)/ C(u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) f(\tilde{x};\tilde{u})/ C(\tilde{u})} \cdot
+\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)} \\
+&= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) f(x;u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) f(\tilde{x};\tilde{u})} \cdot
+\frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)}
+\end{align}
+$$
+:::
+
+The ratio @eq-MH-ratio-ext-intractable no longer involves the intractable terms!
+This Metropolis-Hastings scheme therefore admits $p(u,x \mid y)$ as a stationary
+distribution without requiring the ability to evaluate $C(u)$. The algorithm
+is thus "correct", but its efficiency will depend heavily on the choice of the
+auxiliary distribution $p(x \mid u,y)$, which is a free parameter of this method.
+
+## Choice of Auxiliary Distribution
+We now aim to build some intuition as to what the algorithm is doing, to help
+inform the choice of $p(x \mid u,y)$. The situation we
+find ourselves in is somewhat backwards when compared to the typical design
+of Metropolis-Hastings algorithms. In particular, the proposal
+$q(x \mid u)$ (typically a free parameter) has been prescribed,
+and we instead need to choose the distribution $p(x \mid u,y)$ (typically prescribed).
+Ideally, the proposal will look something like the target distribution. This
+intuition would lead us to set $p(x \mid u,y) := f(x;u) / C(u)$.
+This is of course infeasible as it would reintroduce the normalizing function,
+but it does give a baseline goal to shoot for.
+
+To further understand the workings of this algorithm, notice that the
+first term in @eq-MH-ratio-ext-intractable is equal to the intractable ratio
+in @eq-MH-ratio-intractable except that it is missing $C(u)/C(\tilde{u})$.
+The second term in @eq-MH-ratio-ext-intractable might therefore be viewed as
+providing an estimate of $C(u)/C(\tilde{u})$. Indeed, consider the
+random ratio
+$$
+\begin{align}
+&\frac{p(x \mid u,y)}{f(x;u)}, &&x \sim f(x;u)/C(u)
+\end{align}
+$$ {#eq-IS-est}
+which has expectation
+$$
+\mathbb{E}\left[\frac{p(x \mid u,y)}{f(x;u)}\right]
+= \int \frac{p(x \mid u,y)}{f(x;u)} \frac{f(x;u)}{C(u)} dx
+= C(u)^{-1} \int p(x \mid u,y) dx = C(u)^{-1}.
+$$
+Therefore, the ratio in @eq-IS-est is a single-sample importance sampling
+estimate of $C(u)^{-1}$. The second term in @eq-MH-ratio-ext-intractable
+can thus be viewed as
+$$
+\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}
+\approx \frac{C(\tilde{u})^{-1}}{C(u)^{-1}}
+= \frac{C(u)}{C(\tilde{u})},
+$$
+a biased estimate of the ratio $C(u)/C(\tilde{u})$ derived from the two
+importance sampling estimates. It is interesting that the algorithm is correct
+despite the use of this plug-in biased estimate. This importance sampling
+viewpoint further strengthens our intuition that $p(x \mid u,y)$ should
+be chosen to approximate $f(x;u)/C(u)$.
+
+@Moller give two options for choosing $p(x \mid u,y)$. The simpler of the
+two is to choose
+$$
+\begin{align}
+&p(x \mid u,y) := f(x;\hat{u})/C(\hat{u}), &&\hat{u} = \hat{u}(y)
+\end{align}
+$$ {#eq-lik-approx}
+where $\hat{u}$ is a fixed estimate of $u$ derived from the data $y$.
+Recall that $f(x;u)/C(u)$ describes the data-generating
+distribution as a function of the parameter $u$. Fixing a single $u$ will
+therefore be a reasonable approximation if this distribution is not strongly
+dependent on $u$. Alternatively, this may also work well if the posterior
+support is concentrated around $\hat{u}$, so that a reasonable approximation is
+only required in this neighborhood. The second approach is to construct a more
+sophisticated $u$-dependent approximation of $f(x;u)/C(u)$. We will not
+consider this option here.

@@ -1,0 +1,238 @@
+---
+title: "Annealed Importance Sampling"
+layout: default
+date: 2025-07-14
+categories: [MCMC, Sampling, Computational Statistics]
+bibliography: annealed-IS.bib
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+In this post we walk through the annealed importance sampling (AIS) scheme
+introduced in the classic paper @Neal. The algorithm seeks to improve upon
+standard IS by incorporating Markov chain Monte Carlo (MCMC) updates, and is
+widely used for estimating intractable expectations and normalizing constants.
+While I highly recommend reading Neal's original paper, my presentation here
+leans towards more recent perspectives. My notation is most similar
+to @Doucet.
+
+# Setup and Derivation
+Consider a target distribution
+$$
+\begin{align}
+&\pi(x) = \frac{f(x)}{Z}, &&Z = \int f(x) dx
+\end{align}
+$$ {#eq-target}
+such that $f(x)$ can be evaluated at any input $x \in \mathbb{R}^d$. Two
+common goals are to estimate expectations with respect to $\pi$ and to
+estimate the intractable normalizing constant $Z$. As with standard IS,
+AIS addresses these problems by returning weighted samples $(x^{(n)}, w^{(n)})$,
+with the weights $w^{(n)}$ constructed to produce unbiased estimates of the
+quantities of interest.
+
+## Bridging Distributions
+The idea underlying annealed IS is to improve an initial proposal via a sequence
+of updates that move the proposal closer to $\pi$. An initial "simple"
+distribution is slowly *annealed* towards the intractable target distribution.
+Let $(\pi_k)_{k=0}^{K}$ denote the sequence of intermediate distributions
+$\pi_k(x) = f_k(x)/Z_k$. In this post, we will consider $\pi_0$ to be a simple
+distribution from which independent samples can be drawn. The final distribution
+$\pi_K = \pi$ is the target, meaning the intermediate distributions bridge from
+the simple distribution to $\pi$. The canonical choice of bridging distributions
+is the geometric path, defined by the geometric averages
+$$
+\begin{align}
+&f_k(x) := f_0(x)^{1-\beta_k} f(x)^{\beta_k},
+&&0 = \beta_0 < \beta_1 < \cdots < \beta_K = 1.
+\end{align}
+$$ {#eq-geometric-path}
+
+As we will see below, we require the bridging distributions to satisfy
+$$
+f_k(x) = 0 \implies f_{k+1}(x) = 0
+$$ {#eq-abs-cont}
+In other words, the supports of the distributions cannot be growing as
+$\pi_0$ evolves to $\pi_K$. This assumption is often denoted by
+$\pi_K \ll \pi_{K-1} \ll \cdots \ll \pi_0$, where $\pi_{k+1} \ll \pi_{k}$
+is defined by @eq-abs-cont and read "$\pi_{k+1}$ is absolutely continuous
+with respect to $\pi_{k}$".
+
+::: {.callout-note title="Remark"}
+In some treatments (including Neal's original paper), the sequence of
+distributions is defined in the reverse order, such that $\pi_K$ is the
+simple distribution and $\pi_0 = \pi$. This is mostly a matter of taste.
+As we will see, the reversed sequence will still become relevant here.
+:::
+
+## Markov Kernels
+If we could sample directly from the $\pi_k$ then the problem would already
+be solved, since $\pi_K$ is precisely the distribution from which we hope
+to sample. Given that this is not possible, we will instead try to approximately
+track the intermediate distributions via Markov chain iterations.
+The importance weights will ultimately correct for the fact that we are not
+exactly tracking the distributions. Let $(F_k)_{k=1}^{K}$ be a collection of
+Markov kernels such that $F_k$ is $\pi_k$-invariant. In particular, the target
+$\pi$ is the stationary distribution of $F_K$.
+
+::: {.callout-note title="Remark"}
+In general, the final Markov kernel $F_K$ need not be $\pi$-invariant. There
+is actually no $F_K$ is Neal's original formulation. However, in most applications
+I am aware of it is included, presumably to push samples closer to $\pi$.
+:::
+
+An IS proposal can then be generated via
+$$
+\begin{align}
+&x_0 \sim \pi_0, &&x_k \sim F(x_{k-1}, \cdot), \qquad k = 1, 2, \dots, K.
+\end{align}
+$$ {#eq-prop-gen}
+The resulting vector $x_{0:K} := (x_0, \dots, x_K)$ has joint distribution
+^[Throughout this post we will assume all distributions and Markov kernels
+admit densities with respect to some common dominating measure (typically
+the Lebesgue measure).]
+$$
+\begin{align}
+&q(x_{0:K}) := \frac{f^q(x_{0:K})}{Z_0}
+&&f^q(x_{0:K}) := f_0(x_0)\prod_{k=1}^{K} F(x_{k-1}, x_k).
+\end{align}
+$$ {#eq-prop-dens}
+Letting $q_k$ denote the $k^{\text{th}}$ univariate marginal of $q$, we see that
+$$
+q_K(x_K) := \int \pi_0(x_0)\prod_{k=1}^{K} F(x_{k-1}, x_k) \ dx_{0:K-1}
+$$ {#eq-prop-dens-marg}
+is the marginal distribution of $x_K$. This final marginal can be viewed as the
+best approximation $\pi$. If we view the final entry $x_K$ of
+$x_{0:K}$ as a standard IS proposal, then we would have to compute the
+importance weight $f(x_K)/q_K(x_K)$. In light of @eq-prop-dens-marg, the
+denominator is typically intractable, and we appear out of luck.
+
+## Extended State Space
+A clever way around this issue is to view @eq-prop-gen as an IS proposal in
+an extended state space over $(x_0, \dots, x_K)$. The joint density $q_K(x_K)$
+in @eq-prop-dens-marg is thus the associated proposal density. The question
+now becomes how to define the target distribution $p(x) = f^p(x)/Z^p$
+over the extended state space.
+Most importantly, we will define the target such that it admits $\pi$ as a marginal.
+This implies that if we formulate a valid IS algorithm in the extended state space, then we
+will have solved the original problem by simply extracting the relevant component
+from samples of the extended state. We will also choose $p$ to have
+a specific Markov structure that leads $f^p(x_{0:K})/q(x_{0:K})$ to have a
+convenient, computable form. To this end, consider
+$$
+p(x_{0:K}) := \frac{1}{Z^p} f(x_K) \prod_{k=0}^{K-1} R_k(x_{k+1}, x_k),
+$$ {#eq-target-ext}
+which admits $\pi$ as the $K^{\text{th}}$ marginal. Here, $R_k$ is another
+Markov kernel which is the reversal of $F_k$.
+The reversed Markov kernel (with respect to invariant distribution $\pi_k$)
+is defined by the identity
+$$
+\pi_k(x)F_k(x,x^\prime) = \pi_k(x^\prime) R_k(x^\prime, x)
+$$ {#eq-rev-kernel-id}
+Rearranging @eq-rev-kernel-id,
+we obtain the explicit expression
+$$
+\begin{align}
+R_k(x^\prime, x)
+&= \frac{\pi_k(x)}{\pi_k(x^\prime)} F_k(x,x^\prime) \\
+&= \frac{f_k(x)}{f_k(x^\prime)} F_k(x,x^\prime).
+\end{align}
+$$ {#eq-rev-kernel}
+The kernel $R_k$ defines a valid Markov chain that preserves the stationary
+distribution $\pi_k$ when run backwards in time.
+
+::: {.callout-note title="Proof" collapse=true}
+Putting aside measure-theoretic technicalities, we simply verify that
+$R_k(x^\prime, \cdot)$ defines a valid probability distribution
+for each $x^\prime$. This follows from
+$$
+\begin{align}
+\int R_k(x^\prime, x) dx
+&= \int \frac{\pi_k(x)}{\pi_k(x^\prime)} F_k(x, x^\prime) dx \\
+&= \frac{1}{\pi_k(x^\prime)} \int \pi_k(x) F_k(x, x^\prime) dx \\
+&= \frac{\pi_k(x^\prime)}{\pi_k(x^\prime)} \\
+&= 1,
+\end{align}
+$$
+where the penultimate equality uses the fact that $F_k$ is $\pi_k$-invariant.
+To show that $R_k$ is also $\pi_k$-invariant, see that
+$$
+\begin{align}
+\int \pi_k(x^\prime) R_k(x^\prime, x) dx^\prime
+&= \int \pi_k(x^\prime) \frac{\pi_k(x)}{\pi_k(x^\prime)} F_k(x, x^\prime) dx^\prime \\
+&= \int \pi_k(x) R_k(x, x^\prime) dx^\prime \\
+&= \pi_k(x) \int R_k(x, x^\prime) dx^\prime \\
+&= \pi_k(x),
+\end{align}
+$$
+where the final equality uses the fact that $R_k$ is a Markov kernel.
+:::
+
+::: {.callout-note title="Remark"}
+Certain Markov kernels (e.g., Metropolis-Hastings kernels)
+are explicitly constructed to satisfy $F_k = R_k$ (the detailed
+balance condition). Kernels that are not in detailed balance with $\pi_k$
+require the re-weighting $\pi_k(x)/\pi_k(x^\prime)$ in @eq-rev-kernel-id to
+construct a kernel that preserves the stationary distribution when run in reverse.
+:::
+
+## Importance Weights
+The preceding sections define the target $p$ and proposal $q$
+distributions on the extended state space. The IS algorithm in the
+extended space proceeds via the steps:
+
+  1. Sample $x_{0:K} \sim q$.
+  2. Return $(x_{0:K},w)$, where $w := f^p(x_{0:K})/f^q(x_{0:K})$ is the importance weight.
+
+This algorithm will only be useful if we can easily compute the importance
+weight. The Markov structure in $p$ and $q$ yields a very convenient form
+for $w$. To see this, we start by applying @eq-rev-kernel to write
+$f^p$ as
+$$
+f^p(x_{0:K}) = f^q(x_{0:K}) \frac{f(x_K)}{f_0(x_0)} \prod_{k=1}^{K} \frac{f_k(x_{k-1})}{f_k(x_k)}
+$$ {#eq-rev-joint-rewrite}
+
+::: {.callout-note title="Derivation" collapse=true}
+$$
+\begin{align}
+f^p(x_{0:K})
+&= f(x_K) \prod_{k=1}^{K} R_k(x_k, x_{k-1}) \\
+&= f(x_K) \prod_{k=1}^{K} \frac{f_k(x_{k-1})}{f_k(x_k)} F_k(x_{k-1},x_k) \\
+&= \left[f_0(x_0) \prod_{k=1}^{K} F_k(x_{k-1},x_k) \right] \cdot
+\frac{f(x_K)}{f_0(x_0)} \prod_{k=1}^{K} \frac{f_k(x_{k-1})}{f_k(x_k)} \\
+&= f^q(x_{0:K}) \frac{f(x_K)}{f_0(x_0)} \prod_{k=1}^{K} \frac{f_k(x_{k-1})}{f_k(x_k)}
+\end{align}
+$$
+:::
+
+The importance weight thus simplifies to
+$$
+\frac{f^p(x_{0:K})}{f^q(x_{0:K})} = \prod_{k=0}^{K-1} \frac{f_{k+1}(x_k)}{f_k(x_k)} .
+$$ {#eq-importance-weight}
+
+::: {.callout-note title="Derivation" collapse=true}
+Using @eq-rev-joint-rewrite, we have
+$$
+\begin{align}
+\frac{f^p(x_{0:K})}{f^q(x_{0:K})}
+&= \frac{f(x_K)}{f_0(x_0)} \prod_{k=1}^{K} \frac{f_k(x_{k-1})}{f_k(x_k)}
+\end{align}
+$$
+:::
+
+We see in @eq-importance-weight the precise reason why the absolute continuity
+assumption in @eq-abs-cont is required. This assumptions avoids dividing by
+zero in density ratios, ensuring the importance weight is well-defined.
+
+::: {.callout-note title="Remark"}
+Notice that the final value $x_K$ from the proposal $x_{0:K} \sim q$ does
+not appear in the importance weight. This was hinted at by an earlier remark,
+which claimed that the algorithm would still be valid in the absence of the
+last kernel $F_K$. Implicitly, this kernel contributes the term
+$f_K(x_K)/f_K(x_K)$ in @eq-importance-weight.
+:::

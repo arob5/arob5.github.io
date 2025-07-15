@@ -2,9 +2,14 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/annealed-IS/annealed-IS.html",
+      "/posts/doubly-intractable-mcmc/doubly-intractable.html",
+      "/posts/simplex-transform.html",
       "/posts/reversed-Cholesky.html",
       "/posts/ls-psd-cov.html",
       "/posts/nonlinear-LS.html",
+      "/posts/eki_1/eki_introduction.html",
+      "/posts/pseudo-marginal-mcmc/pseudo-marginal-mcmc.html",
       "/posts/basis-func-emulator.html",
       "/posts/nonlinear-maps-of-Gaussians.html",
       "/posts/gp-specifications.html",

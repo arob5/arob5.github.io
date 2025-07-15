@@ -1,2 +1,1370 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"></html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-10-05">
+<meta name="description" content="The first post in a series on using Ensemble Kalman methods to approximately solve Bayesian inverse problems.">
+
+<title>Ensemble Kalman Methods for Solving Inverse Problems: An Introduction – Andrew G. Roberts</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Andrew G. Roberts</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Ensemble Kalman Methods for Solving Inverse Problems: An Introduction</h1>
+            <p class="subtitle lead">EKI Part 1</p>
+                  <div>
+        <div class="description">
+          The first post in a series on using Ensemble Kalman methods to approximately solve Bayesian inverse problems.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Inverse-Problem</div>
+                <div class="quarto-category">Data-Assimilation</div>
+                <div class="quarto-category">Optimization</div>
+                <div class="quarto-category">Sampling</div>
+                <div class="quarto-category">Computational Statistics</div>
+                <div class="quarto-category">EKI</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">October 5, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<div class="hidden-macros">
+<p><span class="math display">\[
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pr}{\mathbb{P}}
+\newcommand{\given}{\mid}
+\newcommand{\Def}{:=}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Gaussian}{\mathcal{N}}
+\newcommand{\fwd}{\mathcal{G}}
+\newcommand{\u}{u}
+\newcommand{\yobs}{y^{\dagger}}
+\newcommand{\y}{y}
+\newcommand{\noise}{\epsilon}
+\newcommand{\covNoise}{\Sigma}
+\newcommand{\meanVec}{m}
+\newcommand{\covMat}{C}
+\newcommand{\dimObs}{n}
+\newcommand{\dimPar}{d}
+\newcommand{\parSpace}{\mathcal{U}}
+\newcommand{\misfit}{\Phi}
+\newcommand{\misfitReg}{\Phi_R}
+\newcommand{\misfitPost}{\Phi_{\pi}}
+\newcommand{\covPrior}{\covMat}
+\newcommand{\meanPrior}{\meanVec}
+\newcommand{\dens}{\pi}
+\newcommand{\priorDens}{\pi_0}
+\newcommand{\postDens}{\pi}
+\newcommand{\normCst}{Z}
+\newcommand{\joint}{\overline{\pi}}
+\newcommand{\meanObs}{\meanVec^{\y}}
+\newcommand{\covObs}{\covMat^{\y}}
+\newcommand{\covCross}{\covMat^{\u \y}}
+\newcommand{\tcovCross}{\covMat^{\y \u}}
+\newcommand{\GaussProj}{\mathcal{P}_{\Gaussian}}
+\newcommand{\meanPost}{\meanVec_{\star}}
+\newcommand{\covPost}{\covMat_{\star}}
+\newcommand{\transport}{T}
+\newcommand{\nens}{J}
+\]</span></p>
+</div>
+<p>The ensemble Kalman filter (EnKF) is a well-established algorithm for state estimation in high-dimensional state space models. More recently, it has gained popularity as a general-purpose derivative-free tool for optimization and approximate posterior sampling; i.e., for the solution of inverse problems. The label <em>ensemble Kalman inversion (EKI)</em> is generally used to refer to the class of algorithms that adapt the EnKF methodology for such purposes. While these algorithms are typically quite simple – mostly relying on slight modifications of the standard EnKF update formula – there are quite a few subtleties required in designing and analyzing EKI methods. In particular, while much of the EKI literature is focused on optimization, small modifications of optimization-focused algorithms can be made to instead target the goal of posterior sampling. In a series of posts, we will walk through these subtleties, exploring the potential of the EnKF both as a derivative-free (approximate) optimizer and sampler. We start in this post by outlining the basic setup and goals, and then proceed to introduce a basic EnKF algorithm for approximate posterior sampling.</p>
+<section id="setup-inverse-problems" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Setup: Inverse Problems</h1>
+<p>This section serves to introduce the notation that will be used throughout the entire series of posts. Our focus will be on inverse problems, with the goal being to recover a latent parameter <span class="math inline">\(\u \in \R^{\dimPar}\)</span> from indirect, and potentially noisy, observations <span class="math inline">\(\yobs \in \R^{\dimObs}\)</span>. We assume the parameter and data are related via a forward model (i.e., parameter-to-observable map) <span class="math inline">\(\fwd: \R^{\dimPar} \to \R^{\dimObs}\)</span>, giving the relationship <span class="math inline">\(y \approx \fwd(\u)\)</span>.</p>
+<section id="optimization" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="optimization"><span class="header-section-number">1.1</span> Optimization</h2>
+<p>We start by formulating the solution to the inverse problem as an optimization problem. One of the most basic approaches we might take is to seek the value of the parameter that minimizes the quadratic error between the data and the model prediction.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Goal 1: Least-squares minimization">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Goal 1: Least-squares minimization
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Define the <strong>least squares model-data misfit function</strong> <span id="eq-misfit"><span class="math display">\[
+\misfit(u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} := \frac{1}{2}(\yobs - \fwd(\u))^\top \covNoise^{-1}(\yobs - \fwd(\u)),
+\tag{1}\]</span></span> weighted by a positive definite matrix <span class="math inline">\(\covNoise\)</span>. The (nonlinear) least squares minimization problem is then given by <span id="eq-ls-opt"><span class="math display">\[
+u_{\star} \in \text{argmin}_{u \in \parSpace} \ \misfit(\u).
+\tag{2}\]</span></span></p>
+</div>
+</div>
+<p>The above definition also serves to define the notation we will be using throughout this series to denote weighted Euclidean norms. Note also that <span class="math inline">\(\misfit(u)\)</span> depends on the observed data <span class="math inline">\(\yobs\)</span>, but we suppress this dependence in the notation. A natural extension to the least-squares problem is to add a regularization term to the objective function. We will focus on quadratic regularization terms, which is referred to as <strong>Tikhonov regularization</strong> and <strong>ridge regression</strong> in the inverse problems and statistical literatures, respectively.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Goal 2: Tikhonov-regularized Least-squares minimization">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Goal 2: Tikhonov-regularized Least-squares minimization
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Define the <strong>Tikhonov-regularized least squares function</strong> by <span id="eq-misfit-reg"><span class="math display">\[
+\misfitReg(\u) := \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} + \frac{1}{2}\lVert \u - \meanPrior\rVert^2_{\covPrior}.
+\tag{3}\]</span></span> The Tikhonov-regularized least squares optimization problem is given by <span id="eq-reg-ls-opt"><span class="math display">\[
+u_{\star} \in \text{argmin}_{u \in \parSpace} \misfitReg(\u).
+\tag{4}\]</span></span></p>
+</div>
+</div>
+<p>The Tikhonov loss function balances the model fit to the data with the requirement to keep <span class="math inline">\(\u\)</span> “close” to <span class="math inline">\(\meanPrior\)</span>, where the relative weights of these objectives are determined by the (positive definite) covariances <span class="math inline">\(\covNoise\)</span> and <span class="math inline">\(\covPrior\)</span>.</p>
+</section>
+<section id="sampling" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="sampling"><span class="header-section-number">1.2</span> Sampling</h2>
+<p>We next consider the Bayesian formulation of the inverse problem, whereby the goal is no longer to identify a single value <span class="math inline">\(\u_{\star}\)</span>, but instead to construct a probability distribution over all possible <span class="math inline">\(\u\)</span>. The Bayesian approach requires the definition of a joint distribution over the data and the parameter, <span class="math inline">\((\u,\y)\)</span>. We view the observed data <span class="math inline">\(\yobs\)</span> as a particular realization of the random variable <span class="math inline">\(\y\)</span>. The solution of the Bayesian inverse problem is given by the conditional distribution <span class="math inline">\(\u \given [\y=\yobs]\)</span>, known as the <strong>posterior distribution</strong>. We will often shorten this notation by writing <span class="math inline">\(\u \given \yobs\)</span>.</p>
+<p>Throughout this series, we will primarily focus on the joint distribution on <span class="math inline">\((\u, \y)\)</span> induced by the following model: <span id="eq-bip"><span class="math display">\[
+\begin{align}
+\y &amp;= \fwd(\u) + \noise \newline
+\u &amp;\sim \priorDens \newline
+\noise &amp;\sim \Gaussian(0, \covNoise),
+\end{align}
+\tag{5}\]</span></span> where <span class="math inline">\(\priorDens\)</span> is a prior distribution on the parameter, <span class="math inline">\(\covNoise\)</span> is the fixed (known) covariance of the additive Gaussian noise, and <span class="math inline">\(\u\)</span> and <span class="math inline">\(\noise\)</span> are independent. The EnKF methodology we will discuss is particularly well-suited to such additive Gaussian models with known noise covariance, but there has been work on relaxing these restrictions. The above model defines a joint distribution <span class="math inline">\(\joint\)</span> on <span class="math inline">\((\u,\y)\)</span> via the product of densities <span id="eq-joint-dens"><span class="math display">\[
+p(\u,\y) := p(\y \given \u) \priorDens(\u) = \Gaussian(\y \given \fwd(\u), \covNoise)\priorDens(\u),
+\tag{6}\]</span></span> with the posterior density given by Bayes’ theorem <span id="eq-Bayes-thm"><span class="math display">\[
+\begin{align}
+\postDens(\u) &amp;:= p(\u \given \yobs) = \frac{1}{\normCst}\Gaussian(\yobs \given \fwd(\u), \covNoise)\priorDens(\u),
+&amp;&amp;\normCst := \int_{\parSpace} \Gaussian(\yobs \given \fwd(\u), \covNoise)\priorDens(\u) d\u.
+\end{align}
+\tag{7}\]</span></span> We omit the dependence on <span class="math inline">\(\yobs\)</span> in the notation <span class="math inline">\(\postDens(\u)\)</span> and <span class="math inline">\(Z\)</span>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Goal 3: Posterior Sampling">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Goal 3: Posterior Sampling
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>We seek to draw samples from the posterior distribution <span class="math inline">\(\u \given \yobs\)</span> under the model <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>. We can phrase this as the task of sampling the probability distribution with density <span id="eq-post-dens"><span class="math display">\[
+\postDens(\u) \propto \exp\left\{\misfitPost(\u)\right\},
+\tag{8}\]</span></span> where <span id="eq-misfit-post"><span class="math display">\[
+\misfitPost(\u) := -\log \postDens(\u)
+= -\log p(\y \given \u) - \log \priorDens(\u)
+= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} - \log \priorDens(\u) + C,
+\tag{9}\]</span></span> is the (unnormalized) negative log posterior density, up to an additive constant <span class="math inline">\(C\)</span> that is independent of <span class="math inline">\(\u\)</span>.</p>
+</div>
+</div>
+<p>We introduce the notation <span class="math inline">\(\misfitPost(\u)\)</span> in order to draw a connection with the optimization goals. Indeed, note that the log-likelihood term in <a href="#eq-misfit-post" class="quarto-xref">Equation&nbsp;9</a> is precisely the least squares misfit function <a href="#eq-misfit" class="quarto-xref">Equation&nbsp;1</a> (up to an additive constant). Moreover, if we choose Gaussian prior <span class="math inline">\(\priorDens(\u) = \Gaussian(\u \given \meanPrior, \covPrior)\)</span>, then <span class="math inline">\(\misfitPost(\u)\)</span> agrees with <span class="math inline">\(\misfitReg(\u)\)</span> (again, up to an additive constant). We will explore certain algorithms that assume the prior is Gaussian, but in general we will allow <span class="math inline">\(\priorDens\)</span> to be non-Gaussian.</p>
+</section>
+<section id="roadmap" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="roadmap"><span class="header-section-number">1.3</span> Roadmap</h2>
+<p>With the setup and goals established, we will now take steps towards practical algorithms. It is important to recognize that the application of EnKF methodology to the optimization and sampling problems will yield <em>approximate</em> algorithms in general. The methods will be exact (in a manner which will be made precise) in the linear Gaussian setting, where the forward model <span class="math inline">\(\fwd\)</span> is linear and the prior <span class="math inline">\(\priorDens\)</span> is Gaussian. The EKI algorithms we consider are derivative-free, suitable for the black-box setting whereby we can only evaluate <span class="math inline">\(\fwd(\cdot)\)</span> pointwise. In typical applications, function evaluations <span class="math inline">\(\fwd(\cdot)\)</span> may be quite computationally expensive; e.g., they might require numerically solving partial differential equations. Another benefit of the EnKF methodology is that they allow for many model evaluations to be performed in parallel. These features will become clear as we dive into the methods. We start in this post by focusing on the sampling problem; the optimization setting will be explored in future posts.</p>
+</section>
+</section>
+<section id="joint-gaussian-approximation" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Joint Gaussian Approximation</h1>
+<p>We start by introducing the notion of approximate conditioning using Gaussian distributions, a core idea underlying many Kalman methods. A slight extension of this notion yields the classic EnKF update.</p>
+<section id="gaussian-projection" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="gaussian-projection"><span class="header-section-number">2.1</span> Gaussian Projection</h2>
+<p>Recall that we write <span class="math inline">\(\joint\)</span> to denote the joint distribution of <span class="math inline">\((\u,\y)\)</span> under <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>. In general, this distribution will be non-Gaussian, rendering the conditioning <span class="math inline">\(u \given \yobs\)</span> a challenging task. A simple idea is to consider approximating <span class="math inline">\(\joint\)</span> with a Gaussian, which is a distribution for which conditioning is easy. To this end, consider the approximation <span id="eq-Gaussian-proj"><span class="math display">\[
+\begin{align}
+\GaussProj\joint \Def
+\Gaussian\left(
+\begin{bmatrix} \meanPrior \newline \meanObs \end{bmatrix},
+\begin{bmatrix} \covPrior &amp; \covCross \newline
+                \tcovCross &amp; \covObs \end{bmatrix}
+\right)
+\end{align}
+\tag{10}\]</span></span> where the means and covariances are simply given by the first two moments of <span class="math inline">\((\u, \y)\)</span>. In particular, <span id="eq-par-moments"><span class="math display">\[
+\begin{align}
+&amp;\meanPrior \Def \E[\u], &amp;&amp;\covPrior \Def \Cov[\u]
+\end{align}
+\tag{11}\]</span></span></p>
+<p>are the moments of the <span class="math inline">\(\u\)</span>-marginal, and <span id="eq-obs-moments"><span class="math display">\[
+\begin{align}
+&amp;\meanObs \Def \E[\y], &amp;&amp;\covObs \Def \Cov[\y]
+\end{align}
+\tag{12}\]</span></span></p>
+<p>are the moments of the <span class="math inline">\(\y\)</span>-marginal. Finally, <span id="eq-cross-cov"><span class="math display">\[
+\begin{align}
+&amp;\covCross \Def \Cov[\u,\y], &amp;&amp;\tcovCross \Def [\covCross]^\top
+\end{align}
+\tag{13}\]</span></span></p>
+<p>is the cross-covariance between <span class="math inline">\(\u\)</span> and <span class="math inline">\(\y\)</span>. Following <span class="citation" data-cites="meanField">Calvello, Reich, and Stuart (<a href="#ref-meanField" role="doc-biblioref">2024</a>)</span>, we refer to <span class="math inline">\(\GaussProj\joint\)</span> as the Gaussian “projection” of <span class="math inline">\(\joint\)</span>. This terminology is motivated by the fact that <span class="math inline">\(\GaussProj\joint\)</span> can be seen to minimize the Kullback-Leibler divergence <span class="math inline">\(\text{KL}(\joint \parallel q)\)</span> over the space of Gaussians <span class="math inline">\(q = \Gaussian(\meanVec^\prime, \covMat^\prime)\)</span> (see <span class="citation" data-cites="invProbDA">Sanz-Alonso, Stuart, and Taeb (<a href="#ref-invProbDA" role="doc-biblioref">2023</a>)</span>, chapter 4 for details).</p>
+<p>Having invoked the joint Gaussian approximation in <a href="#eq-Gaussian-proj" class="quarto-xref">Equation&nbsp;10</a>, we can now approximate <span class="math inline">\(\u \given \yobs\)</span> with the Gaussian conditional. Gaussian conditionals are also Gaussian, and are thus characterized by the well-known conditional mean and covariance formulas given below.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Posterior Approximation: Gaussian Conditional">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Posterior Approximation: Gaussian Conditional
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Let <span class="math inline">\((\tilde{\u}, \tilde{y})\)</span> be a random vector with distribution <span class="math inline">\(\GaussProj\joint\)</span>. We consider approximating the posterior <span class="math inline">\(\u \given (\y=\yobs)\)</span> with <span class="math inline">\(\tilde{\u} \given (\tilde{\y}=\yobs)\)</span>. As it is the conditional of a Gaussian distribution, this posterior approximation is Gaussian, with moments <span id="eq-Gaussian-cond"><span class="math display">\[
+\begin{align}
+\meanPost &amp;= \meanPrior + \covCross [\covObs]^{-1} (\yobs - \meanObs) \newline
+\covPost &amp;= \covPrior + \covCross [\covObs]^{-1} \tcovCross.
+\end{align}
+\tag{14}\]</span></span></p>
+</div>
+</div>
+</section>
+<section id="monte-carlo-approximations" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="monte-carlo-approximations"><span class="header-section-number">2.2</span> Monte Carlo Approximations</h2>
+<p>With the closed-form approximation <a href="#eq-Gaussian-cond" class="quarto-xref">Equation&nbsp;14</a> in hand, we can simulate approximate posterior draws by constructing <span class="math inline">\(\meanPost\)</span> and <span class="math inline">\(\covPost\)</span>, then sampling from <span class="math inline">\(\Gaussian(\meanPost, \covPost)\)</span>. Interestingly, we can actually bypass the step of computing conditional moments and directly sample from the Gaussian conditional using a result known as <strong>Matheron’s rule</strong>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Matheron's Rule: Gaussian Conditional Simulation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Matheron’s Rule: Gaussian Conditional Simulation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Let <span class="math inline">\((\tilde{\u}, \tilde{y})\)</span> be random variables with distribution <span class="math inline">\(\GaussProj\joint\)</span>. Then the following equality holds in distribution. <span id="eq-Matheron"><span class="math display">\[
+\begin{align}
+(\tilde{\u} \given [\tilde{\y} = \yobs]) &amp;\overset{d}{=} \tilde{\u} + \covCross [\covObs]^{-1} (\yobs - \tilde{\y}).
+\end{align}
+\tag{15}\]</span></span></p>
+<p>This implies that independent samples from <span class="math inline">\(\tilde{\u} \given [\tilde{\y} = \yobs]\)</span> can be simulated via the following algorithm.</p>
+<ol type="1">
+<li>Sample <span class="math inline">\((\u^\prime, \y^\prime) \sim \GaussProj\joint\)</span></li>
+<li>Return <span class="math inline">\(\transport(\u^\prime, \y^\prime)\)</span></li>
+</ol>
+<p>where <span id="eq-Matheron-transport"><span class="math display">\[
+\transport(\u^\prime, \y^\prime) \Def \u^\prime + \covCross [\covObs]^{-1} (\yobs - \y^\prime)
+\tag{16}\]</span></span></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Proof
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The distribution of the lefthand side of <a href="#eq-Matheron" class="quarto-xref">Equation&nbsp;15</a> is given in <a href="#eq-Gaussian-cond" class="quarto-xref">Equation&nbsp;14</a>. Notice that the righthand side is a linear function of the Gaussian random vector <span class="math inline">\((\tilde{\u}, \tilde{\y})\)</span>, and is thus Gaussian. It remains to verify that the mean and covariance of the righthand side agrees with <a href="#eq-Gaussian-cond" class="quarto-xref">Equation&nbsp;14</a>. The mean is given by <span class="math display">\[
+\begin{align}
+\E[\transport(\tilde{\u}, \tilde{\y})]
+&amp;= \E[\tilde{\u}] + \covCross [\covObs]^{-1} (\yobs - \E[\tilde{\y}]) \newline
+&amp;= \meanPrior + \covCross [\covObs]^{-1} (\yobs - \meanObs) \newline
+&amp;= \E[\tilde{\u} \given \tilde{\y} = \yobs].
+\end{align}
+\]</span> Similarly, the covariance is <span class="math display">\[
+\begin{align}
+\Cov[\transport(\tilde{\u}, \tilde{\y})]
+\end{align}
+\]</span> □</p>
+</div>
+</div>
+</div>
+<p>The map <span class="math inline">\(\transport(\cdot, \cdot)\)</span> is a deterministic function that <em>transports</em> samples from the joint Gaussian to its conditional distribution. Note that this map depends on the first two moments of <span class="math inline">\(\GaussProj\joint\)</span>.</p>
+<p>We next consider a slight adjustment to the Matheron update, which results in (potentially) non-Gaussian approximate posterior samples. This yields the classical EnKF update equation.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="EnKF Update: Conditional Simulation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+EnKF Update: Conditional Simulation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>An alternative Monte Carlo posterior approximation can be obtained by modifying the above sampling strategy as follows:</p>
+<ol type="1">
+<li>Sample <span class="math inline">\((u^\prime, \y^\prime) \sim \joint\)</span></li>
+<li>Return <span class="math inline">\(\transport(\u^\prime, \y^\prime)\)</span></li>
+</ol>
+<p>Here, <span class="math inline">\(\transport(\cdot, \cdot)\)</span> is the same transport map as defined in <a href="#eq-Matheron-transport" class="quarto-xref">Equation&nbsp;16</a>. Sampling from the joint distribution in step one above entails sampling a parameter from the prior, then sampling from the likelihood: <span id="eq-enkf-update"><span class="math display">\[
+\begin{align}
+&amp;\u^\prime \sim \priorDens \newline
+&amp;\y^\prime \Def \fwd(\u^\prime) + \noise^\prime, &amp;&amp;\noise^\prime \sim \Gaussian(0, \covNoise)
+\end{align}
+\tag{17}\]</span></span></p>
+</div>
+</div>
+<p>Note that the difference between the two above algorithms is that the former samples <span class="math inline">\((u^\prime, \y^\prime)\)</span> from the Gaussian projection <span class="math inline">\(\GaussProj\joint\)</span>, while the latter samples from the true joint distribution <span class="math inline">\(\joint\)</span>. In both cases, the form of the transport map <span class="math inline">\(\transport\)</span> is derived from the Gaussian approximation <span class="math inline">\(\GaussProj\joint\)</span>. The EnKF update thus combines exact Monte Carlo sampling from the joint distribution with approximate conditioning motivated by a Gaussian ansatz. Since the samples <span class="math inline">\((u^\prime, \y^\prime)\)</span> are no longer Gaussian in general, then the approximate conditional samples <span class="math inline">\(\transport(u^\prime, \y^\prime)\)</span> can also be non-Gaussian. One might hope that this additional flexibility leads to an improved approximation. We conclude this section by defining the Kalman gain, which forms the core of the Matheron transport map <span class="math inline">\(\transport\)</span>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Kalman Gain">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Kalman Gain
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <strong>Kalman gain</strong> associated with the inverse problem in <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a> is defined as <span id="eq-Kalman-gain"><span class="math display">\[
+K := \covCross [\covObs]^{-1}.
+\tag{18}\]</span></span> The transport map in <a href="#eq-Matheron-transport" class="quarto-xref">Equation&nbsp;16</a> can thus be written as <span id="eq-Matheron-transport-Kalman"><span class="math display">\[
+\transport(\u^\prime, \y^\prime) = \u^\prime + K(\yobs - \y^\prime).
+\tag{19}\]</span></span></p>
+</div>
+</div>
+<p>We thus see that the transport map takes the prior sample <span class="math inline">\(\u^\prime\)</span> and adds a “correction” term based on the data. The correction is the linear map <span class="math inline">\(K\)</span> applied to the residual <span class="math inline">\(\yobs - \y^\prime\)</span> (i.e., the difference between the observed and predicted data).</p>
+</section>
+<section id="practical-algorithms" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="practical-algorithms"><span class="header-section-number">2.3</span> Practical Algorithms</h2>
+<p>The methods presented above do not yet constitute algorithms, as we have not specified how to compute the moments defining the Gaussian projection <a href="#eq-Gaussian-proj" class="quarto-xref">Equation&nbsp;10</a>. By replacing the exact moments with Monte Carlo estimates, we obtain an algorithm which we will refer to as <em>single-step ensemble Kalman inversion (EKI)</em>. Given samples, <span class="math inline">\(\{u^{(j)}, \y^{(j)}\}_{j=1}^{\nens} \sim \joint\)</span>, we can estimate the required moments via the standard Monte Carlo estimates: <span id="eq-empirical-moments"><span class="math display">\[
+\begin{align}
+&amp;\meanPrior \Def \frac{1}{\nens} \sum_{j=1}^{\nens} \u^{(j)},
+&amp;&amp;\covPrior \Def \frac{1}{\nens-1} \sum_{j=1}^{\nens} (\u^{(j)}-\meanPrior)(\u^{(j)}-\meanPrior)^\top \newline
+&amp;\meanObs \Def \frac{1}{\nens} \sum_{j=1}^{\nens} \y^{(j)},
+&amp;&amp;\covObs \Def \frac{1}{\nens-1} \sum_{j=1}^{\nens} (\y^{(j)}-\meanObs)(\y^{(j)}-\meanObs)^\top
+\end{align}
+\tag{20}\]</span></span></p>
+<p><span class="math display">\[
+\begin{equation}
+\covCross \Def \frac{1}{\nens-1} \sum_{j=1}^{\nens} (\u^{(j)}-\meanPrior)(\y^{(j)}-\meanObs)^\top
+\end{equation}
+\]</span></p>
+<p>Note that we utilize the same notation for the exact moments and their empirical estimates; the precise meaning of the notation will be made clear from context.</p>
+<div id="alg-single-step-eki" class="algo-box algorithm">
+<p><strong>Algorithm: Single Step EKI</strong> <span class="math display">\[
+\begin{array}{ll}
+\textbf{Input:} &amp; \text{Sample size } \nens \\
+\textbf{Output:} &amp; \text{Approximate posterior samples } \{\u_{\star}^{(j)}\}_{j=1}^{\nens} \\
+\hline
+\textbf{1:} &amp; \text{Sample prior: } &amp;&amp;\u^{(j)} \overset{\text{iid}}{\sim} \priorDens, \ j = 1, \dots, \nens \\
+\textbf{2:} &amp; \text{Sample likelihood: } &amp;&amp;\y^{(j)} \Def \fwd(\u^{(j)}) + \noise^{(j)}, \ \noise^{(j)} \overset{\text{iid}}{\sim} \Gaussian(0, \covNoise) \\
+\textbf{3:} &amp; \text{Estimate moments: } &amp;&amp;\meanPrior, \covPrior, \meanObs, \covObs \\
+\textbf{4:} &amp; \text{Transport samples: } &amp;&amp;\u_{\star}^{(j)} \Def \u^{(j)} + \covCross [\covObs]^{-1}(\yobs - \y^{(j)})
+\end{array}
+\]</span></p>
+<p>The definition of the empirical moments is given in <a href="#eq-empirical-moments" class="quarto-xref">Equation&nbsp;20</a>.</p>
+</div>
+<p>Other considerations: - If prior is Gaussian, then no need to estimate m, C - Reducing sampling bias in covariance estimate of Cy. - Gaussian algorithm algorithm can be defined by returning conditional moments. - Cite Higdon paper.</p>
+</section>
+</section>
+<section id="generalizing-to-iterative-algorithms" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Generalizing to Iterative Algorithms</h1>
+<p>In the previous section, we developed an algorithm for approximate posterior sampling that essentially represents a single application of the EnKF update formula. Since this update stems from a Gaussian ansatz, we would expect its performance to degrade for highly nonlinear <span class="math inline">\(\fwd\)</span> or non-Gaussian <span class="math inline">\(\priorDens\)</span>. One approach to deal with this issue is to break the problem into a sequence of easier problems. In particular, we will consider breaking the prior-to-posterior map <span class="math inline">\(\priorDens \mapsto \postDens\)</span> into a composition of maps <span id="eq-dist-sequence"><span class="math display">\[
+\priorDens \mapsto \dens_1 \mapsto \cdots \mapsto \dens_K = \postDens.
+\tag{21}\]</span></span></p>
+<p>We will now apply the EnKF update <span class="math inline">\(K\)</span> times in order to track these intermediate distributions, and hopefully end up with a better approximation of the posterior. The intuition here is that the intermediate maps <span class="math inline">\(\dens_k \mapsto \dens_{k+1}\)</span> should represent relatively smaller changes, and small changes may be more amenable to linear-Gaussian approximation.</p>
+<section id="interpolating-between-probability-densities" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="interpolating-between-probability-densities"><span class="header-section-number">3.1</span> Interpolating between probability densities</h2>
+<p>There are many ways to construct the sequence <a href="#eq-dist-sequence" class="quarto-xref">Equation&nbsp;21</a>; i.e., to interpolate between two probability distributions <span class="math inline">\(\priorDens\)</span> and <span class="math inline">\(\postDens\)</span>. We will start by considering the following basic tempering schedule. We start with a generic result for two arbitrary densities, and then specialize to our particular setting.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Interpolating between two densities">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Interpolating between two densities
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Let <span class="math inline">\(\priorDens(\u)\)</span> and <span class="math inline">\(\postDens(\u) = \frac{1}{\normCst}\tilde{\dens}(\u)\)</span> be two probability densities on <span class="math inline">\(\parSpace\)</span>. For a positive integer <span class="math inline">\(K\)</span>, define the sequence of densities <span class="math inline">\(\dens_0, \dens_1, \dots, \dens_K\)</span> recursively by</p>
+<p><span id="eq-tempering-sequence"><span class="math display">\[
+\begin{align}
+\dens_{k+1}(\u) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\u)L(\u)^{1/K},
+&amp;&amp;\normCst_{k+1} := \int \dens_k(\u)L(\u)^{1/K} d\u,
+\end{align}
+\tag{22}\]</span></span></p>
+<p>for <span class="math inline">\(k = 0, \dots, K-1\)</span>, where <span id="eq-dens-ratio"><span class="math display">\[
+L(\u) \Def \frac{\tilde{\dens}(\u)}{\priorDens(\u)}.
+\tag{23}\]</span></span> Then the final density satisfies <span class="math inline">\(\dens_K = \postDens\)</span>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Proof
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>To start, note that the density ratio <a href="#eq-dens-ratio" class="quarto-xref">Equation&nbsp;23</a> can be written as <span class="math display">\[
+L(\u) = \frac{\tilde{\dens}(\u)}{\priorDens(\u)}
+= \frac{Z \postDens(\u)}{\priorDens(\u)}.
+\]</span></p>
+<p>We use this fact, and the recursion <a href="#eq-tempering-sequence" class="quarto-xref">Equation&nbsp;22</a> to obtain <span class="math display">\[
+\begin{align}
+\normCst_K
+&amp;= \int \dens_{K-1}(\u)L(\u)^{1/K} d\u \\
+&amp;= \int \dens_{0}(\u)L(\u)^{1/K} \prod_{k=1}^{K-1} \frac{L(\u)^{1/K}}{Z_k} d\u \\
+&amp;= \frac{1}{\normCst_1 \cdots \normCst_{K-1}} \int \priorDens(\u)L(\u) d\u \\
+&amp;= \frac{1}{\normCst_1 \cdots \normCst_{K-1}} \int \priorDens(\u)\frac{\normCst \postDens(\u)}{\priorDens(\u)} d\u \\
+&amp;= \frac{\normCst}{\normCst_1 \cdots \normCst_{K-1}}  \int \postDens(\u) d\u \\
+&amp;= \frac{\normCst}{\normCst_1 \cdots \normCst_{K-1}}.
+\end{align}
+\]</span></p>
+<p>The density recursion similarly yields <span class="math display">\[
+\begin{align}
+\dens_K(\u)
+&amp;= \frac{1}{\normCst_{K}}\dens_{K-1}(\u)L(\u)^{1/K} \\
+&amp;= \frac{\normCst_1 \cdots \normCst_{K-1}}{\normCst} \priorDens(\u)\frac{L(\u)}{\normCst_1 \cdots \normCst_{K-1}} \\
+&amp;= \frac{1}{\normCst} \priorDens(\u) L(\u) \\
+&amp;= \postDens(\u),
+\end{align}
+\]</span> where we have plugged in the expressions for <span class="math inline">\(\normCst_K\)</span> and <span class="math inline">\(L(\u)\)</span> derived above. □</p>
+</div>
+</div>
+</div>
+<p>The above result constructs a sequence between two arbitrary densities <span class="math inline">\(\priorDens\)</span> and <span class="math inline">\(\postDens\)</span>. If we choose these to be the prior and posterior distributions, then we obtain a prior-to-posterior map as a corollary.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Prior-to-Posterior Map in Finite Time">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Prior-to-Posterior Map in Finite Time
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Consider a Bayesian joint distribution <span class="math inline">\(p(\u, \y) = \priorDens(\u)p(\y \given \u)\)</span> with posterior <span class="math inline">\(\postDens(\u) \Def \frac{1}{\normCst} \priorDens(\u) p(\yobs \given \u)\)</span> where <span class="math inline">\(\normCst = p(\y)\)</span>. Then the sequence <span class="math inline">\(\dens_0, \dens_1, \dots, \dens_K\)</span> defined by <span id="eq-prior-to-post"><span class="math display">\[
+\begin{align}
+\dens_{k+1}(\u) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\u)p(\yobs \given \u)^{1/K},
+&amp;&amp;\normCst_{k+1} := \int \dens_k(\u)p(\yobs \given \u)^{1/K} d\u,
+\end{align}
+\tag{24}\]</span></span> for <span class="math inline">\(k = 0, \dots, K-1\)</span>, satisfies <span class="math inline">\(\dens_{K} = \postDens\)</span>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Proof
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>This is a special case of <a href="#eq-tempering-sequence" class="quarto-xref">Equation&nbsp;22</a> where <span class="math inline">\(\tilde{\postDens}(\u) = \priorDens(\u)p(\yobs \given \u)\)</span>. Thus, the density ratio simplifies to <span class="math display">\[
+L(\u) = \frac{\priorDens(\u)p(\yobs \given \u)}{\priorDens(\u)} = p(\yobs \given \u).
+\]</span> □</p>
+</div>
+</div>
+</div>
+<p>We conclude this section with another corollary that specializes the result even further to the particular Bayesian inverse problem <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Prior-to-Posterior Map with Gaussian Likelihood">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Prior-to-Posterior Map with Gaussian Likelihood
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Consider the particular Bayesian joint distribution <span class="math inline">\(p(\u, \y)\)</span> defined by the model in <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>. Then the updates in <a href="#eq-prior-to-post" class="quarto-xref">Equation&nbsp;24</a> take the particular form <span id="eq-prior-to-post-bip"><span class="math display">\[
+\begin{align}
+\dens_{k+1}(\u) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\u)\Gaussian(\yobs \given \fwd(\u), K\covNoise),
+&amp;&amp;\normCst_{k+1} := \int \dens_k(\u)\Gaussian(\yobs \given \fwd(\u), K\covNoise) d\u.
+\end{align}
+\tag{25}\]</span></span></p>
+<p>This update can equivalently be written as <span id="eq-prior-to-post-bip2"><span class="math display">\[
+\begin{align}
+\dens_{k+1}(\u) &amp;:= \frac{1}{\normCst_{k+1}}\dens_k(\u)\exp\left\{-\frac{1}{K}\misfit(\u) \right\},
+&amp;&amp;\normCst_{k+1} := \int \dens_k(\u)\exp\left\{-\frac{1}{K}\misfit(\u) \right\} d\u,
+\end{align}
+\tag{26}\]</span></span> where <span class="math inline">\(\misfit(\u)\)</span> is defined in <a href="#eq-misfit" class="quarto-xref">Equation&nbsp;1</a>. In either case, <span class="math inline">\(\dens_{K} = \postDens\)</span>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Proof
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Recall the Gaussian density <span class="math display">\[
+\begin{align}
+&amp;\Gaussian(\y \given \fwd(\u), \covNoise) =
+\text{det}(2\pi\covNoise)^{-1/2} \exp\left\{-\misfit(\u) \right\},
+&amp;&amp;\misfit(\u) = \frac{1}{2} \lVert \y - \fwd(\u)\rVert^2_{\covNoise}.
+\end{align}
+\]</span></p>
+<p>Raising this density to the power <span class="math inline">\(K^{-1}\)</span> thus gives <span class="math display">\[
+\begin{align}
+\Gaussian(\y \given \fwd(\u), \covNoise)^{1/K}
+&amp;= \text{det}(2\pi K \covNoise)^{-1/2} \exp\left\{-\frac{1}{K}\misfit(\u) \right\}, \\
+&amp;= \text{det}(2\pi K \covNoise)^{-1/2} \exp\left\{-\frac{1}{2} \lVert \y - \fwd(\u)\rVert^2_{K \covNoise} \right\} \\
+&amp;= \Gaussian(\yobs \given \fwd(\u), K \covNoise).
+\end{align}
+\]</span> The two updates <a href="#eq-prior-to-post-bip" class="quarto-xref">Equation&nbsp;25</a> thus follow, and differ only in whether we treat the determinant term as part of the normalizing constant <span class="math inline">\(\normCst\)</span> or the likelihood. □</p>
+</div>
+</div>
+</div>
+<p>As noted above, the approximation algorithm summarized in (27) can be viewed as performing an iteration of the EnKF algorithm. In this section, we take this idea further by encoding the structure of the inverse problem (1) in a dynamical system. Once these artificial dynamics are introduced, we can then consider applying standard algorithms for Bayesian estimation of time-evolving systems (e.g., the EnKF) to solve the inverse problem. We emphasize that (1), the original problem we are trying to solve, is static. The dynamics we introduce here are purely artificial, introduced for the purpose of making a mathematical connection with the vast field of time-varying systems. This allows us to port methods that have demonstrated success in the time-varying domain to our current problem of interest.</p>
+</section>
+<section id="prior-to-posterior-map-in-finite-time" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="prior-to-posterior-map-in-finite-time"><span class="header-section-number">3.2</span> Prior-to-Posterior Map in Finite Time</h2>
+<p>We start by generically considering how to construct a sequence of probability distributions that maps from the prior <span class="math inline">\(\pi_0\)</span> to the posterior <span class="math inline">\(\pi\)</span> in a finite number of steps. We will find it convenient to write the likelihood with respect to the potential <span class="math inline">\(\Phi(u)\)</span> defined in (3), such that the posterior distribution solving (1) is given by</p>
+</section>
+</section>
+<section id="appendix" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Appendix</h1>
+<section id="notation" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="notation"><span class="header-section-number">4.1</span> Notation</h2>
+<p>We write <span class="math display">\[
+\lVert x \rVert^2_A := \langle x, x\rangle_A := x^\top A^{-1}x
+\]</span> to denote the Euclidean norm weighted by the inverse of a positive definite matrix <span class="math inline">\(A\)</span>.</p>
+</section>
+</section>
+<section id="background-joint-gaussian-conditioning" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Background: Joint Gaussian Conditioning</h1>
+<section id="joint-gaussian-assumption" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="joint-gaussian-assumption"><span class="header-section-number">5.1</span> Joint Gaussian Assumption</h2>
+<p>We now begin by considering approximation of the posterior <span class="math inline">\(u|y\)</span> by way of a certain Gaussian approximation. In particular, we will assume that <span class="math inline">\((u,y)\)</span> are jointly Gaussian distributed, in which case standard Gaussian conditioning identities can be implied to yield an approximation of <span class="math inline">\(u|y\)</span>. Given that conditionals of Gaussians are also Gaussian, this approach produces a Gaussian approximation to the posterior <span class="math inline">\(u|y\)</span>. However, borrowing an idea from EnKF methodology, we will consider a slight modification with the ability to produce non-Gaussian approximations. To avoid notational confusion between exact and approximate distributions, we will denote by <span class="math inline">\((\hat{u}, \hat{y})\)</span> the random variables defining the joint Gaussian approximation. The Gaussian assumption thus takes the form <span class="math display">\[
+\begin{align}
+\begin{bmatrix} \hat{u} \newline \hat{y} \end{bmatrix}
+\sim
+\mathcal{N}\left(
+\begin{bmatrix} \overline{u} \newline \overline{y} \end{bmatrix},
+\begin{bmatrix} \hat{C} &amp; \hat{C}^{uy} \newline
+                \hat{C}^{yu} &amp; \hat{C}^{y} \end{bmatrix}
+\right) \tag{6}
+\end{align}
+\]</span> where the moments <span class="math inline">\(\overline{u}\)</span>, <span class="math inline">\(\overline{y}\)</span>, <span class="math inline">\(\hat{C}\)</span>, <span class="math inline">\(\hat{C}^y\)</span>, and <span class="math inline">\(\hat{C}^{uy}\)</span> defining this approximation are quantities that we must specify. We use the notation <span class="math inline">\(\hat{C}^{yu} := \hat{C}^{uy}\)</span>. Note that if the forward model <span class="math inline">\(\mathcal{G}\)</span> is linear and the prior distribution <span class="math inline">\(\pi_0\)</span> is Gaussian, then the joint Gaussian approximation (6) is actually exact, and the moments can be computed in closed-form. In other words, with the moments properly defined, <span class="math inline">\((\hat{u},\hat{y}) \overset{d}{=} (u,y)\)</span> and therefore <span class="math inline">\((\hat{u}|\hat{y}) \overset{d}{=} (u|y)\)</span>; that is, the posterior approximation is exact. This special case is typically referred to as the <em>linear Gaussian</em> setting, which I discuss in depth in this <a href="https://arob5.github.io/blog/2024/07/03/lin-Gauss/">this</a> post. When <span class="math inline">\(\mathcal{G}\)</span> is nonlinear and/or <span class="math inline">\(\pi_0\)</span> is non-Gaussian, then (6) will truly be an approximation and the above equalities will not hold.</p>
+<p>In the following subsections, we briefly review some properties of joint Gaussians and their conditional distributions. We work with the joint distribution (6), assuming the means and covariances are known. With the necessary background established, we then discuss practical algorithms for estimating these moments and producing approximations of <span class="math inline">\(u|y\)</span>.</p>
+</section>
+<section id="gaussian-conditional-moments" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="gaussian-conditional-moments"><span class="header-section-number">5.2</span> Gaussian Conditional Moments</h2>
+<p>Regardless of whether or not we are truly in the linear Gaussian setting, let us suppose that we have constructed the joint distribution (6). Using standard facts about Gaussian distributions, we know the conditional is also Gaussian <span class="math display">\[
+\hat{u}|[\hat{y}=y] \sim \mathcal{N}(\hat{m}_*, \hat{C}_*), \tag{7}
+\]</span> with moments given by</p>
+<p><span class="math display">\[
+\hat{m}_* = \overline{u} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y - \overline{y}) \tag{8}
+\]</span> <span class="math display">\[
+\hat{C}_* = \hat{C} - \hat{C}^{uy}[\hat{C}^y]^{-1}\hat{C}^{yu}. \tag{9}
+\]</span></p>
+</section>
+<section id="gaussian-conditional-simulation" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="gaussian-conditional-simulation"><span class="header-section-number">5.3</span> Gaussian Conditional Simulation</h2>
+<p>As an alternative to explicitly computing the conditional moments (8) and (9), we can consider a Monte Carlo representation of <span class="math inline">\(\hat{u}|\hat{y}\)</span>. The conditional distribution can be directly simulated (without computing (8) and (9)) using the fact <span class="math display">\[
+(\hat{u}|[\hat{y}=y]) \overset{d}{=} \hat{u} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}), \tag{10}
+\]</span> which can be quickly verified by computing the mean and covariance of each side. Note that the randomness in the righthand side is inherited from the random variables <span class="math inline">\(\hat{u}\)</span> and <span class="math inline">\(\hat{y}\)</span>, while <span class="math inline">\(y\)</span> here is viewed as a specific realization of the data (and is thus non-random). The result (10), known as <em>Matheron’s Rule</em>, provides the basis for the following algorithm to draw independent samples from the conditional distribution <span class="math inline">\(\hat{u}|[\hat{y}=y]\)</span>.</p>
+<blockquote class="blockquote">
+<p>
+</p><p><strong>Gaussian Conditional Simulation via Matheron’s Rule.</strong> <br> Independent samples <span class="math inline">\(\hat{u}_*^{(1)}, \dots, \hat{u}_*^{(J)}\)</span> can be simulated from the distribution <span class="math inline">\(\hat{u}|[\hat{y}=y]\)</span> by repeating the following procedure for each <span class="math inline">\(j=1,\dots,J\)</span>: <br> <br></p>
+<ol type="1">
+<li>Draw independent samples <span class="math inline">\(\hat{u}^{(j)}\)</span> and <span class="math inline">\(\hat{y}^{(j)}\)</span> from the marginal distributions of <span class="math inline">\(\hat{u}\)</span> and <span class="math inline">\(\hat{y}\)</span>, respectively. That is, <span class="math display">\[\begin{align}
+  &amp;\hat{u}^{(j)} \sim \mathcal{N}(\overline{u},\hat{C})
+  &amp;&amp;\hat{y}^{(j)} \sim \mathcal{N}(\overline{y},\hat{C}^y). \tag{11}
+  \end{align}\]</span></li>
+<li>Return <span class="math display">\[
+  \hat{u}^{(j)}_* := \hat{u}^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}^{(j)}). \tag{12}
+  \]</span>
+<p></p>
+</li></ol></blockquote>
+
+</section>
+</section>
+<section id="posterior-approximation-algorithm" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Posterior Approximation Algorithm</h1>
+<p>Up to this point, we have not discussed the choice of the moments defining the joint Gaussian approximation (6). We now provide these definitions, leading to concrete algorithms for posterior approximation. We will adopt a Monte Carlo strategy by sampling independently from the <em>true</em> joint distribution <span class="math inline">\((u,y)\)</span> defined by (1); i.e., <span class="math inline">\((u^{(j)}, y^{(j)}) \sim p(u,y)\)</span>. We next compute the empirical means and covariances of these random draws and insert them into the joint Gaussian approximation (6). The below subsection focuses on the estimation of these moments, which we will then follow by utilizing the above Gaussian conditioning results to derive various approximations of <span class="math inline">\(u|y\)</span>.</p>
+<section id="estimating-the-gaussian-moments" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="estimating-the-gaussian-moments"><span class="header-section-number">6.1</span> Estimating the Gaussian Moments</h2>
+<p>The first step in our approach requires generating the prior <em>ensemble</em> <span class="math display">\[
+\{(u^{(j)}, \epsilon^{(j)})\}, \qquad j = 1, \dots, J \tag{13}
+\]</span> constructed by sampling according to model (1); i.e., <span class="math display">\[
+\begin{align}
+&amp;u^{(j)} \sim \pi_0, &amp;&amp;\epsilon^{(j)} \sim \mathcal{N}(0, \Sigma). \tag{14}
+\end{align}
+\]</span> We now consider estimating the first two moments of this joint distribution. Starting with the <span class="math inline">\(u\)</span> marginal, we define the sample estimates <span class="math display">\[
+\begin{align}
+\overline{u} &amp;:= \frac{1}{J}\sum_{j=1}^{J} u^{(j)} \tag{15} \newline
+\hat{C} &amp;:= \frac{1}{J-1}\sum_{j=1}^{J} (u^{(j)}-\overline{u})(u^{(j)}-\overline{u})^\top. \tag{16}
+\end{align}
+\]</span> Alternatively, if the prior <span class="math inline">\(\pi_0\)</span> takes the form of a well-known distribution, then we can simply set <span class="math inline">\(\overline{u}\)</span> and/or <span class="math inline">\(\hat{C}\)</span> to the known moments of this distribution. We can likewise consider such mean and covariance estimates for the <span class="math inline">\(\hat{y}\)</span> portion of (6), defined with respect to the ensemble <span class="math display">\[
+\{y^{(j)}\}_{j=1}^{J}, \qquad\qquad y^{(j)} := \mathcal{G}(u^{(j)}) + \epsilon^{(j)}. \tag{17}
+\]</span> However, we can simplify matters a bit by performing part of the calculations analytically, owing to the simple additive Gaussian error structure. Noting that under (1) we have <span class="math display">\[
+\begin{align}
+\mathbb{E}[y]
+&amp;= \mathbb{E}[\mathcal{G}(u) + \epsilon]
+= \mathbb{E}[\mathcal{G}(u)] \tag{18} \newline
+\text{Cov}[y]
+&amp;= \text{Cov}[\mathcal{G}(u) + \epsilon]
+= \text{Cov}[\mathcal{G}(u)] + \text{Cov}[\epsilon]
+= \text{Cov}[\mathcal{G}(u)] + \Sigma, \tag{19}
+\end{align}
+we can focus our efforts on substituting sample-based estimates for the first
+term in both (18) and (19). Doing so yields,
+\begin{align}
+\overline{y} &amp;:= \frac{1}{J} \sum_{j=1}^{J} \mathcal{G}(u^{(j)}) \tag{20} \newline
+\hat{C}^y &amp;:= \frac{1}{J-1} \sum_{j=1}^{J} (\mathcal{G}(u^{(j)})-\overline{y})(\mathcal{G}(u^{(j)})-\overline{y})^\top + \Sigma. \tag{21}
+\end{align}
+\]</span> We similarly define the last remaining quantity <span class="math inline">\(\hat{C}^{uy}\)</span> by noting that <span class="math display">\[
+\text{Cov}[u,y]
+= \text{Cov}[u,\mathcal{G}(u)+\epsilon]
+= \text{Cov}[u,\mathcal{G}(u)] + \text{Cov}[u,\epsilon]
+= \text{Cov}[u,\mathcal{G}(u)]. \tag{22}
+\]</span> We thus consider the estimator <span class="math display">\[
+\hat{C}^{uy} := \frac{1}{J-1} \sum_{j=1}^{J} (u^{(j)}-\overline{u})(\mathcal{G}(u^{(j)})-\overline{y})^\top. \tag{23}
+\]</span></p>
+</section>
+<section id="gaussian-approximations" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="gaussian-approximations"><span class="header-section-number">6.2</span> Gaussian Approximations</h2>
+<p>At this point, we have obtained the joint approximation (6) derived by computing the sample moments as described in the previous subsection. The question is now how best to use this joint approximation in approximating the true posterior. The most straightforward approach is to simply define our approximate posterior to be <span class="math inline">\(\hat{u}|[\hat{y}=y]\)</span>, the Gaussian conditional. This conditional is available in closed-form and is defined in equations (7), (8), and (9). Suppose, for whatever reason, we are only interested in a sample-based representation of this Gaussian conditional. In this case, we can apply the algorithm summarized in (11) and (12) based on Matheron’s Rule. Explicitly, we construct an approximate posterior ensemble <span class="math inline">\(\{\hat{u}_*^{(j)}\}_{j=1}^{J^\prime}\)</span> via the update equation in (12), <span class="math display">\[
+\hat{u}^{(j)}_* := \hat{u}^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}^{(j)}), \tag{24}
+\]</span> for <span class="math inline">\(j = 1, \dots, J^\prime\)</span>. At this point we should be quite clear about the definition of each term in (24). The mean and covariance estimates appearing in this expression are all derived from the ensemble <span class="math inline">\(\{(u^{(j)}, \epsilon^{(j)})\}_{j=1}^{J}\)</span> sampled from the <em>true</em> joint distribution implied by (1). On the other hand, <span class="math inline">\(\{\hat{u}^{(j)}, \hat{y}^{(j)}\}_{j=1}^{J^\prime}\)</span> are samples from the <em>approximate</em> joint distribution defined in (6). This is simply an exact implementation of Matheron’s rule under the joint distribution (6); i.e., the resulting ensemble <span class="math inline">\(\{\hat{u}^{(j)}_*\}_{j=1}^{J^\prime}\)</span> contains iid samples from <span class="math inline">\(\hat{u}|[\hat{y}=y]\)</span>. If it seems odd to dwell on this point, we note that we are primarily doing so to provide motivation for the alternative method discussed below.</p>
+</section>
+<section id="non-gaussian-approximation-via-enkf-update" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="non-gaussian-approximation-via-enkf-update"><span class="header-section-number">6.3</span> Non-Gaussian Approximation via EnKF Update</h2>
+As discussed above, a direct application of Matheron’s rule to (6) results in an ensemble of samples from a Gaussian distribution, which we interpret as a sample-based approximation to the true posterior. We now consider constructing the ensemble <span class="math inline">\(\{\hat{u}_*^{(j)}\}_{j=1}^{J}\)</span> via the slightly different update rule <span class="math display">\[
+\hat{u}^{(j)}_* := u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-y^{(j)}), \tag{25}
+\]</span> for <span class="math inline">\(j = 1, \dots, J\)</span>. This is precisely the update equation used in the analysis (i.e., update) step of the EnKF, so we refer to (25) as the <em>EnKF update</em>. The only difference from (24) is that we have replaced the samples <span class="math inline">\((\hat{u}^{(j)},\hat{y}^{(j)})\)</span> from (6) with the samples <span class="math inline">\((u^{(j)}, y^{(j)})\)</span> from the true joint distribution, as defined in (14) and (17). In other words, we now utilize the samples from the initial ensemble (the same samples used to compute the mean and covariance estimates). Thus, equation (25) can be viewed as a particle-by-particle update to the initial ensemble, <span class="math display">\[
+\{u^{(j)}\}_{j=1}^{J} \mapsto \{\hat{u}^{(j)}_*\}_{j=1}^{J}. \tag{26}
+\]</span> The update (25) is somewhat heuristic, and it is difficult to assess the properties of the updated ensemble. Given that the initial ensemble will not in general constitute samples from a Gaussian (since <span class="math inline">\(p(u,y)\)</span> is in general non-Gaussian), then the updated ensemble will also generally be non-Gaussian distributed. If the inverse problem (1) is linear Gaussian, then the updates (24) and (25) are essentially equivalent. Beyond this special case, the hope is that the use of the true prior samples in (25) will better approximate non-Gaussianity in the posterior distribution, as opposed to the Gaussian approximation implied by (24). The EnKF update can alternatively be justified from an optimization perspective, which we won’t discuss here; see my <a href="https://arob5.github.io/blog/2024/07/30/enkf/">post</a> on the EnKF for details. We conclude this section by summarizing the final algorithm.
+<blockquote class="blockquote">
+<p>
+<strong>Posterior Approximation via EnKF Update.</strong> <br><br> 1. Generate the initial ensembles <span class="math inline">\(\{u^{(j)}\}_{j=1}^{J}\)</span> and <span class="math inline">\(\{\mathcal{G}(u^{(j)})\}_{j=1}^{J}\)</span>, where <span class="math inline">\(u^{(j)} \sim \pi_0\)</span>. <br> 2. Compute the sample estimates <span class="math inline">\(\overline{u}\)</span>, <span class="math inline">\(\overline{y}\)</span>, <span class="math inline">\(\hat{C}\)</span>, <span class="math inline">\(\hat{C}^y\)</span>, and <span class="math inline">\(\hat{C}^{uy}\)</span> as defined in (20)-(23). <br> 3. Return the updated ensemble <span class="math inline">\(\{\hat{u}^{(j)}_*\}_{j=1}^{J}\)</span> by applying the EnKF update <span class="math display">\[\begin{align}
+  \hat{u}^{(j)}_* &amp;:= u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-y^{(j)}),
+  &amp;&amp;y^{(j)} \sim \mathcal{N}(\mathcal{G}(u^{(j)}), \Sigma). \tag{27}
+  \end{align}\]</span>
+</p>
+</blockquote>
+</section>
+</section>
+<section id="artificial-dynamics" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Artificial Dynamics</h1>
+<p>As noted above, the approximation algorithm summarized in (27) can be viewed as performing an iteration of the EnKF algorithm. In this section, we take this idea further by encoding the structure of the inverse problem (1) in a dynamical system. Once these artificial dynamics are introduced, we can then consider applying standard algorithms for Bayesian estimation of time-evolving systems (e.g., the EnKF) to solve the inverse problem. We emphasize that (1), the original problem we are trying to solve, is static. The dynamics we introduce here are purely artificial, introduced for the purpose of making a mathematical connection with the vast field of time-varying systems. This allows us to port methods that have demonstrated success in the time-varying domain to our current problem of interest.</p>
+<section id="prior-to-posterior-map-in-finite-time-1" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="prior-to-posterior-map-in-finite-time-1"><span class="header-section-number">7.1</span> Prior-to-Posterior Map in Finite Time</h2>
+<p>We start by generically considering how to construct a sequence of probability distributions that maps from the prior <span class="math inline">\(\pi_0\)</span> to the posterior <span class="math inline">\(\pi\)</span> in a finite number of steps. We will find it convenient to write the likelihood with respect to the potential <span class="math inline">\(\Phi(u)\)</span> defined in (3), such that the posterior distribution solving (1) is given by</p>
+<p><span class="math display">\[
+\begin{align}
+\pi(u) &amp;= \frac{1}{Z} \pi_0(u)\exp(-\Phi(u)), &amp;&amp;Z = \int \pi_0(u)\exp(-\Phi(u)) du. \tag{28}
+\end{align}
+\]</span></p>
+<p>The following result describes a likelihood tempering approach to constructing the desired sequence of densities.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Prior-to-Posterior Sequence of Densities.</strong> <br><br> For a positive integer <span class="math inline">\(K\)</span>, define the sequence of densities <span class="math inline">\(\pi_0, \pi_1, \dots, \pi_K\)</span> recursively by <span class="math display">\[\begin{align}
+  \pi_{k+1}(u) &amp;:= \frac{1}{Z_{k+1}}\pi_k(u)\exp\left(-\frac{1}{K}\Phi(u)\right),
+  &amp;&amp;Z_{k+1} := \int \pi_k(u)\exp\left(-\frac{1}{K}\Phi(u)\right) du, \tag{29}
+  \end{align}\]</span> for <span class="math inline">\(k = 0, \dots, K-1\)</span>. Then the final density satisfies <span class="math inline">\(\pi_K = \pi\)</span>, where <span class="math inline">\(\pi\)</span> is defined in (28).
+</p>
+</blockquote>
+<p><strong>Proof.</strong> We first consider the normalizing constant at the final iteration: <span class="math display">\[
+\begin{align}
+Z_K
+&amp;= \int \pi_{K-1}(u)\exp\left(-\frac{1}{K}\Phi(u)\right) du \newline
+&amp;= \int \pi_{0}(u)\frac{1}{Z_{K-1} \cdots Z_1}\exp\left(-\frac{1}{K}\Phi(u)\right)^K du \newline
+&amp;= \frac{1}{Z_{K-1} \cdots Z_1} \int \pi_{0}(u)\exp\left(-\Phi(u)\right) du \newline
+&amp;= \frac{Z}{Z_1 \cdots Z_{K-1}},
+\end{align}
+\]</span> where the second equality simply iterates the recursion (29). Rearranging, we see that <span class="math display">\[
+Z = \prod_{k=1}^{K} Z_k. \tag{30}
+\]</span></p>
+<p>We similarly iterate the recursion for <span class="math inline">\(\pi_K\)</span>: <span class="math display">\[
+\begin{align}
+\pi_K(u)
+&amp;= \frac{1}{Z_K} \pi_{K-1}(u) \exp\left(-\frac{1}{K}\Phi(u)\right) \newline
+&amp;= \frac{1}{Z_K Z_{K-1} \cdots Z_1} \pi_{0}(u) \exp\left(-\frac{1}{K}\Phi(u)\right)^K \newline
+&amp;= \frac{1}{Z} \pi_{0}(u) \exp\left(-\Phi(u)\right) \newline
+&amp;= \pi(u) \qquad\qquad\qquad\qquad\qquad \blacksquare
+\end{align}
+\]</span></p>
+<p>The sequence defined by (29) essentially splits the single Bayesian inverse problem (1) into a sequence of <span class="math inline">\(K\)</span> inverse problems. In particular, the update <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span> implies solving the inverse problem <span class="math display">\[
+\begin{align}
+y|u &amp;\sim \tilde{p}(y|u) \tag{31} \newline
+u &amp;\sim \pi_k(u),
+\end{align}
+\]</span> with the tempered likelihood <span class="math display">\[
+\tilde{p}(y|u) \propto \exp\left(-\frac{1}{K}\Phi(u)\right). \tag{32}
+\]</span> Each update thus encodes the action of conditioning on the data <span class="math inline">\(y\)</span>, but under the modified likelihood <span class="math inline">\(\tilde{p}(y|u)\)</span> which “spreads out” the information in the data over the <span class="math inline">\(K\)</span> time steps. If we were to consider using the true likelihood <span class="math inline">\(p(y|u)\)</span> in each time step, this would artificially inflate the information content in <span class="math inline">\(y\)</span>, as if we had <span class="math inline">\(K\)</span> independent data vectors instead of just one.</p>
+<section id="gaussian-special-case" class="level3" data-number="7.1.1">
+<h3 data-number="7.1.1" class="anchored" data-anchor-id="gaussian-special-case"><span class="header-section-number">7.1.1</span> Gaussian Special Case</h3>
+<p>Suppose the likelihood is Gaussian <span class="math inline">\(\mathcal{N}(y|\mathcal{G}(u), \Sigma)\)</span>, with associated potential <span class="math inline">\(\Phi(u) = \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma}\)</span>. The tempered likelihood in this case is <span class="math display">\[
+\exp\left(-\frac{1}{K}\Phi(u)\right)
+= \exp\left(-\frac{1}{2K}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma}\right)
+\propto \mathcal{N}(y|\mathcal{G}(u), K\Sigma). \tag{33}
+\]</span> The modified likelihood remains Gaussian, and is simply the original likelihood with the variance inflated by a factor of <span class="math inline">\(K\)</span>. This matches the intuition from above; the variance is increased to account for the fact that we are conditioning on the same data vector <span class="math inline">\(K\)</span> times.</p>
+<p>If, in addition to the Gaussian likelihood, the prior <span class="math inline">\(\pi_0\)</span> is Gaussian and the map <span class="math inline">\(\mathcal{G}\)</span> is linear then the final posterior <span class="math inline">\(\pi\)</span> and each intermediate distribution <span class="math inline">\(\pi_k\)</span> will also be Gaussian. In this case, the recursion (29) defines a sequence of <span class="math inline">\(K\)</span> linear Gaussian Bayesian inverse problems.</p>
+</section>
+</section>
+<section id="introducing-artificial-dynamics" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="introducing-artificial-dynamics"><span class="header-section-number">7.2</span> Introducing Artificial Dynamics</h2>
+<p>The previous section considered a discrete process on the level of densities; i.e., the dynamics (29) describe the evolution of <span class="math inline">\(\pi_k\)</span>. Our goal is now to design an artificial dynamical system that treats <span class="math inline">\(u\)</span> as the state variable, such that <span class="math inline">\(\pi_k\)</span> describes the filtering distribution of the state at iteration <span class="math inline">\(k\)</span>. In theory, we can then draw samples from <span class="math inline">\(\pi\)</span> by applying standard filtering algorithms to this artificial dynamical system.</p>
+<p>There are many approaches we could take here, but let us start with the simplest. We know that the update <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span> should encode the action of conditioning on <span class="math inline">\(y\)</span> with respect to the tempered likelihood. Thus, let’s consider the following dynamics and observation model: <span class="math display">\[
+\begin{align}
+u_{k+1} &amp;= u_k \tag{34} \newline
+y_{k+1} &amp;= \mathcal{G}(u_{k+1}) + \epsilon_{k+1}, &amp;&amp;\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{35} \newline
+u_0 &amp;\sim \pi_0 \tag{36}
+\end{align}
+\]</span> The lines (34) and (36) define our artificial dynamics in <span class="math inline">\(u\)</span>, with the former providing the evolution equation and the latter the initial condition. These dynamics are rather uninteresting; the evolution operator is the identity, meaning that the state remains fixed at its initial condition. All of the interesting bits here come into play in the observation model (34). We observe that, by construction, the filtering distribution of this dynamical system at time step <span class="math inline">\(k\)</span> is given by <span class="math inline">\(\pi_k\)</span>: <span class="math display">\[
+\pi_k(u_k) = p(u_k | y_1 = y, \dots, y_k = y). \tag{37}
+\]</span> To be clear, we emphasize that the quantities <span class="math inline">\(y_1, \dots, y_K\)</span> in the observation model (35) are random variables, and <span class="math inline">\(y_k = y\)</span> indicates that the condition that the random variable <span class="math inline">\(y_k\)</span> is equal to the fixed data realizaton <span class="math inline">\(y\)</span>.</p>
+<section id="extending-the-state-space" class="level3" data-number="7.2.1">
+<h3 data-number="7.2.1" class="anchored" data-anchor-id="extending-the-state-space"><span class="header-section-number">7.2.1</span> Extending the State Space</h3>
+<p>We now provide an alternative, but equivalent, formulation that gives another useful perspective. Observe that the observation model (34) can be written as <span class="math display">\[
+y_k
+= \mathcal{G}(u_k) + \epsilon_{k}
+= \begin{bmatrix} 0 &amp; I \end{bmatrix} \begin{bmatrix} u_k \\ \mathcal{G}(u_k) \end{bmatrix} + \epsilon_{k}
+=: Hv_k + \epsilon_k, \tag{38}
+\]</span> where we have defined <span class="math display">\[\begin{align}
+H &amp;:= \begin{bmatrix} 0 &amp; I \end{bmatrix} \in \mathbb{R}^{p \times (d+p)},
+&amp;&amp;v_k := \begin{bmatrix} u_k \newline \mathcal{G}(u_k) \end{bmatrix} \in \mathbb{R}^{d+p}. \tag{38}
+\end{align}\]</span> We will now adjust the dynamical system (33) to describe the dynamics with respect to the state vector <span class="math inline">\(v_k\)</span>: <span class="math display">\[
+\begin{align}
+v_{k+1} &amp;= v_k \tag{40} \newline
+y_{k+1} &amp;= Hv_{k+1} + \epsilon_{k+1}, &amp;&amp;\epsilon_{k+1} \sim \mathcal{N}(0, K\Sigma) \tag{41} \newline
+u_0 &amp;\sim \pi_0. \tag{42}
+\end{align}
+\]</span> We continue to write the initial condition (42) with respect to <span class="math inline">\(u\)</span> but note that the distribution on <span class="math inline">\(u_0\)</span> induces an initial distribution for <span class="math inline">\(v_0\)</span>. Why extend the state space in this way? For one, the observation operator in (41) is now linear. Linearity of the observation operator is a common assumption in the data assimilation literature, so satisfying this assumption allows us more flexibility in choosing a filtering algorithm. The main reason I opt to include the state space extension here is that this is the approach taken in Iglesias et al (2012), which is the first paper to systematically propose and analyze the application of the EnKF to inverse problems. In effect, if you have defined the EnKF with respect to a linear observation operator (as is commonly done), then the extended state space formulation allows you to extend the algorithm to the nonlinear case. As we will see, what you ultimately get is identical to the joint Gaussian approximation viewpoint used in deriving (27).</p>
+<p>This extended state space formulation still gives rise to the sequence <span class="math inline">\(\pi_0, \dots, \pi_K\)</span> as before. However, the distribution <span class="math inline">\(\pi_k\)</span> is now a <em>marginal</em> of filtering distribution for <span class="math inline">\(v_k\)</span> (the marginal corresponding to the first <span class="math inline">\(d\)</span> entries of <span class="math inline">\(v_k\)</span>).</p>
+</section>
+</section>
+<section id="applying-filtering-algorithms" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="applying-filtering-algorithms"><span class="header-section-number">7.3</span> Applying Filtering Algorithms</h2>
+We have now considered a couple options to formulate the Bayesian inverse problem (1) as a discrete dynamical system, such that the filtering distributions of the artificial system are given by <span class="math inline">\(\pi_1, \dots, \pi_K\)</span>, as defined in (29). The distribution at the final time step satisfies <span class="math inline">\(\pi_K = \pi\)</span>. This points to a possible algorithmic approach to posterior inference. If we can propagate an ensemble of particles such that they are distributed according to <span class="math inline">\(\pi_k\)</span> at time step <span class="math inline">\(k\)</span>, then the ensemble will represent the posterior at time step <span class="math inline">\(K\)</span>. Particle filtering methods might be considered to exactly implement this Monte Carlo scheme. However, in this post we consider approximate methods rooted in Kalman methodology. Specifically, let’s consider applying the EnKF to the model given in (40). We could also consider (34) and get the same result, but I’ll follow Iglesias et al (2012) in using the extended state space formulation to generalize the linear observation operator EnKF to nonlinear operators. A direct application of the EnKF to the system (40) gives the following recursive algorithm.
+<blockquote class="blockquote">
+<p>
+<strong>Posterior Approximation via EnKF Update in Finite Time.</strong> <br><br> <strong> Time k=0:</strong> <br><br> Generate the initial ensemble <span class="math inline">\(\{v_0^{(j)}\}_{j=1}^{J}\)</span>, where <span class="math display">\[
+  \begin{align}
+  &amp;v^{(j)}_0 := \begin{bmatrix} u^{(j)}_0, \mathcal{G}(u^{(j)}_0) \end{bmatrix}^\top,
+  &amp;&amp;u^{(j)}_0 \overset{iid}{\sim} \pi_0. \tag{43}
+  \end{align}
+  \]</span> <strong> Time k+1:</strong> <br><br> 1. Perform the forecast step: <span class="math display">\[
+  \hat{v}^{(j)}_{k+1} := v^{(j)}_{k}, \qquad j = 1, \dots, J \tag{44}
+  \]</span> <br> 2. Compute the sample estimates: <span class="math display">\[
+  \begin{align}
+  \overline{v}_{k+1} &amp;:= \frac{1}{J} \sum_{j=1}^{J} \hat{v}^{(j)}_{k+1} \tag{45} \newline
+  \hat{C}^v_{k+1} &amp;:= \frac{1}{J-1} \sum_{j=1}^{J} (\hat{v}^{(j)}_{k+1} - \overline{v}_{k+1}) (\hat{v}^{(j)}_{k+1} - \overline{v}_{k+1})^\top.
+  \end{align}
+  \]</span> 3. Perform the analysis step: <span class="math display">\[
+  \begin{align}
+  v^{(j)}_{k+1} &amp;:=
+  \hat{v}^{(j)}_{k+1} + \hat{C}^{v}_{k+1}H^\top[H\hat{C}^{v}_{k+1}H^\top + K\Sigma]^{-1}(y-y^{(j)}),
+  &amp;&amp;y^{(j)} \sim \mathcal{N}(H\hat{v}_{k+1}^{(j)}, K\Sigma). \tag{46}
+  \end{align}
+  \]</span>
+</p>
+</blockquote>
+</section>
+</section>
+<section id="references" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> References</h1>
+<ol type="1">
+<li>The Ensemble Kalman Filter for Inverse Problems (Iglesias et al, 2012)</li>
+</ol>
+
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-meanField" class="csl-entry" role="listitem">
+Calvello, Edoardo, Sebastian Reich, and Andrew M. Stuart. 2024. <span>“Ensemble Kalman Methods: A Mean Field Perspective.”</span> <a href="https://arxiv.org/abs/2209.11371">https://arxiv.org/abs/2209.11371</a>.
+</div>
+<div id="ref-invProbDA" class="csl-entry" role="listitem">
+Sanz-Alonso, Daniel, Andrew Stuart, and Armeen Taeb. 2023. <em>Inverse Problems and Data Assimilation</em>. London Mathematical Society Student Texts. Cambridge University Press.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
