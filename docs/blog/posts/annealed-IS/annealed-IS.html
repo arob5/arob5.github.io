@@ -418,7 +418,7 @@ Remark
 <section id="algorithm" class="level2" data-number="1.5">
 <h2 data-number="1.5" class="anchored" data-anchor-id="algorithm"><span class="header-section-number">1.5</span> Algorithm</h2>
 <p>The core of the AIS algorithm is the generation of independent weighted samples <span class="math inline">\((x^{(n)}_{0:K}, w(x_{0:K}^{(n)}))\)</span>. We discuss the use of these samples for estimating expectations and normalizing constants in the next section. Here, we summarize the above derivations in an algorithm. The procedure simply requires sampling <span class="math inline">\(x_{0:K} \sim q\)</span> and then computing the weight in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a>. As seen below, this can be done in an online fashion, which shoes that AIS can be viewed as alternating between MCMC steps and IS updates. Note that the logarithm actually returns the logarithm of the importance weight for numerical stability.</p>
-<div id="alg-single-step-eki" class="algo-box algorithm">
+<div class="algo-box algorithm">
 <p><strong>Algorithm 1: Calculate AIS weighted sample</strong> <span class="math display">\[
 \begin{array}{ll}
 &amp;\textbf{Input:} &amp;&amp; (f_k)_{k=1}^K, \ (F_k)_{k=1}^K \\
@@ -431,7 +431,7 @@ Remark
 &amp; \quad x_k \sim F_{k+1}(x_{k-1}, \cdot) \\
 &amp; \textbf{end for} \\[0.1em]
 &amp; x \gets (x_0, \dots, x_K) \\
-&amp; \textbf{Return:} \qquad (x, \ell_w)
+&amp; \textbf{Return:} \ (x, \ell_w)
 \end{array}
 \]</span></p>
 </div>

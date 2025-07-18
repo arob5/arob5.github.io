@@ -255,7 +255,7 @@ can be viewed as alternating between MCMC steps and IS updates.
 Note that the logarithm actually returns the logarithm of the importance weight
 for numerical stability.
 
-::: {.algo-box .algorithm #alg-single-step-eki}
+::: {.algo-box .algorithm}
 **Algorithm 1: Calculate AIS weighted sample**
 $$
 \begin{array}{ll}

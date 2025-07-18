@@ -19,24 +19,24 @@ format:
 A typical Bayesian model consists of a joint probability distribution over
 a parameter $u$ and data $y$ of the form
 $$
-p(u,y) = \pi_0(u)L(u)
+p(u,y) = \pi_0(u)L(u;y)
 $$ {#eq-joint-model}
-where $\pi_0(u)$ is the prior density on $u$ and $L(u) = p(y \mid u)$ the likelihood.
+where $\pi_0(u)$ is the prior density on $u$ and $L(u;y) = p(y \mid u)$ the likelihood.
 The posterior distribution is then given by
 $$
-\pi(u) := p(u \mid y) = \frac{1}{Z}\pi_0(u)L(u)
+\pi(u) := p(u \mid y) = \frac{1}{Z}\pi_0(u)L(u;y)
 $$ {#eq-post}
 where $Z$ is a normalizing constant (independent of $u$) that we are not
 typically able to compute. Fortunately, common algorithms for posterior
 inference such as Markov chain Monte Carlo (MCMC)
 only require pointwise evaluations of the *unnormalized* posterior density
-$\pi_0(u)L(u)$.
+$\pi_0(u)L(u;y)$.
 
 In this post, we consider a class of Bayesian models that adds an additional
 difficulty, rendering these standard inference algorithms infeasible.
 In particular, we assume a likelihood of the form
 $$
-L(u) = \frac{f(y; u)}{C(u)},
+L(u;y) = \frac{f(y; u)}{C(u)},
 $$ {#eq-intractable-lik}
 such that we can evaluate $f(y;u)$ but not the normalizing function $C(u)$.
 The posterior density in this setting becomes
@@ -46,8 +46,8 @@ $$ {#eq-doubly-intractable-post}
 Distributions of the form @eq-doubly-intractable-post are known as
 *doubly intractable* owing to the two quantities
 we are unable to compute: $Z$ and $C(u)$. While the former does not pose
-a problem for typical inference algorithms, the presence of the latter will
-require specialized methods.
+a problem for typical inference algorithms, the presence of the latter
+is problematic.
 
 # The Problem
 Recall the basic structure of a Metropolis-Hastings algorithm. If $u$ is the
@@ -62,7 +62,7 @@ $$
 $$ {#eq-MH-ratio}
 If accepted, the updated state is set to $\tilde{u}$, otherwise the chain remains
 at $u$. A key requirement of the algorithm is the ability to compute
-$r(\tilde{u} \mid u)$. Plugging the density @eq-doubly-intractable-post into this
+$r(\tilde{u} \mid u)$. Plugging the density in @eq-doubly-intractable-post into this
 expression, we see the ratio simplifies to
 $$
 r(\tilde{u} \mid u)
@@ -129,12 +129,12 @@ on the normalizing function is
 $$
 q(\tilde{x} \mid \tilde{u}) := f(\tilde{x};\tilde{u}) / C(\tilde{u}).
 $$ {#eq-auxiliary-proposal}
-Indeed, if we plug @eq-auxiliary-proposal into @eq-MH-ratio-ext-intractable to
-obtain
+Indeed, plugging @eq-auxiliary-proposal into @eq-MH-ratio-ext-intractable
+yields
 $$
 r(\tilde{u},\tilde{x} \mid u,x)
 = \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
-\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}
+\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}.
 $$ {#eq-MH-ratio-ext-intractable}
 
 ::: {.callout-note title="Derivation" collapse=true}
@@ -151,15 +151,15 @@ r(\tilde{u},\tilde{x} \mid u,x)
 $$
 :::
 
-The ratio @eq-MH-ratio-ext-intractable no longer involves the intractable terms!
+The ratio in @eq-MH-ratio-ext-intractable no longer involves the intractable terms!
 This Metropolis-Hastings scheme therefore admits $p(u,x \mid y)$ as a stationary
 distribution without requiring the ability to evaluate $C(u)$. The algorithm
 is thus "correct", but its efficiency will depend heavily on the choice of the
 auxiliary distribution $p(x \mid u,y)$, which is a free parameter of this method.
 
 ## Choice of Auxiliary Distribution
-We now aim to build some intuition as to what the algorithm is doing, to help
-inform the choice of $p(x \mid u,y)$. The situation we
+We now aim to build some intuition as to what the algorithm is doing, which will
+help inform the choice of $p(x \mid u,y)$. The situation we
 find ourselves in is somewhat backwards when compared to the typical design
 of Metropolis-Hastings algorithms. In particular, the proposal
 $q(x \mid u)$ (typically a free parameter) has been prescribed,
