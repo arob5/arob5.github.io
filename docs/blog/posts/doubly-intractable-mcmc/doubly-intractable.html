@@ -216,15 +216,15 @@ window.Quarto = {
 
 
 <p>A typical Bayesian model consists of a joint probability distribution over a parameter <span class="math inline">\(u\)</span> and data <span class="math inline">\(y\)</span> of the form <span id="eq-joint-model"><span class="math display">\[
-p(u,y) = \pi_0(u)L(u)
-\tag{1}\]</span></span> where <span class="math inline">\(\pi_0(u)\)</span> is the prior density on <span class="math inline">\(u\)</span> and <span class="math inline">\(L(u) = p(y \mid u)\)</span> the likelihood. The posterior distribution is then given by <span id="eq-post"><span class="math display">\[
-\pi(u) := p(u \mid y) = \frac{1}{Z}\pi_0(u)L(u)
-\tag{2}\]</span></span> where <span class="math inline">\(Z\)</span> is a normalizing constant (independent of <span class="math inline">\(u\)</span>) that we are not typically able to compute. Fortunately, common algorithms for posterior inference such as Markov chain Monte Carlo (MCMC) only require pointwise evaluations of the <em>unnormalized</em> posterior density <span class="math inline">\(\pi_0(u)L(u)\)</span>.</p>
+p(u,y) = \pi_0(u)L(u;y)
+\tag{1}\]</span></span> where <span class="math inline">\(\pi_0(u)\)</span> is the prior density on <span class="math inline">\(u\)</span> and <span class="math inline">\(L(u;y) = p(y \mid u)\)</span> the likelihood. The posterior distribution is then given by <span id="eq-post"><span class="math display">\[
+\pi(u) := p(u \mid y) = \frac{1}{Z}\pi_0(u)L(u;y)
+\tag{2}\]</span></span> where <span class="math inline">\(Z\)</span> is a normalizing constant (independent of <span class="math inline">\(u\)</span>) that we are not typically able to compute. Fortunately, common algorithms for posterior inference such as Markov chain Monte Carlo (MCMC) only require pointwise evaluations of the <em>unnormalized</em> posterior density <span class="math inline">\(\pi_0(u)L(u;y)\)</span>.</p>
 <p>In this post, we consider a class of Bayesian models that adds an additional difficulty, rendering these standard inference algorithms infeasible. In particular, we assume a likelihood of the form <span id="eq-intractable-lik"><span class="math display">\[
-L(u) = \frac{f(y; u)}{C(u)},
+L(u;y) = \frac{f(y; u)}{C(u)},
 \tag{3}\]</span></span> such that we can evaluate <span class="math inline">\(f(y;u)\)</span> but not the normalizing function <span class="math inline">\(C(u)\)</span>. The posterior density in this setting becomes <span id="eq-doubly-intractable-post"><span class="math display">\[
 \pi(u) = \frac{1}{ZC(u)}\pi_0(u)f(y;u).
-\tag{4}\]</span></span> Distributions of the form <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> are known as <em>doubly intractable</em> owing to the two quantities we are unable to compute: <span class="math inline">\(Z\)</span> and <span class="math inline">\(C(u)\)</span>. While the former does not pose a problem for typical inference algorithms, the presence of the latter will require specialized methods.</p>
+\tag{4}\]</span></span> Distributions of the form <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> are known as <em>doubly intractable</em> owing to the two quantities we are unable to compute: <span class="math inline">\(Z\)</span> and <span class="math inline">\(C(u)\)</span>. While the former does not pose a problem for typical inference algorithms, the presence of the latter is problematic.</p>
 <section id="the-problem" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> The Problem</h1>
 <p>Recall the basic structure of a Metropolis-Hastings algorithm. If <span class="math inline">\(u\)</span> is the current state of the Markov chain, then a new proposed state is sampled as <span class="math inline">\(\tilde{u} \sim q(\cdot \mid u)\)</span> from some proposal distribution <span class="math inline">\(q\)</span>. The proposed state is then accepted with probability <span id="eq-MH-ratio"><span class="math display">\[
@@ -232,7 +232,7 @@ L(u) = \frac{f(y; u)}{C(u)},
 &amp;\alpha(\tilde{u} \mid u) = \min\{1, r(\tilde{u} \mid u)\},
 &amp;&amp;r(\tilde{u} \mid u) = \frac{\pi(\tilde{u}) q(u \mid \tilde{u})}{\pi(u) q(\tilde{u} \mid u)}.
 \end{align}
-\tag{5}\]</span></span> If accepted, the updated state is set to <span class="math inline">\(\tilde{u}\)</span>, otherwise the chain remains at <span class="math inline">\(u\)</span>. A key requirement of the algorithm is the ability to compute <span class="math inline">\(r(\tilde{u} \mid u)\)</span>. Plugging the density <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> into this expression, we see the ratio simplifies to <span id="eq-MH-ratio-intractable"><span class="math display">\[
+\tag{5}\]</span></span> If accepted, the updated state is set to <span class="math inline">\(\tilde{u}\)</span>, otherwise the chain remains at <span class="math inline">\(u\)</span>. A key requirement of the algorithm is the ability to compute <span class="math inline">\(r(\tilde{u} \mid u)\)</span>. Plugging the density in <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> into this expression, we see the ratio simplifies to <span id="eq-MH-ratio-intractable"><span class="math display">\[
 r(\tilde{u} \mid u)
 = \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
 \frac{C(u)}{C(\tilde{u})}.
@@ -260,10 +260,10 @@ r(\tilde{u},\tilde{x} \mid u,x)
 q(\tilde{u}, \tilde{x} \mid u, x) := q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u}),
 \tag{9}\]</span></span> implying a standard proposal for <span class="math inline">\(u\)</span>, followed by a proposal of the auxiliary variable that depends on <span class="math inline">\(\tilde{u}\)</span> but not <span class="math inline">\(x\)</span>. Given this setup, the necessary choice of <span class="math inline">\(q(\tilde{x} \mid \tilde{u})\)</span> to eliminate dependence on the normalizing function is <span id="eq-auxiliary-proposal"><span class="math display">\[
 q(\tilde{x} \mid \tilde{u}) := f(\tilde{x};\tilde{u}) / C(\tilde{u}).
-\tag{10}\]</span></span> Indeed, if we plug <a href="#eq-auxiliary-proposal" class="quarto-xref">Equation&nbsp;10</a> into <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> to obtain <span id="eq-MH-ratio-ext-intractable"><span class="math display">\[
+\tag{10}\]</span></span> Indeed, plugging <a href="#eq-auxiliary-proposal" class="quarto-xref">Equation&nbsp;10</a> into <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> yields <span id="eq-MH-ratio-ext-intractable"><span class="math display">\[
 r(\tilde{u},\tilde{x} \mid u,x)
 = \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
-\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}
+\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}.
 \tag{11}\]</span></span></p>
 <div class="callout callout-style-default callout-note callout-titled" title="Derivation">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
@@ -291,11 +291,11 @@ r(\tilde{u},\tilde{x} \mid u,x)
 </div>
 </div>
 </div>
-<p>The ratio <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> no longer involves the intractable terms! This Metropolis-Hastings scheme therefore admits <span class="math inline">\(p(u,x \mid y)\)</span> as a stationary distribution without requiring the ability to evaluate <span class="math inline">\(C(u)\)</span>. The algorithm is thus “correct”, but its efficiency will depend heavily on the choice of the auxiliary distribution <span class="math inline">\(p(x \mid u,y)\)</span>, which is a free parameter of this method.</p>
+<p>The ratio in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> no longer involves the intractable terms! This Metropolis-Hastings scheme therefore admits <span class="math inline">\(p(u,x \mid y)\)</span> as a stationary distribution without requiring the ability to evaluate <span class="math inline">\(C(u)\)</span>. The algorithm is thus “correct”, but its efficiency will depend heavily on the choice of the auxiliary distribution <span class="math inline">\(p(x \mid u,y)\)</span>, which is a free parameter of this method.</p>
 </section>
 <section id="choice-of-auxiliary-distribution" class="level2" data-number="2.3">
 <h2 data-number="2.3" class="anchored" data-anchor-id="choice-of-auxiliary-distribution"><span class="header-section-number">2.3</span> Choice of Auxiliary Distribution</h2>
-<p>We now aim to build some intuition as to what the algorithm is doing, to help inform the choice of <span class="math inline">\(p(x \mid u,y)\)</span>. The situation we find ourselves in is somewhat backwards when compared to the typical design of Metropolis-Hastings algorithms. In particular, the proposal <span class="math inline">\(q(x \mid u)\)</span> (typically a free parameter) has been prescribed, and we instead need to choose the distribution <span class="math inline">\(p(x \mid u,y)\)</span> (typically prescribed). Ideally, the proposal will look something like the target distribution. This intuition would lead us to set <span class="math inline">\(p(x \mid u,y) := f(x;u) / C(u)\)</span>. This is of course infeasible as it would reintroduce the normalizing function, but it does give a baseline goal to shoot for.</p>
+<p>We now aim to build some intuition as to what the algorithm is doing, which will help inform the choice of <span class="math inline">\(p(x \mid u,y)\)</span>. The situation we find ourselves in is somewhat backwards when compared to the typical design of Metropolis-Hastings algorithms. In particular, the proposal <span class="math inline">\(q(x \mid u)\)</span> (typically a free parameter) has been prescribed, and we instead need to choose the distribution <span class="math inline">\(p(x \mid u,y)\)</span> (typically prescribed). Ideally, the proposal will look something like the target distribution. This intuition would lead us to set <span class="math inline">\(p(x \mid u,y) := f(x;u) / C(u)\)</span>. This is of course infeasible as it would reintroduce the normalizing function, but it does give a baseline goal to shoot for.</p>
 <p>To further understand the workings of this algorithm, notice that the first term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> is equal to the intractable ratio in <a href="#eq-MH-ratio-intractable" class="quarto-xref">Equation&nbsp;6</a> except that it is missing <span class="math inline">\(C(u)/C(\tilde{u})\)</span>. The second term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> might therefore be viewed as providing an estimate of <span class="math inline">\(C(u)/C(\tilde{u})\)</span>. Indeed, consider the random ratio <span id="eq-IS-est"><span class="math display">\[
 \begin{align}
 &amp;\frac{p(x \mid u,y)}{f(x;u)}, &amp;&amp;x \sim f(x;u)/C(u)

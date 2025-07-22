@@ -135,10 +135,17 @@ convenient, computable form. To this end, consider
 $$
 p(x_{0:K}) := \frac{1}{Z^p} f(x_K) \prod_{k=0}^{K-1} R_k(x_{k+1}, x_k),
 $$ {#eq-target-ext}
-which admits $\pi$ as the $K^{\text{th}}$ marginal. Here, $R_k$ is another
-Markov kernel which is the reversal of $F_k$.
-The reversed Markov kernel (with respect to invariant distribution $\pi_k$)
-is defined by the identity
+where the $R_k$ are "backwards" Markov kernels -- they evolve backwards in time.
+This joint distribution admits $\pi$ as the $K^{\text{th}}$ marginal, since
+\begin{align}
+\int p(x_{0:K}) dx_{0:K-1}
+&= \frac{1}{Z^p} f(x_K) \prod_{k=0}^{K-1} \int_{x_k} R_k(x_{k+1}, x_k) dx_k
+= \frac{1}{Z^p} f(x_K),
+\end{align}
+following from the fact that each $R_k(x_k, \cdot)$ is a probability measure
+by definition. In AIS, the backward kernel $R_k$ is chosen to be the
+reversal of $F_k$. The reversed Markov kernel (with respect to invariant
+distribution $\pi_k$) is defined by the identity
 $$
 \pi_k(x)F_k(x,x^\prime) = \pi_k(x^\prime) R_k(x^\prime, x)
 $$ {#eq-rev-kernel-id}
@@ -252,7 +259,7 @@ The procedure simply requires sampling $x_{0:K} \sim q$ and then
 computing the weight in @eq-importance-weight. As seen below, this can
 be done in an online fashion, which shoes that AIS
 can be viewed as alternating between MCMC steps and IS updates.
-Note that the logarithm actually returns the logarithm of the importance weight
+Note that the algorithm actually returns the logarithm of the importance weight
 for numerical stability.
 
 ::: {.algo-box .algorithm}

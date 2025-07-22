@@ -272,7 +272,11 @@ q_K(x_K) := \int \pi_0(x_0)\prod_{k=1}^{K} F_k(x_{k-1}, x_k) \ dx_{0:K-1}
 <h2 data-number="1.3" class="anchored" data-anchor-id="extended-state-space"><span class="header-section-number">1.3</span> Extended State Space</h2>
 <p>A clever way around this issue is to view <a href="#eq-prop-gen" class="quarto-xref">Equation&nbsp;4</a> as an IS proposal in an extended state space over <span class="math inline">\((x_0, \dots, x_K)\)</span>. The joint density <span class="math inline">\(q_K(x_K)\)</span> in <a href="#eq-prop-dens-marg" class="quarto-xref">Equation&nbsp;6</a> is thus the associated proposal density. The question now becomes how to define the target distribution <span class="math inline">\(p(x_{0:K}) = f^p(x_{0:K})/Z^p\)</span> over the extended state space. Most importantly, we will define the target such that it admits <span class="math inline">\(\pi\)</span> as a marginal. This implies that if we formulate a valid IS algorithm in the extended state space, then we will have solved the original problem by simply extracting the relevant component from samples of the extended state. We will also choose <span class="math inline">\(p\)</span> to have a specific Markov structure that leads <span class="math inline">\(f^p(x_{0:K})/f^q(x_{0:K})\)</span> to have a convenient, computable form. To this end, consider <span id="eq-target-ext"><span class="math display">\[
 p(x_{0:K}) := \frac{1}{Z^p} f(x_K) \prod_{k=0}^{K-1} R_k(x_{k+1}, x_k),
-\tag{7}\]</span></span> which admits <span class="math inline">\(\pi\)</span> as the <span class="math inline">\(K^{\text{th}}\)</span> marginal. Here, <span class="math inline">\(R_k\)</span> is another Markov kernel which is the reversal of <span class="math inline">\(F_k\)</span>. The reversed Markov kernel (with respect to invariant distribution <span class="math inline">\(\pi_k\)</span>) is defined by the identity <span id="eq-rev-kernel-id"><span class="math display">\[
+\tag{7}\]</span></span> where the <span class="math inline">\(R_k\)</span> are “backwards” Markov kernels – they evolve backwards in time. This joint distribution admits <span class="math inline">\(\pi\)</span> as the <span class="math inline">\(K^{\text{th}}\)</span> marginal, since <span class="math display">\[\begin{align}
+\int p(x_{0:K}) dx_{0:K-1}
+&amp;= \frac{1}{Z^p} f(x_K) \prod_{k=0}^{K-1} \int_{x_k} R_k(x_{k+1}, x_k) dx_k
+= \frac{1}{Z^p} f(x_K),
+\end{align}\]</span> following from the fact that each <span class="math inline">\(R_k(x_k, \cdot)\)</span> is a probability measure by definition. In AIS, the backward kernel <span class="math inline">\(R_k\)</span> is chosen to be the reversal of <span class="math inline">\(F_k\)</span>. The reversed Markov kernel (with respect to invariant distribution <span class="math inline">\(\pi_k\)</span>) is defined by the identity <span id="eq-rev-kernel-id"><span class="math display">\[
 \pi_k(x)F_k(x,x^\prime) = \pi_k(x^\prime) R_k(x^\prime, x)
 \tag{8}\]</span></span> Rearranging <a href="#eq-rev-kernel-id" class="quarto-xref">Equation&nbsp;8</a>, we obtain the explicit expression <span id="eq-rev-kernel"><span class="math display">\[
 R_k(x^\prime, x)
@@ -401,12 +405,12 @@ Remark
 </section>
 <section id="algorithm" class="level2" data-number="1.5">
 <h2 data-number="1.5" class="anchored" data-anchor-id="algorithm"><span class="header-section-number">1.5</span> Algorithm</h2>
-<p>The core of the AIS algorithm is the generation of independent weighted samples <span class="math inline">\((x^{(n)}_{0:K}, w(x_{0:K}^{(n)}))\)</span>. We discuss the use of these samples for estimating expectations and normalizing constants in the next section. Here, we summarize the above derivations in an algorithm. The procedure simply requires sampling <span class="math inline">\(x_{0:K} \sim q\)</span> and then computing the weight in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a>. As seen below, this can be done in an online fashion, which shoes that AIS can be viewed as alternating between MCMC steps and IS updates. Note that the logarithm actually returns the logarithm of the importance weight for numerical stability.</p>
-<div id="alg-single-step-eki" class="algo-box algorithm">
+<p>The core of the AIS algorithm is the generation of independent weighted samples <span class="math inline">\((x^{(n)}_{0:K}, w(x_{0:K}^{(n)}))\)</span>. We discuss the use of these samples for estimating expectations and normalizing constants in the next section. Here, we summarize the above derivations in an algorithm. The procedure simply requires sampling <span class="math inline">\(x_{0:K} \sim q\)</span> and then computing the weight in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a>. As seen below, this can be done in an online fashion, which shoes that AIS can be viewed as alternating between MCMC steps and IS updates. Note that the algorithm actually returns the logarithm of the importance weight for numerical stability.</p>
+<div class="algo-box algorithm">
 <p><strong>Algorithm 1: Calculate AIS weighted sample</strong> <span class="math display">\[
 \begin{array}{ll}
-&amp;\textbf{Input:} \qquad (f_k)_{k=1}^K, \ (F_k)_{k=1}^K \\
-&amp; \textbf{Output:} \text{Weighted sample } \{x_{0:K}, \log w(x_{0:K})\} \\
+&amp;\textbf{Input:} &amp;&amp; (f_k)_{k=1}^K, \ (F_k)_{k=1}^K \\
+&amp; \textbf{Output:} &amp;&amp; \text{Weighted sample } \{x_{0:K}, \log w(x_{0:K})\} \\
 \hline \\[0.1em]
 &amp; x_0 \sim \pi_0 \\
 &amp; \ell_w \gets 0 \\
@@ -415,7 +419,7 @@ Remark
 &amp; \quad x_k \sim F_{k+1}(x_{k-1}, \cdot) \\
 &amp; \textbf{end for} \\[0.1em]
 &amp; x \gets (x_0, \dots, x_K) \\
-&amp; \textbf{Return:} (x, \ell_w)
+&amp; \textbf{Return:} \ (x, \ell_w)
 \end{array}
 \]</span></p>
 </div>
