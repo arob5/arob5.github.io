@@ -199,6 +199,11 @@ window.Quarto = {
   <li><a href="#importance-weights" id="toc-importance-weights" class="nav-link" data-scroll-target="#importance-weights"><span class="header-section-number">1.4</span> Importance Weights</a></li>
   <li><a href="#algorithm" id="toc-algorithm" class="nav-link" data-scroll-target="#algorithm"><span class="header-section-number">1.5</span> Algorithm</a></li>
   </ul></li>
+  <li><a href="#perspectives-and-applications" id="toc-perspectives-and-applications" class="nav-link" data-scroll-target="#perspectives-and-applications"><span class="header-section-number">2</span> Perspectives and Applications</a>
+  <ul class="collapse">
+  <li><a href="#bayesian-inference" id="toc-bayesian-inference" class="nav-link" data-scroll-target="#bayesian-inference"><span class="header-section-number">2.1</span> Bayesian Inference</a></li>
+  <li><a href="#intermediate-targets-on-extended-space" id="toc-intermediate-targets-on-extended-space" class="nav-link" data-scroll-target="#intermediate-targets-on-extended-space"><span class="header-section-number">2.2</span> Intermediate Targets on Extended Space</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -268,7 +273,7 @@ Remark
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>In general, the final Markov kernel <span class="math inline">\(F_K\)</span> need not be <span class="math inline">\(\pi\)</span>-invariant, a fact that will emerge as we derive the algorithm. There is actually no <span class="math inline">\(F_K\)</span> is Neal’s original formulation. However, in most applications I am aware of it is included.</p>
+<p>In general, the final Markov kernel <span class="math inline">\(F_K\)</span> need not be <span class="math inline">\(\pi\)</span>-invariant, a fact that will emerge as we derive the algorithm. There is actually no <span class="math inline">\(F_K\)</span> in Neal’s original formulation. However, in most applications I am aware of it is included.</p>
 </div>
 </div>
 <p>An IS proposal can then be generated via <span id="eq-prop-gen"><span class="math display">\[
@@ -404,7 +409,7 @@ Derivation
 </div>
 </div>
 </div>
-<p>We see in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a> the precise reason why the absolute continuity assumption in <a href="#eq-abs-cont" class="quarto-xref">Equation&nbsp;3</a> is required. This assumptions avoids dividing by zero in density ratios, ensuring the importance weight is well-defined.</p>
+<p>We see in <a href="#eq-importance-weight" class="quarto-xref">Equation&nbsp;11</a> the precise reason why the absolute continuity assumption in <a href="#eq-abs-cont" class="quarto-xref">Equation&nbsp;3</a> is required. This assumption avoids dividing by zero in density ratios, ensuring the importance weight is well-defined.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Remark">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -439,6 +444,31 @@ Remark
 \end{array}
 \]</span></p>
 </div>
+</section>
+</section>
+<section id="perspectives-and-applications" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Perspectives and Applications</h1>
+<section id="bayesian-inference" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="bayesian-inference"><span class="header-section-number">2.1</span> Bayesian Inference</h2>
+<p>Throughout this post, we have provided a generic discussion of AIS with respect to the goal of characterizing some target distribution <span class="math inline">\(\pi\)</span>. A very common application is the setting where <span class="math inline">\(\pi\)</span> is a Bayesian posterior distribution. A Bayesian model consists of a joint probability distribution over parameters <span class="math inline">\(x\)</span> and data <span class="math inline">\(y\)</span>, typically specified as <span class="math display">\[
+\begin{equation}
+\rho(x,y) := \pi_0(x)\mathsf{L}(x; y)
+\end{equation}
+\]</span> where <span class="math inline">\(\pi_0\)</span> and <span class="math inline">\(\mathsf{L}\)</span> are the prior distribution and likelihood function, respectively. The posterior distribution is then given by <span class="math display">\[
+\begin{equation}
+\pi(x) := \rho(x \mid y) = \frac{1}{Z} \pi_0(x)\mathsf{L}(x; y),
+\end{equation}
+\]</span> which we now consider to be our target distribution in AIS. Using the notation from <a href="#eq-target" class="quarto-xref">Equation&nbsp;1</a>, we write <span class="math inline">\(f(x) = \pi_0(x)\mathsf{L}(x; y)\)</span> to denote the unnormalized target.</p>
+</section>
+<section id="intermediate-targets-on-extended-space" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="intermediate-targets-on-extended-space"><span class="header-section-number">2.2</span> Intermediate Targets on Extended Space</h2>
+<p>To acheive the goal of producing weighted samples from <span class="math inline">\(\pi(x)\)</span>, where <span class="math inline">\(x \in \mathbb{R}^d\)</span>, AIS considers a sequence of intermediate distributions <span class="math inline">\((\pi_k)_{k=0}^{K}\)</span> that bridge from a simple distribution <span class="math inline">\(\pi_0\)</span> to the target <span class="math inline">\(\pi_K = \pi\)</span>. However, as we discovered above, the correctness of the method relies on the fact that the IS is actually conducted on an extended state space. We further clarify this viewpoint here, and note connections to sequential Monte Carlo (SMC).</p>
+<p>Recall that the extended state is denoted by <span class="math inline">\(x_{0:K}\)</span>, where each entry <span class="math inline">\(x_k\)</span> lives in <span class="math inline">\(\mathbb{R}^d\)</span>, the same space as the original variable <span class="math inline">\(x\)</span>. The extended target distribution <span class="math inline">\(p(x_{0:K})\)</span> defined in <a href="#eq-target-ext" class="quarto-xref">Equation&nbsp;7</a> can be viewed as the final distribution <span class="math inline">\(p_K\)</span> within a sequence of extended intermediate distributions <span class="math inline">\((p_k)_{k=0}^{K}\)</span> given by <span id="eq-ext-inter-dists"><span class="math display">\[
+\begin{equation}
+p_k(x_{0:k}) := \frac{1}{Z_k^p} f_k(x_k) \prod_{k=0}^{k-1} R_k(x_{k+1}, x_k),
+\end{equation}
+\tag{12}\]</span></span></p>
+<p>Notice that <span class="math inline">\(p_K = p\)</span> indeed holds. While the supports of the intermediate distributions <span class="math inline">\((\pi_k)_{k=0}^{K}\)</span> are all <span class="math inline">\(\mathbb{R}^d\)</span>, the supports of the extended intermediate distributions <span class="math inline">\((p_k)_{k=0}^{K}\)</span> grow with <span class="math inline">\(k\)</span>; i.e., <span class="math inline">\(p_k\)</span> is defined over <span class="math inline">\(\mathbb{R}^{d(k+1)}\)</span>.</p>
 
 
 

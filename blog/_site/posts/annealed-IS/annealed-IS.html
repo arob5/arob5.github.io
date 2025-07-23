@@ -423,6 +423,32 @@ Remark
 \end{array}
 \]</span></p>
 </div>
+</section>
+</section>
+<section id="perspectives-and-applications" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Perspectives and Applications</h1>
+<section id="bayesian-inference" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="bayesian-inference"><span class="header-section-number">2.1</span> Bayesian Inference</h2>
+<p>Throughout this post, we have provided a generic discussion of AIS with respect to the goal of characterizing some target distribution <span class="math inline">\(\pi\)</span>. A very common application is the setting where <span class="math inline">\(\pi\)</span> is a Bayesian posterior distribution. A Bayesian model consists of a joint probability distribution over parameters <span class="math inline">\(x\)</span> and data <span class="math inline">\(y\)</span>, typically specified as <span class="math display">\[
+\begin{equation}
+\rho(x,y) := \pi_0(x)\mathsf{L}(x; y)
+\end{equation}
+\]</span> where <span class="math inline">\(\pi_0\)</span> and <span class="math inline">\(\mathsf{L}\)</span> are the prior distribution and likelihood function, respectively. The posterior distribution is then given by <span class="math display">\[
+\begin{equation}
+\pi(x) := \rho(x \mid y) = \frac{1}{Z} \pi_0(x)\mathsf{L}(x; y),
+\end{equation}
+\]</span> which we now consider to be our target distribution in AIS. Using the notation from <a href="#eq-target" class="quarto-xref">Equation&nbsp;1</a>, we write <span class="math inline">\(f(x) = \pi_0(x)\mathsf{L}(x; y)\)</span> to denote the unnormalized target.</p>
+</section>
+<section id="intermediate-targets-on-extended-space" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="intermediate-targets-on-extended-space"><span class="header-section-number">2.2</span> Intermediate Targets on Extended Space</h2>
+<p>To acheive the goal of producing weighted samples from <span class="math inline">\(\pi(x)\)</span>, where <span class="math inline">\(x \in \mathbb{R}^d\)</span>, AIS considers a sequence of intermediate distributions <span class="math inline">\((\pi_k)_{k=0}^{K}\)</span> that bridge from a simple distribution <span class="math inline">\(\pi_0\)</span> to the target <span class="math inline">\(\pi_K = \pi\)</span>. However, as we discovered above, the correctness of the method relies on the fact that the IS is actually conducted on an extended state space. We further clarify this viewpoint here, and note connections to sequential Monte Carlo (SMC).</p>
+<p>Recall that the extended state is denoted by <span class="math inline">\(x_{0:K}\)</span>, where each entry <span class="math inline">\(x_k\)</span> lives in <span class="math inline">\(\mathbb{R}^d\)</span>, the same space as the original variable <span class="math inline">\(x\)</span>. The extended target distribution <span class="math inline">\(p(x_{0:K})\)</span> defined in <a href="#eq-target-ext" class="quarto-xref">Equation&nbsp;7</a> can be viewed as the final distribution <span class="math inline">\(p_K\)</span> within a sequence of extended intermediate distributions <span class="math inline">\((p_k)_{k=0}^{K}\)</span> given by <span id="eq-ext-inter-dists"><span class="math display">\[
+\begin{equation}
+p_k(x_{0:k}) := \frac{1}{Z_k^p} f_k(x_k) \prod_{k=0}^{k-1} R_k(x_{k+1}, x_k),
+\end{equation}
+\tag{12}\]</span></span></p>
+<p>Notice that <span class="math inline">\(p_K = p\)</span> indeed holds. While the supports of the intermediate distributions <span class="math inline">\((\pi_k)_{k=0}^{K}\)</span> are all <span class="math inline">\(\mathbb{R}^d\)</span>, the supports of the extended intermediate distributions <span class="math inline">\((p_k)_{k=0}^{K}\)</span> grow with <span class="math inline">\(k\)</span>. For example, <span class="math inline">\(p_k\)</span> is defined over <span class="math inline">\(\mathbb{R}^{d(k+1)}\)</span>. As the AIS weighted sample is incrementally constructed, the partial weighted sample <span class="math inline">\(\{x_{0:k}, w(x_{0:k})\}\)</span> targets the intermediate distribution <span class="math inline">\(p_k\)</span>. These intermediate distributions are of interest only in that they help bridge to the final distribution, which is the one we ultimately care about.</p>
+<p>The extended intermediate distributions in <a href="#eq-ext-inter-dists" class="quarto-xref">Equation&nbsp;12</a> are utilized in algorithms other than AIS; see equation 1.12 in <span class="citation" data-cites="elementsSMC">(<a href="#ref-elementsSMC" role="doc-biblioref"><strong>elementsSMC?</strong></a>)</span>. For example, these same distributions are used in SMC, but they are approximated using particle filtering techniques rather than IS. In such settings, the <span class="math inline">\(R_k\)</span> may be defined as other “backwards” Markov kernels, rather than restricting them to be the reversals of the <span class="math inline">\(F_k\)</span>.</p>
 
 
 

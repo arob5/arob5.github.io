@@ -280,3 +280,64 @@ $$
 \end{array}
 $$
 :::
+
+# Perspectives and Applications
+
+## Bayesian Inference
+Throughout this post, we have provided a generic discussion of AIS with
+respect to the goal of characterizing some target distribution $\pi$. A very
+common application is the setting where $\pi$ is a Bayesian posterior
+distribution. A Bayesian model consists of a joint probability distribution
+over parameters $x$ and data $y$, typically specified as
+$$
+\begin{equation}
+\rho(x,y) := \pi_0(x)\mathsf{L}(x; y)
+\end{equation}
+$$
+where $\pi_0$ and $\mathsf{L}$ are the prior distribution and likelihood function,
+respectively. The posterior distribution is then given by
+$$
+\begin{equation}
+\pi(x) := \rho(x \mid y) = \frac{1}{Z} \pi_0(x)\mathsf{L}(x; y),
+\end{equation}
+$$
+which we now consider to be our target distribution in AIS. Using the notation
+from @eq-target, we write $f(x) = \pi_0(x)\mathsf{L}(x; y)$ to denote the
+unnormalized target.
+
+
+## Intermediate Targets on Extended Space
+To acheive the goal of producing weighted samples from $\pi(x)$, where
+$x \in \mathbb{R}^d$, AIS considers a sequence of intermediate distributions
+$(\pi_k)_{k=0}^{K}$ that bridge from a simple distribution $\pi_0$ to the
+target $\pi_K = \pi$. However, as we discovered above, the correctness of the
+method relies on the fact that the IS is actually conducted on an extended
+state space. We further clarify this viewpoint here, and note connections
+to sequential Monte Carlo (SMC).
+
+Recall that the extended state is denoted by $x_{0:K}$, where each entry
+$x_k$ lives in $\mathbb{R}^d$, the same space as the original variable $x$.
+The extended target distribution $p(x_{0:K})$ defined in @eq-target-ext can
+be viewed as the final distribution $p_K$ within a sequence of extended
+intermediate distributions $(p_k)_{k=0}^{K}$ given by
+$$
+\begin{equation}
+p_k(x_{0:k}) := \frac{1}{Z_k^p} f_k(x_k) \prod_{k=0}^{k-1} R_k(x_{k+1}, x_k),
+\end{equation}
+$$ {#eq-ext-inter-dists}
+
+Notice that $p_K = p$ indeed holds. While the supports of the intermediate
+distributions $(\pi_k)_{k=0}^{K}$ are all $\mathbb{R}^d$, the supports
+of the extended intermediate distributions $(p_k)_{k=0}^{K}$ grow with $k$.
+For example, $p_k$ is defined over $\mathbb{R}^{d(k+1)}$. As the AIS
+weighted sample is incrementally constructed, the partial weighted sample
+$\{x_{0:k}, w(x_{0:k})\}$ targets the intermediate distribution $p_k$.
+These intermediate distributions are of interest only in that they help
+bridge to the final distribution, which is the one we ultimately care about.
+
+The extended intermediate distributions in @eq-ext-inter-dists are utilized in
+algorithms other than AIS; see equation 1.12 in @elementsSMC.
+For example, these same distributions are used
+in SMC, but they are approximated using particle filtering techniques rather
+than IS. In such settings, the $R_k$ may be defined as other "backwards"
+Markov kernels, rather than restricting them to be the reversals of the $F_k$.
