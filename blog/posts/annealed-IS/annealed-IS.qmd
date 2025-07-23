@@ -90,7 +90,7 @@ $\pi$ is the stationary distribution of $F_K$.
 ::: {.callout-note title="Remark"}
 In general, the final Markov kernel $F_K$ need not be $\pi$-invariant,
 a fact that will emerge as we derive the algorithm.
-There is actually no $F_K$ is Neal's original formulation. However, in most
+There is actually no $F_K$ in Neal's original formulation. However, in most
 applications I am aware of it is included.
 :::
 
@@ -239,7 +239,7 @@ $$
 :::
 
 We see in @eq-importance-weight the precise reason why the absolute continuity
-assumption in @eq-abs-cont is required. This assumptions avoids dividing by
+assumption in @eq-abs-cont is required. This assumption avoids dividing by
 zero in density ratios, ensuring the importance weight is well-defined.
 
 ::: {.callout-note title="Remark"}
