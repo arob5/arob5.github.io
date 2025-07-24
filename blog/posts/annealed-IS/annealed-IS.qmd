@@ -304,7 +304,20 @@ $$
 which we now consider to be our target distribution in AIS. Using the notation
 from @eq-target, we write $f(x) = \pi_0(x)\mathsf{L}(x; y)$ to denote the
 unnormalized target.
-
+^[We'll assume we can evaluate $\pi_0(x)$ here, but as before we need only
+be able to evaluate a function that is proportional to it.]
+As the notation suggests, we will take the prior
+$\pi_0$ as the initial distribution in the sequence of bridging
+distributions. If we consider the geometric path in @eq-geometric-path, we
+obtain
+$$
+\pi_k(x)
+\propto \pi_0(x)^{1-\beta_k} f(x)^{\beta_k}
+= \pi_0(x)^{1-\beta_k} [\pi_0(x)\mathsf{L}(x; y)]^{\beta_k}
+= \pi_0(x) \mathsf{L}(x; y)^{\beta_k},
+$$
+which shows that the intermediate distributions arise from a likelihood
+tempering schedule in this setting.
 
 ## Intermediate Targets on Extended Space
 To acheive the goal of producing weighted samples from $\pi(x)$, where
@@ -322,7 +335,7 @@ be viewed as the final distribution $p_K$ within a sequence of extended
 intermediate distributions $(p_k)_{k=0}^{K}$ given by
 $$
 \begin{equation}
-p_k(x_{0:k}) := \frac{1}{Z_k^p} f_k(x_k) \prod_{k=0}^{k-1} R_k(x_{k+1}, x_k),
+p_k(x_{0:k}) := \frac{1}{Z_k^p} f_k(x_k) \prod_{k=0}^{k-1} R_k(x_{k+1}, x_k).
 \end{equation}
 $$ {#eq-ext-inter-dists}
 
@@ -336,8 +349,9 @@ These intermediate distributions are of interest only in that they help
 bridge to the final distribution, which is the one we ultimately care about.
 
 The extended intermediate distributions in @eq-ext-inter-dists are utilized in
-algorithms other than AIS; see equation 1.12 in @elementsSMC.
+algorithms other than AIS.
 For example, these same distributions are used
 in SMC, but they are approximated using particle filtering techniques rather
-than IS. In such settings, the $R_k$ may be defined as other "backwards"
-Markov kernels, rather than restricting them to be the reversals of the $F_k$.
+than IS (e.g., see equation 1.12 in @elementsSMC). In such settings,
+the $R_k$ may be defined as other "backwards" Markov kernels,
+rather than restricting them to be the reversals of the $F_k$.
