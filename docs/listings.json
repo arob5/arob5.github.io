@@ -2,6 +2,7 @@
   {
     "listing": "/blog/index.html",
     "items": [
+      "/blog/posts/involutive-mcmc/MH_Tierney.html",
       "/blog/posts/annealed-IS/annealed-IS.html",
       "/blog/posts/doubly-intractable-mcmc/doubly-intractable.html",
       "/blog/posts/simplex-transform.html",
@@ -10,7 +11,6 @@
       "/blog/posts/nonlinear-LS.html",
       "/blog/posts/eki_1/eki_introduction.html",
       "/blog/posts/pseudo-marginal-mcmc/pseudo-marginal-mcmc.html",
-      "/blog/posts/function-space-mcmc/function-space-mcmc.html",
       "/blog/posts/basis-func-emulator.html",
       "/blog/posts/nonlinear-maps-of-Gaussians.html",
       "/blog/posts/gp-specifications.html",

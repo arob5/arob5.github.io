@@ -40,5 +40,8 @@
   },
   "posts/annealed-IS/annealed-IS.qmd": {
     "annealed-IS.html": "bbd8c772"
+  },
+  "posts/involutive-mcmc/MH_Tierney.qmd": {
+    "MH_Tierney.html": "ccb1c4de"
   }
 }

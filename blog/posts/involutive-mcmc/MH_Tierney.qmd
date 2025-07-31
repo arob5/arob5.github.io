@@ -1,0 +1,97 @@
+---
+title: "Metropolis-Hastings Kernels for General State Spaces"
+subtitle: An introduction to Tierney's influential formulation of Metropolis-Hastings algorithms.
+layout: default
+date: 2025-07-31
+categories: [MCMC, Sampling, Computational Statistics]
+bibliography: involutive_mcmc_references.bib
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+<div class="hidden-macros">
+$$
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pr}{\mathbb{P}}
+\newcommand{\given}{\mid}
+\newcommand{\Def}{:=}
+\newcommand{\stateSpace}{\mathsf{X}}
+\newcommand{\sigAlg}{\mathcal{A}}
+\newcommand{\target}{\mu}
+\newcommand{\Ker}{P}
+\newcommand{\propKer}{Q}
+\newcommand{\stateProp}{x^\prime}
+\newcommand{\rejectProb}{s}
+$$
+</div>
+
+In this post we walk through @MHGeneralStateSpace, which describes
+a very general formulation of Metropolis-Hastings algorithms. In particular,
+the paper provides necessary and sufficient conditions on the proposal kernel
+and acceptance probability in order to define a Markov chain with a desired
+invariant distribution.
+
+# Setup and Background
+
+## MCMC and Reversibility
+Our goal is to draw samples from a probability measure $\target$ defined
+on a measurable space $(\stateSpace, \sigAlg)$. Markov chain Monte Carlo
+(MCMC) algorithms address this goal by defining a Markov chain with
+$\target$-invariant transition kernel $\Ker$, meaning
+$$
+\begin{equation}
+\target(A) = \int \target(dx) \Ker(x,A), \qquad \forall A \in \sigAlg.
+\end{equation}
+$$ {#eq-invariance}
+In other words, the target distribution $\target$ is a fixed point of the
+operator $\Ker$. While it is generally difficult to construct $\Ker$ to
+satisfy the integral equation @eq-invariance, it is much easier to construct
+a $\target$-reversible chain, which turns out to be a sufficient condition
+for @eq-invariance to hold. A Markov chain is said to be $\target$-reversible
+provided that the *detailed balance* relation
+$$
+\begin{equation}
+\int_A \target(dx)P(x,B) = \int_B \target(dy) P(y,A),
+\qquad \forall A,B \in \sigAlg
+\end{equation}
+$$ {#eq-detailed-balance}
+is satisfied; that is, the product measures
+$\target(dx)P(x,dy)$ and $\target(dy)P(y,dx)$ on
+$(\stateSpace \times \stateSpace, \sigAlg \otimes \sigAlg)$ are identical.
+To see that @eq-invariance follows from @eq-detailed-balance, simply set
+$B \Def \stateSpace$. The detailed balance relation imposes a symmetry
+condition between pairs of sets $(A,B)$ when the chain is at equilibrium;
+i.e., if initialized at $\target$, then it is equally likely to start in
+$A$ and transition to $B$ as it is to start in $B$ and transition to $A$.
+
+## Metropolis-Hastings
+Metropolis-Hastings (MH) algorithms are a popular class of MCMC methods, defined
+by a particular recipe for constructing $\target$-reversible Markov kernels.
+Given a current state $x \in \stateSpace$, a MH update proceeds by first
+proposing a new state $y \sim \propKer(x, \cdot)$ and then accepting
+or rejecting the proposed state according to some probability
+$\alpha(x,y)$. If rejected, the chain remains at the current state $x$.
+This generic recipe is thus defined by the choice of proposal kernel
+$\propKer: \stateSpace \times \sigAlg \to [0,1]$ and (measurable) acceptance
+probability function $\alpha: \stateSpace \times \stateSpace \to [0,1]$.
+This accept-reject mechanism yields a Markov chain with transition kernel
+$$
+\begin{align}
+&\Ker(x, A) = \int \alpha(x,y)\propKer(x,dy) + \rejectProb(x)\delta_x(A),
+&&\rejectProb(x) = \int [1 - \alpha(x,y)] \propKer(x,dy),
+\end{align}
+$$ {#eq-MH-kernel}
+with $s(x)$ denoting the probability of a rejection occurring at state $x$.
+The first term is the probability of proposing and accepting a new state in
+$A$. The second term accounts for the case where the chain is already in
+$A$, so that rejecting leaves the chain in $A$. It is common to use the
+shorthand notation
+$\Ker(x,dy) = \alpha(x,y)\propKer(x,dy) + \rejectProb(x)\delta_x(dy)$
+for the measure $\Ker(x, \dot)$.

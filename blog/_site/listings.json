@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/involutive-mcmc/MH_Tierney.html",
       "/posts/annealed-IS/annealed-IS.html",
       "/posts/doubly-intractable-mcmc/doubly-intractable.html",
       "/posts/simplex-transform.html",
