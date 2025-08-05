@@ -287,6 +287,8 @@ $$
 \frac{d\targetExt_\symSet}{d\targetExt_\symSet^\top} =
 \left[\frac{d\targetExt_\symSet^\top}{d\targetExt_\symSet}\right]^{-1}.
 $$
+To verify the third claim, let $\symSet^\prime$ be any other set satisfying
+the desired properties.
 :::
 
 
