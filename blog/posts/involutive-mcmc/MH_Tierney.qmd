@@ -1,6 +1,6 @@
 ---
 title: "Metropolis-Hastings Kernels for General State Spaces"
-subtitle: An introduction to Tierney's influential formulation of Metropolis-Hastings algorithms.
+subtitle: An introduction to Tierney's general formulation of Metropolis-Hastings algorithms.
 layout: default
 date: 2025-07-31
 categories: [MCMC, Sampling, Computational Statistics]
@@ -29,6 +29,8 @@ $$
 \newcommand{\propKer}{Q}
 \newcommand{\stateProp}{x^\prime}
 \newcommand{\rejectProb}{s}
+\newcommand{\targetExt}{\eta}
+\newcommand{\symSet}{S}
 $$
 </div>
 
@@ -58,7 +60,7 @@ for @eq-invariance to hold. A Markov chain is said to be $\target$-reversible
 provided that the *detailed balance* relation
 $$
 \begin{equation}
-\int_A \target(dx)P(x,B) = \int_B \target(dy) P(y,A),
+\int_A \target(dx)\Ker(x,B) = \int_B \target(dy) \Ker(y,A),
 \qquad \forall A,B \in \sigAlg
 \end{equation}
 $$ {#eq-detailed-balance}
@@ -68,7 +70,7 @@ $(\stateSpace \times \stateSpace, \sigAlg \otimes \sigAlg)$ are identical.
 To see that @eq-invariance follows from @eq-detailed-balance, simply set
 $B \Def \stateSpace$. The detailed balance relation imposes a symmetry
 condition between pairs of sets $(A,B)$ when the chain is at equilibrium;
-i.e., if initialized at $\target$, then it is equally likely to start in
+i.e., if initialized at $\target$, then it is as likely to start in
 $A$ and transition to $B$ as it is to start in $B$ and transition to $A$.
 
 ## Metropolis-Hastings
@@ -89,9 +91,258 @@ $$
 \end{align}
 $$ {#eq-MH-kernel}
 with $s(x)$ denoting the probability of a rejection occurring at state $x$.
+
+::: {.callout-note title="Derivation" collapse=true}
+The value of $\Ker(x,A)$ is the probability of transitioning from $x$ to a
+new state within the set $A$. Under the MH procedure, this can happen
+in two ways: (i.) proposing and then accepting a new state in $A$, or
+(ii.) rejecting the proposal, but the current state $x$ is already in $A$.
+These events are disjoint, so we need only consider the probability of each
+and then add them. The probability of proposing and accepting a state in $A$ is
+$$
+\begin{equation}
+\int_A \propKer(x,dy)\alpha(x,y).
+\end{equation}
+$$
+The probability of rejecting but ending up in $A$ is
+$$
+\begin{align}
+\int \delta_x(A) \propKer(x,dy)[1-\alpha(x,y)]
+= s(x)\delta_x(A).
+\end{align}
+$$
+Adding these terms yields the transition kernel in @eq-MH-kernel. $\qquad \blacksquare$
+:::
+
 The first term is the probability of proposing and accepting a new state in
 $A$. The second term accounts for the case where the chain is already in
-$A$, so that rejecting leaves the chain in $A$. It is common to use the
-shorthand notation
-$\Ker(x,dy) = \alpha(x,y)\propKer(x,dy) + \rejectProb(x)\delta_x(dy)$
-for the measure $\Ker(x, \dot)$.
+$A$, so that rejecting leaves the chain in $A$. It is common to define
+the measure $\Ker(x, \cdot)$ via the shorthand notation
+$$
+\begin{equation}
+\Ker(x,dy) = \alpha(x,y)\propKer(x,dy) + \rejectProb(x)\delta_x(dy),
+\end{equation}
+$$ {#eq-MH-kernel-shorthand}
+and we will use similar notation for other measures throughout this post.
+We will defer stating the typical definition of $\alpha(x,y)$ and instead
+emphasize the precise conditions on $\alpha(x,y)$ that are required for
+the MH kernel to be $\target$-reversible.
+
+::: {.callout-note title="Proposition"}
+The MH kernel in @eq-MH-kernel-shorthand satisfies detailed balance with
+respect to $\target$ if and only if
+$$
+\begin{equation}
+\int_A \target(dx)\propKer(x,B)\alpha(x,y) =
+\int_B \target(dy)\propKer(y,A)\alpha(y,x),
+\qquad \forall A,B \in \sigAlg.
+\end{equation}
+$$ {#eq-MH-balance-condition}
+In other words, the measures $\target(dx)\propKer(x,dy)\alpha(x,y)$
+and $\target(dy)\propKer(y,dx)\alpha(y,x)$ on
+$(\stateSpace \times \stateSpace, \sigAlg \otimes \sigAlg)$ are identical.
+:::
+
+::: {.callout-note title="Proof" collapse=true}
+We consider when the MH kernel $\Ker$ satisfies @eq-detailed-balance.
+The lefthand side of this expression is given by
+$$
+\begin{align}
+\int_A \target(dx)\Ker(x,B)
+&= \int_A \target(dx) \int_B \Ker(x,dy) \\
+&= \int_A \target(dx) \int_B \left[\propKer(x,dy)\alpha(x,y) +
+\rejectProb(x)\delta_x(dy) \right] \\
+&= \int_A \int_B \mu(dx)\propKer(x,dy)\alpha(x,y) +
+\int_A \int_B \mu(dx) \rejectProb(x) \delta_x(dy)
+\end{align}
+$$ {#eq-invariance-LHS}
+and the righthand side by
+$$
+\begin{equation}
+\int_B \target(dy)\Ker(y,A)
+= \int_B \int_A \mu(dy)\propKer(y,dx)\alpha(y,x) +
+\int_B \int_A \mu(dy) \rejectProb(y) \delta_y(dx).
+\end{equation}
+$$ {#eq-invariance-RHS}
+Notice that the second terms in @eq-invariance-LHS and
+@eq-invariance-RHS are equal. It thus follows that the detailed
+balance condition holds if and only if
+$$
+\begin{equation}
+\int_A \int_B \mu(dx)\propKer(x,dy)\alpha(x,y)
+= \int_B \int_A \mu(dy)\propKer(y,dx)\alpha(y,x).
+\end{equation}
+$$
+That is, if the measures $\target(dx)\propKer(x,dy)\alpha(x,y)$ and
+$\target(dy)\propKer(y,dx)\alpha(y,x)$ are equal. $\blacksquare$
+:::
+
+The quantity
+$\target(dx)\propKer(x,dy)$ is a probability measure on
+$\stateSpace \times \stateSpace$. It is the distribution of $(x,y)$, where
+$$
+\begin{align}
+&x \sim \mu, &&y \sim \propKer(x,\cdot).
+\end{align}
+$$
+In other words, this describes the joint distribution of sampling an initial
+condition from the target distribution, then proposing a new state given
+this initial condition. The measure $\target(dy)\propKer(y,dx)$ is the reversal
+of $\target(dx)\propKer(x,dy)$, describing the same process in the reverse
+direction. In general, the proposal kernel will not be $\target$-invariant; that
+is, $\target(dx)\propKer(x,dy) \neq \target(dy)\propKer(x,dy)$. From
+@eq-MH-balance-condition, we see that the role of $\alpha(x,y)$ is to
+provide a weighting that balances out these two flows. We explore this idea
+further in the following section.
+
+## Tierney's Framework
+We now provide a more thorough analysis of the required conditions on
+$\alpha(x,y)$, following @MHGeneralStateSpace. In doing so, we will make
+use of the following notation.
+
+::: {.callout-note title="Notation"}
+For a measure $\targetExt$ on the joint space
+$(\stateSpace \times \stateSpace, \sigAlg \otimes \sigAlg)$, we denote by
+$\targetExt^\top$ the measure on the same space defined by
+$$
+\targetExt^\top(A,B) \Def \targetExt(B,A).
+$$
+For a density $\frac{d\targetExt}{d\nu}$, we similarly define the density
+$\left[\frac{d\targetExt}{d\nu}\right]^\top$ by
+$$
+\left[\frac{d\targetExt}{d\nu}\right]^\top(x,y) :=
+\frac{d\targetExt}{d\nu}(y,x).
+$$
+Moreover, for $\symSet \in \sigAlg \otimes \sigAlg$ we denote by
+$\targetExt_{\symSet}$ the restriction of $\targetExt$ to $\symSet$.
+Finally, we refer to $\symSet$ as a *symmetric set* if
+$(x,y) \in \symSet \implies (y,x) \in \symSet$.
+:::
+
+Define the joint distribution
+$$
+\begin{equation}
+\targetExt(dx,dy) \Def \target(dx)\propKer(x,dy)
+\end{equation}
+$$ {#eq-target-ext}
+so that the reversibility condition in @eq-MH-balance-condition can be written
+as
+$$
+\targetExt(dx,dy)\alpha(x,y) = \targetExt^{\top}{}(dx,dy)\alpha(y,x).
+$$ {#eq-MH-balance-condition-2}
+We now state and prove the proposition proven in @MHGeneralStateSpace.
+See the appendix for definitions of absolute continuity and
+mutual singularity.
+
+::: {.callout-note title="Proposition"}
+There exists a symmetric set $\symSet \in \sigAlg \otimes \sigAlg$
+such that
+
+1. $\targetExt$ and $\targetExt^\top$ are mutually absolutely continuous on $\symSet$.
+2. $\targetExt$ and $\targetExt^\top$ are mutually singular on the complement $\symSet^c$.
+3. $\symSet$ is unique up to sets that are null under both $\targetExt$ and $\targetExt^\top$.
+4. The densities $\frac{d\targetExt_\symSet}{d\targetExt^\top_\symSet}$ and
+$\frac{d\targetExt^\top_\symSet}{d\targetExt_\symSet}$ exist, are strictly positive,
+and satisfy
+
+$$
+\begin{equation}
+\frac{d\targetExt^\top_\symSet}{d\targetExt_\symSet}(x,y)
+= \left[\frac{d\targetExt_\symSet}{d\targetExt^\top_\symSet}(x,y)\right]^{-1}
+\end{equation}
+$$
+:::
+
+::: {.callout-note title="Proof" collapse=true}
+Define the measure $\nu \Def \targetExt + \targetExt^\top$ so that
+$\targetExt \ll \nu$ and $\targetExt^\top \ll \nu$, and the
+densities $\frac{d\targetExt}{d\nu}$ and $\frac{d\targetExt^\top}{d\nu}$ exist.
+Using the fact that $\nu = \nu^\top$, it follows that
+$$
+\begin{align}
+\targetExt^\top(A,B)
+= \targetExt(B,A)
+&= \int_{A \times B} \frac{d\targetExt}{d\nu}(x,y) \nu(dx, dy) \\
+&= \int_{B \times A} \frac{d\targetExt}{d\nu}(y,x) \nu(dy, dx) \\
+&= \int_{B \times A} \frac{d\targetExt}{d\nu}(y,x) \nu(dx, dy),
+\end{align}
+$$
+which implies that $\left[\frac{d\targetExt}{d\nu}\right]^\top$ is a
+density of $\targetExt^\top$ with respect to $\nu$. Define
+$$
+\symSet \Def \left\{(x,y) : \frac{d\targetExt}{d\nu}(x,y) > 0 \text{ and }
+ \frac{d\targetExt^\top}{d\nu}(x,y) > 0\right\}
+$$
+so that the densities
+$$
+\begin{align}
+&\frac{d\targetExt_\symSet}{d\targetExt_\symSet^\top}
+= \frac{d\targetExt_\symSet / d\nu}{d\targetExt^\top_\symSet / d\nu},
+&&\frac{d\targetExt^\top_\symSet}{d\targetExt_\symSet}
+= \frac{d\targetExt^\top_\symSet / d\nu}{d\targetExt_\symSet / d\nu}
+\end{align}
+$$
+are well-defined, and
+$$
+\frac{d\targetExt_\symSet}{d\targetExt_\symSet^\top} =
+\left[\frac{d\targetExt_\symSet^\top}{d\targetExt_\symSet}\right]^{-1}.
+$$
+:::
+
+
+::: {.callout-note title="Remark"}
+The set $\symSet$ consists of pairs of points $(x,y)$ that are reachable
+(in both directions) via sampling the proposal distribution while the
+chain is at equilibrium (i.e., the current state has distribution $\target$).
+Indeed, suppose the sets $A,B \subset \stateSpace$ are contained in
+$\symSet$. Then $\eta(A,B) > 0$ and $\eta(B,A) > 0$, which in particular
+implies $\target(A) > 0$ and $\target(B) > 0$. Thus, for $A$ and $B$ to be
+in $\symSet$ they must be in the support of $\target$. Moreover, there must
+be positive probability of transitioning from one to the other under the
+kernel $\propKer$. The definition of $\symSet$ is thus jointly dependent on
+both the target distribution and proposal kernel.
+:::
+
+
+We now use the above result to provide a more detailed characterization
+of the condition in @eq-MH-balance-condition-2.
+
+::: {.callout-note title="Proposition"}
+The reversibility condition in @eq-MH-balance-condition-2 is satisfied if
+and only if the following two conditions are met:
+
+  1. The function $\alpha$ satisfies
+  $$
+  \begin{equation}
+  \alpha(x,y) \frac{d\targetExt_\symSet}{d\targetExt_\symSet^\top}(x,y) = \alpha(y,x),
+  \qquad \targetExt-\text{almost everywhere on } \symSet
+  \end{equation}
+  $$
+  2. $\alpha$ is $\targetExt$-almost everywhere zero on $\symSet^c$.
+:::
+
+::: {.callout-note title="Remark"}
+It should be emphasized that these conditions only ensure that $\Ker$ is
+$\target$-invariant, not that $\Ker$ is ergodic; i.e., there is no guarantee
+that a Markov chain generated from an initial condition other than $\target$
+will actually converge to the invariant distribution $\target$. For example,
+the above conditions are satisfied when $\symSet$ is empty,
+in which case $\alpha$ is always zero. Thus, in this case the rejection
+probability is $s(x) = 1$ and the Metropolis-Hastings
+kernel in @eq-MH-kernel reduces to
+$$
+\begin{equation}
+\Ker(x,dy) = s(x)\delta_x(dy) = \delta_x(dy).
+\end{equation}
+$$
+The Markov chain will thus be stuck at its initial condition. This kernel
+trivially satisfies $\target$-invariance but is clearly not useful.
+:::
+
+
+
+
+# Appendix
+We use the term \textit{symmetric set} in this context to mean a set
+$\symSet \subset \stateSpace \times \stateSpace$ satisfying
+$(x,y) \in \symSet \implies (y,x) \in \symSet$.
