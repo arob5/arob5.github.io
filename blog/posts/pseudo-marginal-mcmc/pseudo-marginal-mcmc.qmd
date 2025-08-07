@@ -1,7 +1,7 @@
 ---
 title: "Pseudo-Marginal MCMC"
 subtitle: Pseudo-Marginal MCMC
-description: MCMC with an unbiased likelihood approximation.
+description: MCMC with an unbiased density approximation.
 layout: default
 date: 2024-09-28
 categories: [MCMC, Sampling, Computational Statistics]
@@ -24,7 +24,7 @@ Bayesian inference where the likelihood function is intractable. We then take
 a step back to understand why the algorithm works, and discuss the method from
 a more generic and rigorous viewpoint.
 
-# Pseudo-Marginal MCMC for Bayesian Inference
+## Pseudo-Marginal MCMC for Bayesian Inference
 We start by considering a standard problem of Bayesian inference for a parameter
 of interest $u \in \mathcal{U}$. Given a prior density $\pi_0(u)$ and
 likelihood function $L(u)$, the unnormalized posterior density is then obtained
@@ -135,8 +135,187 @@ appearing in (8); we see in the acceptance probability (5) that we need only
 be able to sample from $P(u,\cdot)$. As usual, we need to be able to evaluate
 the density $q(u,\tilde{u})$.
 
-# A More Generic and Formal Perspective
-The above idea of course extends beyond the Bayesian example. In this section,
+## A More Generic Formulation
+We introduced the pseudo-marginal algorithm above in the context of
+Bayesian inference, where the random variable $\ell \sim P(u,\cdot)$
+provides an unbiased estimate of the likelihood $L(u)$.
+This idea of course extends beyond the Bayesian example, for sampling from
+a generic target distribution with unnormalized density $\pi(u)$. The
+pseudomarginal method can be applied provided access to a non-negative,
+unbiased estimator of $\pi(u)$. Let's denote this estimator by
+$\hat{\pi}(u; x)$, where $x \sim h$. In constrast to the presentation above,
+we now suppose the randomness in the estimator stems from an underlying
+random variable $x$ that is independent of $u$. The dependence on $u$
+still shows up in $\hat{\pi}(u; x)$, so this is essentially a different
+way of thinking of the same algorithm. As before, we target the extended
+distribution
+$$
+\begin{equation}
+\overline{\pi}(u, x) := \hat{\pi}(u;x)h(x) \tag{11}
+\end{equation}
+$$
+and consider a proposal of the form
+$$
+\begin{equation}
+\overline{q}(u,x; \tilde{u}, \tilde{x})
+:= q(u,\tilde{u})h(\tilde{x}). \tag{12}
+\end{equation}
+$$
+The Metropolis-Hastings acceptance ratio then simplifies to
+$$
+\begin{equation}
+\frac{\hat{\pi}(\tilde{u};\tilde{x})h(\tilde{x}) q(\tilde{u},u) h(x)}
+{\hat{\pi}(u;x)h(x) q(u, \tilde{u}) h(\tilde{x})}
+= \frac{\hat{\pi}(\tilde{u};\tilde{x}) q(\tilde{u},u)}
+{\hat{\pi}(u;x) q(u, \tilde{u})}. \tag{13}
+\end{equation}
+$$
+
+We have thus again constructed an implementable MCMC algorithm with the
+correct invariant distribution.
+
+### Efficiency
+Despite being correct, pseudo-marginal
+schemes are known to suffer from poor efficiency when the variance of
+the estimator $\hat{\pi}(u;x)$ is high. This is due to the fact that the
+value of $x$ in the algorithm is only updated when a new value of $u$
+is accepted. If $\hat{\pi}(u;x)$ is quite variable, then a value of
+$x$ may be sampled such that $\hat{\pi}(u;x)$ significantly overestimates
+$\pi(u)$. It therefore might take many iterations to sample a new value
+$\tilde{x}$ that allows $\hat{\pi}(u;\tilde{x})$ to compete with
+$\hat{\pi}(u;x)$ in the acceptance ratio. @corrPM reports that this behavior
+can typically be avoided by ensuring that the variance of
+$\log \hat{\pi}(u;x)$ stays between $1$ and $3$ in regions of high probability.
+
+In practice, one commonly has control over the variance of the estimator but
+reducing the variance comes at the cost of increased computational expense per iteration.
+A typical example is where $x = x_{1:n}$ represents $n$ samples
+$x_i \overset{\text{ind}}{\sim} h_i$, $h(x) = \prod_{i=1}^{n} h_i(x)$,
+and $\hat{\pi}(u;x) = \frac{1}{n} \sum_{i=1}^{n} \hat{\pi}(u;x_i)$ is a sample mean.
+One can therefore reduce the variance of the estimator by increasing the
+number of samples used to compute the mean.
+
+## The Correlated Psuedo-marginal Method
+@corrPM present an alternative method for variance reduction that does not
+require as large of a sample size to achieve a given variance level.
+The idea stems from the fact that it is really the variability in
+the acceptance ratio that determines the efficiency of the algorithm. Therefore,
+we can consider methods for reducing the variance of the ratio estimator
+$\hat{\pi}(u;\tilde{x}) / \hat{\pi}(u;x)$. In general, ratio estimators have
+lower variance when the numerator and denominator are positively correlated.
+In the pseudo-marginal method, the variable $\tilde{x}$ is sampled from
+$h$ independently of $x$, implying independence between $\hat{\pi}(u;\tilde{x})$
+and $\hat{\pi}(u;x)$.
+
+Instead of sampling the values of $x$ independently,
+we might instead consider allowing the values to follow a Markov chain in order
+to induce correlation between the numerator and denominator in the acceptance
+ratio. We are still targeting the joint distribution
+$\overline{\pi}(u, x) := \hat{\pi}(u;x)h(x)$,
+but we now weaken the requirement that $\tilde{x}$ be sampled directly from $h$.
+Suppose instead that $\tilde{x}$ is sampled from a $h$-reversible Markov
+kernel $P(x,\cdot)$ with density $p(x, \cdot)$; that is,
+$$
+h(x)p(x, \tilde{x}) = h(\tilde{x})p(\tilde{x}, x). \tag{14}
+$$
+We apply (14) to simplify the acceptance ratio as
+$$
+\begin{align}
+\frac{\hat{\pi}(\tilde{u}, \tilde{x}) q(\tilde{u},u) h(\tilde{x}) p(\tilde{x},x)}
+{\hat{\pi}(u; x) q(u, \tilde{u}) h(x)p(x, \tilde{x})}
+&= \frac{\hat{\pi}(\tilde{u}, \tilde{x}) q(\tilde{u},u) h(x)p(x, \tilde{x})}
+{\hat{\pi}(u; x) q(u, \tilde{u}) h(x)p(x, \tilde{x})} \\
+&= \frac{\hat{\pi}(\tilde{u}, \tilde{x}) q(\tilde{u},u)}
+{\hat{\pi}(u; x) q(u, \tilde{u})}. \tag{15}
+\end{align}
+$$
+The acceptance ratio is exactly as in the standard pseudo-marginal method.
+Note also that the choice $p(x, \cdot) = h(\cdot)$ recovers the previous
+algorithm.
+
+### Estimators based on Gaussian Random Variables
+The key to implementing this method is to define a valid $h$-reversible
+Markov kernel $P$. In general, this will be somewhat problem-specific, but
+many estimators $\hat{\pi}(u; x)$ can be written as a suitable transformation
+of a Gaussian random variable $x \sim \mathcal{N}(m, C)$. @corrPM focus
+exclusively on this setting. A well-known method for constructing a
+$\mathcal{N}(m, C)$-reversible kernel is via a preconditioned Crank-Nicholson
+(pCN) update
+$$
+\begin{equation}
+\tilde{x} := m + \rho(x-m) + \sqrt{1 - \rho^2} \xi,
+\qquad \xi \sim \mathcal{N}(0, C), \tag{16}
+\end{equation}
+$$
+implying the kernel
+$$
+\begin{equation}
+p(x, \tilde{x}) = \mathcal{N}(\rho x + (1-\rho)m, (1-\rho^2)C). \tag{17}
+\end{equation}
+$$
+To see that $P$ is reversible (and thus invariant) with respect to
+$\mathcal{N}(m, C)$, notice that (16) implies the joint distribution
+$$
+\begin{equation}
+\begin{bmatrix} x \\ \tilde{x} \end{bmatrix} \sim
+\mathcal{N}\left(
+\begin{bmatrix} m \\ m \end{bmatrix},
+\begin{bmatrix} C & \rho C \\ \rho C & C \end{bmatrix}
+\right), \tag{18}
+\end{equation}
+$$
+which satisfies $(x,\tilde{x}) \overset{d}{=} (\tilde{x},x)$ and
+hence $P$ satisfies (17).
+
+::: {.callout-note title="Proof" collapse=true}
+Since $(x,\tilde{x})$ is a linear combination of the independent Gaussian
+variables $x$ and $\xi$, it is itself Gaussian distributed. The moments of the
+$x$ marginal are already known, and the remaining moments can be filled in
+by noting
+\begin{align}
+\mathbb{E}[\tilde{x}]
+&= m + \rho(\mathbb{E}[x]-m) + \sqrt{1 - \rho^2} \mathbb{E}[\xi] = m \\
+\mathrm{Cov}[\tilde{x}]
+&= \rho^2 \mathrm{Cov}[x-m] + (1-\rho^2)\mathrm{Cov}(\xi) = C \\
+\mathrm{Cov}[x,\tilde{x}]
+&= \mathrm{Cov}[x,\rho x + \sqrt{1 - \rho^2}\xi]
+= \rho \mathrm{Cov}[x] + \sqrt{1-\rho^2}\mathrm{Cov}[x,\xi] = \rho C.
+\end{align}
+
+Notice that $(x,\tilde{x}) \sim h(dx)P(x,d\tilde{x})$. Therefore, the
+fact that $(x,\tilde{x})$ and $(\tilde{x},x)$ are equal in distribution
+implies the reversibility condition
+$h(dx)P(x,d\tilde{x}) = h(d\tilde{x})P(\tilde{x},dx)$. Reversibility is a
+sufficient condition for invariance, and thus
+$h(dx)P(x,d\tilde{x}) = h(d\tilde{x})$ also holds. $\qquad \blacksquare$
+:::
+Notice from (18) that the tuning parameter $\rho$ controls the correlation
+between $x$ and $\tilde{x}$. Since we want to induce positive correlation
+between these variables, $\rho$ will typically be set to a value close to one.
+
+As before, this method encompasses the case where the estimator is a sample
+mean of the form
+$$
+\begin{equation}
+\hat{\pi}(u;x) = \frac{1}{n} \sum_{i=1}^{n} \hat{\pi}(u; x_i),
+\qquad x_i \overset{\mathrm{iid}}{\sim} \mathcal{N}(m_0, C_0)
+\end{equation}
+$$
+where $\mathbb{E}[\hat{\pi}(u; x_i)] = \pi(u)$ for each $x_i$.
+The vector $x := [x_1, \dots, x_n]$ is still Gaussian
+with mean $m := [m_0, \dots, m_0]$ and block-diagonal covariance
+$C := \mathrm{diag}(C_0, \dots, C_0)$. In this case, the pCN update
+in (16) reduces to the $n$ updates
+$$
+\begin{equation}
+\tilde{x}_i := m_0 + \rho(x_i - m_0) + \sqrt{1-\rho^2} \xi_i,
+\qquad \xi \overset{\mathrm{iid}}{\sim} \mathcal{N}(0, C_0)
+\end{equation}
+$$
+for $i = 1, \dots, n$.
+
+## Being a bit more rigorous
+In this section,
 we discuss the pseudo-marginal algorithm from a more generic perspective, and
 fill in some of the measure-theoretic details. Let's assume
 $\Pi$ is some generic target distribution on a measurable space

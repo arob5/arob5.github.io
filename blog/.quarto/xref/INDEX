@@ -43,5 +43,8 @@
   },
   "posts/involutive-mcmc/MH_Tierney.qmd": {
     "MH_Tierney.html": "ccb1c4de"
+  },
+  "posts/pseudo-marginal-mcmc/pseudo-marginal-mcmc.qmd": {
+    "pseudo-marginal-mcmc.html": "22f6ac07"
   }
 }
