@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2024-09-28">
-<meta name="description" content="MCMC with an unbiased likelihood approximation.">
+<meta name="description" content="MCMC with an unbiased density approximation.">
 
 <title>Pseudo-Marginal MCMC – Andrew G. Roberts</title>
 <style>
@@ -164,7 +164,7 @@ window.Quarto = {
             <p class="subtitle lead">Pseudo-Marginal MCMC</p>
                   <div>
         <div class="description">
-          MCMC with an unbiased likelihood approximation.
+          MCMC with an unbiased density approximation.
         </div>
       </div>
                           <div class="quarto-categories">
@@ -203,9 +203,11 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#efficiency" id="toc-efficiency" class="nav-link" data-scroll-target="#efficiency"><span class="header-section-number">0.2.1</span> Efficiency</a></li>
   </ul></li>
-  <li><a href="#the-correlated-psuedo-marginal-method" id="toc-the-correlated-psuedo-marginal-method" class="nav-link" data-scroll-target="#the-correlated-psuedo-marginal-method"><span class="header-section-number">0.3</span> The Correlated Psuedo-marginal Method</a></li>
-  <li><a href="#estimators-based-on-gaussian-random-variables" id="toc-estimators-based-on-gaussian-random-variables" class="nav-link" data-scroll-target="#estimators-based-on-gaussian-random-variables"><span class="header-section-number">0.4</span> Estimators based on Gaussian Random Variables</a></li>
-  <li><a href="#being-a-bit-more-rigorous" id="toc-being-a-bit-more-rigorous" class="nav-link" data-scroll-target="#being-a-bit-more-rigorous"><span class="header-section-number">0.5</span> Being a bit more rigorous</a></li>
+  <li><a href="#the-correlated-psuedo-marginal-method" id="toc-the-correlated-psuedo-marginal-method" class="nav-link" data-scroll-target="#the-correlated-psuedo-marginal-method"><span class="header-section-number">0.3</span> The Correlated Psuedo-marginal Method</a>
+  <ul class="collapse">
+  <li><a href="#estimators-based-on-gaussian-random-variables" id="toc-estimators-based-on-gaussian-random-variables" class="nav-link" data-scroll-target="#estimators-based-on-gaussian-random-variables"><span class="header-section-number">0.3.1</span> Estimators based on Gaussian Random Variables</a></li>
+  </ul></li>
+  <li><a href="#being-a-bit-more-rigorous" id="toc-being-a-bit-more-rigorous" class="nav-link" data-scroll-target="#being-a-bit-more-rigorous"><span class="header-section-number">0.4</span> Being a bit more rigorous</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">1</span> References</a></li>
   </ul>
 </nav>
@@ -309,15 +311,14 @@ h(x)p(x, \tilde{x}) = h(\tilde{x})p(\tilde{x}, x). \tag{14}
 {\hat{\pi}(u; x) q(u, \tilde{u})}. \tag{15}
 \end{align}
 \]</span> The acceptance ratio is exactly as in the standard pseudo-marginal method. Note also that the choice <span class="math inline">\(p(x, \cdot) = h(\cdot)\)</span> recovers the previous algorithm.</p>
-</section>
-<section id="estimators-based-on-gaussian-random-variables" class="level2" data-number="0.4">
-<h2 data-number="0.4" class="anchored" data-anchor-id="estimators-based-on-gaussian-random-variables"><span class="header-section-number">0.4</span> Estimators based on Gaussian Random Variables</h2>
+<section id="estimators-based-on-gaussian-random-variables" class="level3" data-number="0.3.1">
+<h3 data-number="0.3.1" class="anchored" data-anchor-id="estimators-based-on-gaussian-random-variables"><span class="header-section-number">0.3.1</span> Estimators based on Gaussian Random Variables</h3>
 <p>The key to implementing this method is to define a valid <span class="math inline">\(h\)</span>-reversible Markov kernel <span class="math inline">\(P\)</span>. In general, this will be somewhat problem-specific, but many estimators <span class="math inline">\(\hat{\pi}(u; x)\)</span> can be written as a suitable transformation of a Gaussian random variable <span class="math inline">\(x \sim \mathcal{N}(m, C)\)</span>. <span class="citation" data-cites="corrPM">Deligiannidis, Doucet, and Pitt (<a href="#ref-corrPM" role="doc-biblioref">2017</a>)</span> focus exclusively on this setting. A well-known method for constructing a <span class="math inline">\(\mathcal{N}(m, C)\)</span>-reversible kernel is via a preconditioned Crank-Nicholson (pCN) update <span class="math display">\[
 \begin{equation}
 \tilde{x} := m + \rho(x-m) + \sqrt{1 - \rho^2} \xi,
 \qquad \xi \sim \mathcal{N}(0, C), \tag{16}
 \end{equation}
-\]</span> implying <span class="math display">\[
+\]</span> implying the kernel <span class="math display">\[
 \begin{equation}
 p(x, \tilde{x}) = \mathcal{N}(\rho x + (1-\rho)m, (1-\rho^2)C). \tag{17}
 \end{equation}
@@ -329,7 +330,7 @@ p(x, \tilde{x}) = \mathcal{N}(\rho x + (1-\rho)m, (1-\rho^2)C). \tag{17}
 \begin{bmatrix} C &amp; \rho C \\ \rho C &amp; C \end{bmatrix}
 \right), \tag{18}
 \end{equation}
-\]</span> which satisfies <span class="math inline">\((x,\tilde{x}) \overset{d}{=} (\tilde{x},x)\)</span>.</p>
+\]</span> which satisfies <span class="math inline">\((x,\tilde{x}) \overset{d}{=} (\tilde{x},x)\)</span> and hence <span class="math inline">\(P\)</span> satisfies (17).</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Proof">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -351,12 +352,12 @@ Proof
 &amp;= \mathrm{Cov}[x,\rho x + \sqrt{1 - \rho^2}\xi]
 = \rho \mathrm{Cov}[x] + \sqrt{1-\rho^2}\mathrm{Cov}[x,\xi] = \rho C.
 \end{align}\]</span></p>
-<p>Notice that <span class="math inline">\((x,\tilde{x}) \sim h(dx)P(x,\tilde{dx})\)</span>. Therefore, the fact that <span class="math inline">\((x,\tilde{x})\)</span> and <span class="math inline">\((\tilde{x},x)\)</span> are equal in distribution implies the reversibility condition <span class="math inline">\(h(dx)P(x,\tilde{dx}) = h(d\tilde{x})P(\tilde{x},dx)\)</span>. Reversibility is a sufficient condition for invariance, and thus <span class="math inline">\(h(dx)P(x,d\tilde{x}) = h(d\tilde{x})\)</span> also holds. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+<p>Notice that <span class="math inline">\((x,\tilde{x}) \sim h(dx)P(x,d\tilde{x})\)</span>. Therefore, the fact that <span class="math inline">\((x,\tilde{x})\)</span> and <span class="math inline">\((\tilde{x},x)\)</span> are equal in distribution implies the reversibility condition <span class="math inline">\(h(dx)P(x,d\tilde{x}) = h(d\tilde{x})P(\tilde{x},dx)\)</span>. Reversibility is a sufficient condition for invariance, and thus <span class="math inline">\(h(dx)P(x,d\tilde{x}) = h(d\tilde{x})\)</span> also holds. <span class="math inline">\(\qquad \blacksquare\)</span></p>
 </div>
 </div>
 </div>
 <p>Notice from (18) that the tuning parameter <span class="math inline">\(\rho\)</span> controls the correlation between <span class="math inline">\(x\)</span> and <span class="math inline">\(\tilde{x}\)</span>. Since we want to induce positive correlation between these variables, <span class="math inline">\(\rho\)</span> will typically be set to a value close to one.</p>
-<p>As before, note that this encompasses the case where the estimator is a sample mean of the form <span class="math display">\[
+<p>As before, this method encompasses the case where the estimator is a sample mean of the form <span class="math display">\[
 \begin{equation}
 \hat{\pi}(u;x) = \frac{1}{n} \sum_{i=1}^{n} \hat{\pi}(u; x_i),
 \qquad x_i \overset{\mathrm{iid}}{\sim} \mathcal{N}(m_0, C_0)
@@ -368,8 +369,9 @@ Proof
 \end{equation}
 \]</span> for <span class="math inline">\(i = 1, \dots, n\)</span>.</p>
 </section>
-<section id="being-a-bit-more-rigorous" class="level2" data-number="0.5">
-<h2 data-number="0.5" class="anchored" data-anchor-id="being-a-bit-more-rigorous"><span class="header-section-number">0.5</span> Being a bit more rigorous</h2>
+</section>
+<section id="being-a-bit-more-rigorous" class="level2" data-number="0.4">
+<h2 data-number="0.4" class="anchored" data-anchor-id="being-a-bit-more-rigorous"><span class="header-section-number">0.4</span> Being a bit more rigorous</h2>
 <p>In this section, we discuss the pseudo-marginal algorithm from a more generic perspective, and fill in some of the measure-theoretic details. Let’s assume <span class="math inline">\(\Pi\)</span> is some generic target distribution on a measurable space <span class="math inline">\((\mathcal{U}, \mathcal{B}(\mathcal{U}))\)</span>. We write <span class="math inline">\(\mathcal{B}(\mathcal{U})\)</span> to denote the Borel <span class="math inline">\(\sigma\)</span>-algebra; that is, the <span class="math inline">\(\sigma\)</span>-algebra generated by the open sets of <span class="math inline">\(\mathcal{U}\)</span>. We assume <span class="math inline">\(\Pi\)</span> admits a density (i.e., Radon-Nikodym derivative) <span class="math inline">\(\pi\)</span> with respect to some reference measure <span class="math inline">\(\nu\)</span>. The density <span class="math inline">\(\pi\)</span> need not be normalized. All densities considered throughout this section will be with respect to the same reference measure <span class="math inline">\(\nu\)</span>. As before, we consider <span class="math inline">\(\pi(u)\)</span> intractable, but assume we can draw samples from an unbiased estimator. We could define <span class="math inline">\(P(u,\cdot)\)</span> as before such that samples drawn from <span class="math inline">\(P(u,\cdot)\)</span> are unbiased with respect to <span class="math inline">\(\pi(u)\)</span>. However, note that this is equivalent to considering samples <span class="math inline">\(w \sim P(u,\cdot)\)</span> with expectation one, such that <span class="math inline">\(w \cdot \pi(u)\)</span> is unbiased for <span class="math inline">\(\pi(u)\)</span>. This seems to be a roundabout way to go around this, but for the purposes of analysis it turns out to be convenient. This is the definition used in some of the “noisy MCMC” literature (see, e.g., Medina-Aguayo et al, 2018). Thus, let’s go with this definition and define the Markov kernel <span class="math inline">\(P: \mathcal{U} \to [0,1]\)</span> such that (1) <span class="math inline">\(P(u,\cdot)\)</span> is a probability measure on <span class="math inline">\((\mathcal{W},\mathcal{B}(\mathcal{W}))\)</span> for each <span class="math inline">\(u \in \mathcal{U}\)</span>, where <span class="math inline">\(\mathcal{W} \subseteq [0,\infty)\)</span>; and (2) <span class="math inline">\(P\)</span> produces weights with unit expectation: <span class="math display">\[
 \begin{align}
 &amp;w \sim P(u,\cdot), &amp;&amp;\mathbb{E}_{P_u}[w] = 1. \tag{11}
