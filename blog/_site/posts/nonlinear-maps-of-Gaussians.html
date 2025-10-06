@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-11-26">
-<meta name="description" content="Gauss-Newton, Levenberg-Marquardt">
+<meta name="dcterms.date" content="2024-02-15">
+<meta name="description" content="I discuss the generic problem of approximating the distribution resulting from a non-linear transformation of a Gaussian random variable, and then show how this leads to extensions of the Kalman filter which yield approximate filtering algorithms in the non-linear setting.">
 
-<title>Nonlinear Least Squares – Andrew G. Roberts</title>
+<title>Approximating Nonlinear Functions of Gaussians – Andrew G. Roberts</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -139,16 +139,15 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Nonlinear Least Squares</h1>
+      <h1 class="title">Approximating Nonlinear Functions of Gaussians</h1>
+            <p class="subtitle lead">And the Extended Kalman Filter</p>
                   <div>
         <div class="description">
-          Gauss-Newton, Levenberg-Marquardt
+          I discuss the generic problem of approximating the distribution resulting from a non-linear transformation of a Gaussian random variable, and then show how this leads to extensions of the Kalman filter which yield approximate filtering algorithms in the non-linear setting.
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">Statistics</div>
-                <div class="quarto-category">Optimization</div>
-                <div class="quarto-category">Inverse-Problem</div>
+                <div class="quarto-category">Data-Assimilation</div>
               </div>
                   </div>
   </div>
@@ -160,7 +159,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">November 26, 2024</p>
+        <p class="date">February 15, 2024</p>
       </div>
     </div>
     
@@ -179,142 +178,137 @@ window.Quarto = {
 
 
 
-<p>This post provides an introduction to nonlinear least squares (NLS), which generalizes the familiar least squares problem by allowing for a nonlinear forward map. Unlike least squares, the NLS problem does not admit closed-form solutions, but a great deal of work has been devoted to numerical schemes tailored to this specific problem. We introduce two of the most popular algorithms: Gauss-Newton and Levenberg-Marquardt.</p>
-<section id="notation" class="level1">
-<h1>Notation</h1>
-<p>For a positive definite matrix <span class="math inline">\(A\)</span>, we use the following notation for the norm and inner product, weighted by <span class="math inline">\(A\)</span>:</p>
-<p><span class="math display">\[
-\langle u, v \rangle_A := \langle A^{-1}u, v\rangle = u^\top A^{-1}v \newline
-\]</span> <span class="math display">\[
-\lVert u \rVert^2_{A} := \langle u, u\rangle_{A} = u^\top A^{-1}u,
-\]</span></p>
-<p>where <span class="math inline">\(\langle \cdot, \cdot \rangle\)</span> and <span class="math inline">\(\lVert \cdot \rVert\)</span> denote the standard Euclidean inner product and norm, respectively. For a function <span class="math inline">\(\mathcal{G}: \mathbb{R}^d \to \mathbb{R}^n\)</span> we write <span class="math inline">\(D\mathcal{G}(u)\)</span> to denote the <span class="math inline">\(n \times d\)</span> Jacobian matrix evaluated at <span class="math inline">\(u\)</span>, with <span class="math inline">\(\nabla \mathcal{G}(u) := D\mathcal{G}(u)^\top\)</span> its transpose. When <span class="math inline">\(n=1\)</span> then <span class="math inline">\(\nabla \mathcal{G}(u)\)</span> is the gradient vector, but note that we extend the notation beyond this typical case. Let <span class="math inline">\(D_j\mathcal{G}(u)\)</span> denote the <span class="math inline">\(1 \times n\)</span> matrix storing the derivative of <span class="math inline">\(\mathcal{G}(u)\)</span> with respect to <span class="math inline">\(u_j\)</span>, and <span class="math inline">\(\nabla_j \mathcal{G}(u) := D_j\mathcal{G}(u)^\top\)</span>. Similarly, let <span class="math inline">\(D\mathcal{G}_i(u)\)</span> denote the <span class="math inline">\(1 \times d\)</span> matrix storing the derivative of <span class="math inline">\(\mathcal{G}(u)\)</span> with respect to the <span class="math inline">\(i^{\text{th}}\)</span> output <span class="math inline">\(\mathcal{G}_i(u)\)</span>, and <span class="math inline">\(\nabla \mathcal{G}_i(u) := D\mathcal{G}_i(u)^\top\)</span> Finally, we denote the <span class="math inline">\(d \times d\)</span> Hessian matrix for a scalar-valued function <span class="math inline">\(g: \mathbb{R}^d \to \mathbb{R}\)</span> by <span class="math inline">\(\nabla^2 g(u) := D\nabla g(u)\)</span>. Similarly, <span class="math inline">\(\nabla^2_i \mathcal{G}(u)\)</span> is the <span class="math inline">\(d \times d\)</span> Hessian of the map <span class="math inline">\(u \mapsto \mathcal{G}_i(u)\)</span>.</p>
-</section>
-<section id="introduction" class="level1">
-<h1>Introduction</h1>
-<p>In this post we investigate optimization problems of the form</p>
+<p>In a previous <a href="https://arob5.github.io/blog/2024/02/15/Kalman-Filter/">post</a>, I discussed the Kalman filter (KF), which provides the closed-form mean and covariance recursions characterizing the Gaussian filtering distributions for linear Gaussian hidden Markov models. In this post, we retain the Gaussian noise assumption, but generalize to nonlinear dynamics and observation operators. Our primary focus is the additive noise model <span class="math display">\[
+\begin{align}
+v_{k+1} &amp;= g(v_k) + \eta_{k+1} &amp;&amp; \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{1} \newline
+y_{k+1} &amp;= h(v_{k+1}) + \epsilon_{k+1}, &amp;&amp; \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
+v_0 &amp;\sim \mathcal{N}(m_0, C_0), &amp;&amp;\{\epsilon_k\} \perp \{\eta_k\} \perp v_0
+\end{align}
+\]</span> but we will also touch on the case where the noise is also subject to nonlinear mapping; i.e.,</p>
 <p><span class="math display">\[
 \begin{align}
-u_{\star} &amp;\in \text{argmin}_{u \in \mathbb{R}^d} J(u) \newline
-J(u) &amp;:= \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma} + \frac{1}{2}\lVert u - m\rVert_C^2, \tag{1}
+v_{k+1} &amp;= g(v_k, \eta_{k+1}) &amp;&amp; \eta_{k+1} \sim \mathcal{N}(0, Q) \tag{2} \newline
+y_{k+1} &amp;= h(v_{k+1}, \epsilon_{k+1}) &amp;&amp; \epsilon_{k+1} \sim \mathcal{N}(0, R) \newline
+v_0 &amp;\sim \mathcal{N}(m_0, C_0), &amp;&amp;\{\epsilon_k\} \perp \{\eta_k\} \perp v_0
 \end{align}
 \]</span></p>
-<p>where <span class="math inline">\(u,m \in \mathbb{R}^d\)</span> and <span class="math inline">\(y \in \mathbb{R}^n\)</span>, and <span class="math inline">\(\Sigma\)</span> and <span class="math inline">\(C\)</span> are positive definite matrices. Notice that if <span class="math inline">\(\mathcal{G}\)</span> is linear, then (1) is simply a regularized least squares objective. I discuss this special case in <a href="https://arob5.github.io/blog/2024/07/03/lin-Gauss/">this</a> post. Allowing <span class="math inline">\(\mathcal{G}\)</span> to be nonlinear generalizes linear least squares, and is therefore referred to as nonlinear least squares (NLS). Unlike the linear case, (1) no longer admits a closed-form solution in general, so we will consider various numerical algorithms that seek to minimize <span class="math inline">\(J(u)\)</span>. While the usual suspects (gradient descent, Newton’s method) can be applied, the quadratic structure of (1) is conducive to some bespoke algorithms that tend to work well in this setting. We will discuss the most well-known, the Gauss-Newton algorithm, in addition to the closely related Levenberg-Marquardt method.</p>
-<p>Note that other treatments of this topic will often leave out the regularization term <span class="math inline">\(\frac{1}{2}\lVert u - m\rVert_C^2\)</span>, and assume <span class="math inline">\(\Sigma\)</span> to be the identity matrix. Alternatively, sometimes the more generic perspective <span class="math inline">\(J(u) = \lVert r(u) \rVert^2\)</span> is taken. Setting <span class="math inline">\(r(u) := \Sigma^{-1/2}(y - \mathcal{G}(u))\)</span> recovers the first term in our present formulation in (1).</p>
-<section id="statistical-perspective" class="level2">
-<h2 class="anchored" data-anchor-id="statistical-perspective">Statistical Perspective</h2>
-<p>The solution <span class="math inline">\(u_{\star}\)</span> to the optimization problem in (1) can be viewed as the maximum a posterior (MAP) estimate of the Bayesian model <span class="math display">\[
+<p>Note even this more general formulation is still a special case of the generic Bayesian filtering problem, since we are restricting to the setting with Gaussian noise and a Gaussian initial condition.</p>
+<p>Let <span class="math inline">\(Y_k := \{y_1, \dots, y_k\}\)</span> denote the set of observations up through time step <span class="math inline">\(k\)</span>. We seek to characterize the filtering distributions <span class="math inline">\(v_k|Y_k\)</span>, and update them in an online fashion as more data arrives. I will denote the density of <span class="math inline">\(v_k|Y_k\)</span> by <span class="math inline">\(\pi_k(v_k) = p(v_k|Y_k)\)</span>. In the linear Gaussian setting these distributions are Gaussian, and can be computed analytically. The introduction of nonlinearity renders the filtering distributions non-Gaussian and not analytically tractable in general, motivating the need for approximations. Certain methods, such as particle filters, are designed to handle the situation where the departure from Gaussianity is severe. The methods discussed in this post, however, are applicable when Gaussian approximations are still reasonable. Given this, the algorithms discussed here all proceed by approximating the current filtering distribution by a Gaussian <span class="math inline">\(v_k|Y_k \sim \mathcal{N}(m_k, C_k)\)</span>. The algorithms differ in the approximations they employ to deal with the nonlinear functions <span class="math inline">\(h\)</span> and <span class="math inline">\(g\)</span> in order to arrive at a Gaussian approximation of the subsequent filtering distribution <span class="math inline">\(v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})\)</span>.</p>
+<p>There are many methods that fit into this general Gaussian approximation framework. In this post we focus on methods rooted in <em>linearization</em> of the nonlinear functions. Alternative approaches employ quadrature-based (e.g., the unscented Kalman filter) or Monte Carlo (e.g., the ensemble Kalman filter) approximations. Although the motivation stems from the filtering problem, we will focus mostly on the underlying fundamental problem here: approximating the distribution of a nonlinear function of a Gaussian random variable. The next section illustrates how this problem arises in the filtering context.</p>
+<section id="motivating-the-generic-problem" class="level2">
+<h2 class="anchored" data-anchor-id="motivating-the-generic-problem">Motivating the Generic Problem</h2>
+<p>We recall from the <a href="https://arob5.github.io/blog/2024/01/29/Bayesian-filtering/">post</a> on Bayesian filtering that the map <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span> naturally decomposes into two steps: the forecast and analysis steps. We assume here the Gaussian approximation <span class="math inline">\(v_k := v_k|Y_k \sim \mathcal{N}(m_k, C_k)\)</span> has been invoked and consider approximating the map <span class="math inline">\(\pi_k \mapsto \pi_{k+1}\)</span>.</p>
+<section id="forecast" class="level3">
+<h3 class="anchored" data-anchor-id="forecast">Forecast</h3>
+<p>The forecast distribution <span class="math inline">\(\hat{\pi}_{k+1}(v_{k+1}) := p(v_{k+1}|Y_k)\)</span> is the distribution implied by feeding <span class="math inline">\(\pi_k\)</span> through the stochastic dynamics model. In the additive noise case (1), we observe that this comes down to approximating the distribution of the random variable <span class="math display">\[
+g(v_k) + \eta_{k+1} , \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{3}
+\]</span> However, since we will be invoking a Gaussian approximation <span class="math inline">\(g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>, in addition to the assumption that <span class="math inline">\(v_k\)</span> and <span class="math inline">\(\eta_{k+1}\)</span> are independent, then we can just focus our attention on the <span class="math inline">\(g(v_k)\)</span> term. Due to independence, once we obtain the approximation <span class="math inline">\(g(v_k) \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>, then <span class="math inline">\(g(v_k) + \eta_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1} + Q)\)</span> is immediate.</p>
+<p>In the non-additive noise case, the problem similarly comes down to approximating the distribution <span class="math display">\[
+g(v_k, \eta_{k+1}), \qquad v_k \sim \mathcal{N}(m_k, C_k), \ \eta_{k+1} \sim \mathcal{N}(0, Q). \tag{4}
+\]</span> Again, due to the independence assumptions we have that <span class="math inline">\((v_k, \eta_{k+1})\)</span> are jointly distributed <span class="math display">\[
 \begin{align}
-y|u &amp;\sim \mathcal{N}(\mathcal{G}(u), \Sigma) \tag{2} \newline
-u &amp;\sim \mathcal{N}(m, C).
+\begin{bmatrix} v_k \newline \eta_{k+1} \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} m_k \newline 0 \end{bmatrix},
+  \begin{bmatrix} C_k &amp; 0 \newline 0 &amp; Q \end{bmatrix} \right).
 \end{align}
-\]</span> In particular, the posterior density of (2) satisfies <span class="math display">\[
-p(u|y) \propto \exp\left[-J(u)\right], \tag{3}
-\]</span> where <span class="math inline">\(J(u)\)</span> is the nonlinear least squares objective (1).</p>
+\]</span></p>
+<p>Thus, this situation also reduces to approximating the distribution of a nonlinear map of a Gaussian; in this case, the map <span class="math inline">\(g(\tilde{v}_k)\)</span>, where <span class="math inline">\(\tilde{v}_k := (v_k, \eta_{k+1})^\top\)</span> is the Gaussian input.</p>
 </section>
-<section id="gradient-and-hessian" class="level2">
-<h2 class="anchored" data-anchor-id="gradient-and-hessian">Gradient and Hessian</h2>
-The gradient and Hessian of <span class="math inline">\(J(u)\)</span> play a prominent role in numerical algorithms that seek to solve (1). We provide the expressions for these quantities below, with derivations given in the appendix.
-<blockquote class="blockquote">
-<p>
-<strong>Gradient and Hessian.</strong> <br> The gradient <span class="math inline">\(\nabla J(u)\)</span> and Hessian <span class="math inline">\(\nabla^2 J(u)\)</span> of the cost function defined in (1) are given by <span class="math display">\[\begin{align}
-  \nabla J(u) &amp;= -\nabla \mathcal{G}(u)\Sigma^{-1}(y-\mathcal{G}(u)) + C^{-1}(u-m) \tag{4} \newline
-  \nabla^2 J(u) &amp;= [\nabla \mathcal{G}(u)]\Sigma^{-1}[\nabla \mathcal{G}(u)]^\top  +
-  \sum_{i=1}^{n} \epsilon_i(u) \nabla^2 \mathcal{G}_i(u) + C^{-1} \tag{5},
-  \end{align}\]</span> where <span class="math inline">\(\epsilon_i(u)\)</span> is the <span class="math inline">\(i^{\text{th}}\)</span> entry of the vector <span class="math inline">\(\epsilon(u) := \Sigma^{-1}(\mathcal{G}(u) - y)\)</span>.
-</p>
-</blockquote>
-<p>In contrast to least squares, the Hessian <span class="math inline">\(\nabla^2 J(u)\)</span> depends on <span class="math inline">\(u\)</span> in general.</p>
-</section>
-</section>
-<section id="numerical-optimization" class="level1">
-<h1>Numerical Optimization</h1>
-<p>We now discuss numerical schemes that construct a sequence of iterates <span class="math inline">\(u_1, u_2, \dots\)</span> with the goal of converging to an optimum of <span class="math inline">\(J(u)\)</span>.</p>
-<section id="newtons-method" class="level2">
-<h2 class="anchored" data-anchor-id="newtons-method">Newton’s Method</h2>
-<p>Given a current iterate <span class="math inline">\(u_k\)</span>, Newton’s method constructs a quadratic approximation of <span class="math inline">\(J(u)\)</span> centered at the point <span class="math inline">\(u_k\)</span>, then minimizes this quadratic function to select the next iterate <span class="math inline">\(u_{k+1}\)</span>. The specific quadratic approximation considered is the second order Taylor expansion <span class="math display">\[
-J_k(u) := J(u_k) + DJ(u_k)[u-u_k] + \frac{1}{2}(u-u_k)^\top [\nabla^2 J(u_k)] (u-u_k). \tag{6}
-\]</span> The next iterate <span class="math inline">\(u_{k+1}\)</span> is thus chosen by solving <span class="math display">\[
-\nabla J_k(u_{k+1}) = 0, \tag{7}
-\]</span> which yields <span class="math display">\[
-\nabla J_k(u_k) = \nabla J(u_k) + [\nabla^2 J(u_k)] (u_{k+1}-u_k) = 0. \tag{8}
-\]</span> At this point, note that it is possible <span class="math inline">\(J_k\)</span> doesn’t even have a minimum, which can happen when <span class="math inline">\(\nabla^2 J(u_k)\)</span> is not positive definite (and hence not invertible). We will not get into this issue here, and instead simply assume that <span class="math inline">\(\nabla^2 J(u_k)\)</span> is invertible. Then we can solve for <span class="math inline">\(u_{k+1}\)</span> in (7) as <span class="math display">\[
-u_{k+1} = u_k - [\nabla^2 J(u_k)]^{-1} \nabla J(u_k). \tag{9}
-\]</span> Working with the Hessian here can be difficult in certain settings; note in (5) that computing the Hessian of <span class="math inline">\(J\)</span> requires computing the Hessian of <span class="math inline">\(\mathcal{G}\)</span> for each output dimension. Since <span class="math inline">\(\mathcal{G}\)</span> can be a very complicated and computationally-expensive function, this presents challenges. The below methods maintain the spirit of the Newton update (9), but replace the Hessian with something that is easier to compute.</p>
-</section>
-<section id="gauss-newton" class="level2">
-<h2 class="anchored" data-anchor-id="gauss-newton">Gauss-Newton</h2>
-<p>We introduce the Gauss-Newton update from two different perspectives. The first simply approximates the Hessian by ignoring the “difficult” terms, while the second views the update as solving a local least squares problem.</p>
-<section id="approximate-hessian" class="level3">
-<h3 class="anchored" data-anchor-id="approximate-hessian">Approximate Hessian</h3>
-<p>The Gauss-Newton procedure performs the Newton update (9) with an approximate Hessian constructed by simply dropping the higher-order terms in (5). Doing so yields the Hessian approximation <span class="math display">\[
-\hat{H}_k := G_k^\top \Sigma^{-1}G_k + C^{-1}, \tag{10}
-\]</span> where we have introduced the shorthand for the Jacobian of <span class="math inline">\(\mathcal{G}\)</span> evaluated at <span class="math inline">\(u_k\)</span>, <span class="math display">\[
-G_k := D\mathcal{G}(u_k). \tag{11}
-\]</span> Notice that (10) no longer requires extracting second order derivative information from <span class="math inline">\(\mathcal{G}\)</span>. The resulting Gauss-Newton update takes the form <span class="math display">\[
-u_{k+1} = u_k - \hat{H}_k^{-1} \nabla J(u_k). \tag{12}
-\]</span> Plugging in the expressions for <span class="math inline">\(\hat{H}_k\)</span> and <span class="math inline">\(\nabla J(u_k)\)</span> yields the explicit update</p>
-<blockquote class="blockquote">
-<p>
-<strong>Gauss Newton Update: Parameter Space</strong> <span class="math display">\[
-  u_{k+1}
-  = u_k - \left(G_k^\top \Sigma^{-1}G_k + C^{-1} \right)^{-1} \left[C^{-1}(u_k-m) - G_k^\top \Sigma^{-1}(y-\mathcal{G}(u_k)) \right]. \tag{13}
-  \]</span>
-</p>
-</blockquote>
-<p>A nice consequence of using <span class="math inline">\(\hat{H}_k\)</span> is that, unlike the Hessian, it is guaranteed to be positive definite. This follows from the fact that <span class="math inline">\(G^\top_k \Sigma^{-1}G_k\)</span> is positive semidefinite, <span class="math inline">\(C^{-1}\)</span> is positive definite, and the sum of a positive semidefinite and positive definite matrix is positive definite. The invertibility of <span class="math inline">\(\hat{H}_k\)</span> is thus guaranteed, and the local quadratic function that Gauss-Newton is implicitly minimizing is guaranteed to have a minimum.</p>
-<p>We refer to (13) as the parameter space version of the Gauss-Newton update, as it requires a <span class="math inline">\(d\)</span>-dimensional linear solve <span class="math inline">\(\hat{H}_k^{-1} \nabla J(u_k)\)</span>. By applying the Woodbury matrix inversion identity, we obtain an alternative, but equivalent, update that instead requires a linear solve in <span class="math inline">\(n\)</span>-dimensional data space.</p>
-<blockquote class="blockquote">
-<p>
-<strong>Gauss Newton Update: Data Space</strong> <span class="math display">\[
-  u_{k+1}
-  = m + CG_k^\top \left(G_k CG_k^\top + \Sigma \right)^{-1}\left[y-\left\{\mathcal{G}(u_k) + G_k(u_k-m)\right\}\right]. \tag{14}
-  \]</span>
-</p>
-</blockquote>
-<p>Notice that the expression in curly brackets is the linearization <span class="math display">\[
+<section id="analysis" class="level3">
+<h3 class="anchored" data-anchor-id="analysis">Analysis</h3>
+<p>Let’s now suppose that we have the forecast approximation <span class="math inline">\(\hat{v}_{k+1} := v_{k+1}|Y_k \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span> in hand. The map <span class="math inline">\(\hat{\pi}_{k+1} \mapsto \pi_{k+1}\)</span> from forecast to filtering distribution is defined by the action of conditioning on the data <span class="math inline">\(y_{k+1}\)</span>. In the additive noise case (1), this entails the following application of Bayes’ theorem, <span class="math display">\[
 \begin{align}
-\mathcal{G}(u_k) + G_k(u_k-m)
-&amp;= \mathcal{G}(u_k) - G_k(m-u_k) \newline
-&amp;\approx \mathcal{G}(u_k) - \left[\mathcal{G}(m) - \mathcal{G}(u_k) \right] \newline
-&amp;= \mathcal{G}(m), \tag{15}
+\pi_{k+1}(v_{k+1})
+&amp;\propto \mathcal{N}(y_{k+1}|h(v_{k+1}), R)\mathcal{N}(v_{k+1}|\hat{m}_{k+1}, \hat{C}_{k+1}).
 \end{align}
-\]</span> and can thus be interpreted as the approximation to <span class="math inline">\(\mathcal{G}(m)\)</span> induced by the first order Taylor expansion around <span class="math inline">\(\mathcal{G}(u_k)\)</span>. With this in mind, the update (14) looks exactly like a regularized least squares estimator. We explore this perspective below.</p>
-</section>
-<section id="local-least-squares-perspective" class="level3">
-<h3 class="anchored" data-anchor-id="local-least-squares-perspective">Local Least Squares Perspective</h3>
-<p>The Gauss-Newton update can alternatively be viewed as minimizing the following linear least squares cost function: <span class="math display">\[
-J_k(u) := \frac{1}{2}\lVert y - [\mathcal{G}(u_k)+G_k(u-u_k)] \rVert^2_{\Sigma} + \frac{1}{2}\lVert u - m\rVert_C^2. \tag{16}
-\]</span> In other words, the NLS objective <span class="math inline">\(J(u)\)</span> is approximated by replacing the true forward model <span class="math inline">\(\mathcal{G}(u)\)</span> with its linearization, centered at the current iterate <span class="math inline">\(u_k\)</span>. It should be emphasized that we are linearizing <span class="math inline">\(\mathcal{G}\)</span>, and then simply plugging the linearization into <span class="math inline">\(J(u)\)</span>. This is not the same as directly linearizing <span class="math inline">\(J(u)\)</span>, which is the approach taken in gradient descent.</p>
-<p>This approach of linearizing <span class="math inline">\(\mathcal{G}\)</span> is quite convenient, since (16) is simply a linear least squares objective function, which we know how to optimize in closed-form. Thus, the Gauss-Newton algorithm can be viewed as iteratively solving a sequence of linear least squares problems. We now try to gain some intuition on the structure of these local least squares problems.</p>
+\]</span> Although everything is Gaussian here, the nonlinear function <span class="math inline">\(h\)</span> breaks the Gaussianity of <span class="math inline">\(\pi_{k+1}\)</span> in general. One idea to deal with this might be to run MCMC and invoke the approximation <span class="math inline">\(v_{k+1}|Y_{k+1} \sim \mathcal{N}(m_{k+1}, C_{k+1})\)</span> with <span class="math inline">\(m_{k+1}\)</span> and <span class="math inline">\(C_{k+1}\)</span> set to their empirical estimates computed from the MCMC samples. This has the distinct disadvantage of requiring an MCMC run at every time step.</p>
+<p>In order to discover alternative approximation methods, it is useful to recall the joint Gaussian view of the analysis step, which I discuss in <a href="https://arob5.github.io/blog/2024/02/15/Kalman-Filter/">this</a> post. The idea here was that, in the linear Gaussian setting, <span class="math inline">\((v_{k+1}, y_{k+1})|Y_k\)</span> has a joint Gaussian distribution. The filtering distribution <span class="math inline">\(v_{k+1}|Y_{k+1} = v_{k+1}|y_{k+1}, Y_k\)</span> is then obtained as a conditional distribution of the joint Gaussian, which is available in closed-form. In the present setting of the additive noise model (1) this joint distribution is given by</p>
 <p><span class="math display">\[
 \begin{align}
-y_k|u &amp;\sim \mathcal{N}(G_k u, \Sigma) \tag{17} \newline
-u &amp;\sim \mathcal{N}(m, C),
+\begin{bmatrix} v_{k+1} \newline y_{k+1} \end{bmatrix} \bigg| Y_k
+&amp;= \begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{v}_{k+1}) + \epsilon_{k+1} \end{bmatrix},
+&amp;&amp; \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})
 \end{align}
-\]</span> where <span class="math inline">\(y_k := y - \mathcal{G}(u_k) + G_k u_k\)</span>.</p>
+\]</span></p>
+<p>which is again generally non-Gaussian due to <span class="math inline">\(h\)</span>. This perspective points to the idea of approximating this joint distribution as a Gaussian, so that an approximation of the filtering distribution then falls out as a conditional. Notice that we have found ourselves in a very similar situation to the analysis step, in that we again want to approximate the nonlinear mapping of a Gaussian with a Gaussian. The problem is thus to furnish a Gaussian approximation of <span class="math display">\[
+\begin{align}
+\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1}) &amp;= \begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{v}_{k+1}) + \epsilon_{k+1} \end{bmatrix},
+&amp;&amp; \hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1}), \ \epsilon_{k+1} \sim \mathcal{N}(0, R). \tag{5}
+\end{align}
+\]</span> In the non-additive error case (2), <span class="math inline">\(h(\hat{v}_{k+1}, \epsilon_{k+1})\)</span> replaces <span class="math inline">\(h(\hat{v}_{k+1}) + \epsilon_{k+1}\)</span> in the above expression. Note that the independence assumptions imply that <span class="math inline">\((\hat{v}_{k+1}, \epsilon_{k+1})\)</span> is joint Gaussian so <span class="math inline">\(\tilde{h}(\hat{v}_{k+1}, \epsilon_{k+1})\)</span> is indeed a nonlinear map of a Gaussian.</p>
 </section>
 </section>
-<section id="levenberg-marquardt" class="level2">
-<h2 class="anchored" data-anchor-id="levenberg-marquardt">Levenberg-Marquardt</h2>
+<section id="the-generic-problem-setting" class="level2">
+<h2 class="anchored" data-anchor-id="the-generic-problem-setting">The Generic Problem Setting</h2>
+<p>Now that we have identified the fundamental issues in the context of nonlinear filtering, we state the problem in generic terms. The notation used in this section should be viewed anew, not to be confused with the state space notation used above. The task is to provide a Gaussian approximation to a random variable <span class="math inline">\(u = f(v)\)</span>, where <span class="math inline">\(v\)</span> is Gaussian-distributed and <span class="math inline">\(f\)</span> is a nonlinear function; more precisely, <span class="math display">\[
+\begin{align}
+u &amp;= f(v), &amp;&amp; v \sim \mathcal{N}(m, C), \quad f: \mathbb{R}^n \to \mathbb{R}^m. \tag{6}
+\end{align}
+\]</span> In the filtering context, the forecast step represented an instantiation of this problem where <span class="math inline">\(f = g\)</span> and hence a special case where the dimensions of the domain and codomain of <span class="math inline">\(f\)</span> are equal. In the analysis step, <span class="math inline">\(f\)</span> is given by the map <span class="math inline">\(v \mapsto (v, h(v))^\top\)</span> (ignoring the <span class="math inline">\(\eta/\epsilon\)</span> for now) and thus represents the case where <span class="math inline">\(m &gt; n\)</span>. Although both of these cases are subsumed by (4), it is also helpful to consider them separately, as the second case has special structure which can present a more challenging problem. We thus define <span class="math display">\[
+\begin{align}
+\tilde{u} &amp;= \tilde{f}(v) := \begin{bmatrix} v \newline f(v) \end{bmatrix}, \tag{7}
+\end{align}
+\]</span> which captures this special case. With the generic problem stated, we now proceed to discuss specific methods which utilize different notions of linearization to produce Gaussian approximations of the distribution of <span class="math inline">\(u\)</span> and <span class="math inline">\(\tilde{u}\)</span>.</p>
 </section>
+<section id="taylor-series-approximations" class="level2">
+<h2 class="anchored" data-anchor-id="taylor-series-approximations">Taylor Series Approximations</h2>
+<p>The first approach we consider leverages a Taylor series approximation of the nonlinear function <span class="math inline">\(f\)</span>. When applied to the filtering problem, the resulting algorithm is known as the <em>extended Kalman filter</em>. We note that higher order Taylor approximations are also possible in certain settings, but we restrict to first order approximations here.</p>
+<section id="the-generic-method" class="level3">
+<h3 class="anchored" data-anchor-id="the-generic-method">The Generic Method</h3>
+<p>We consider approximating the nonlinear function <span class="math inline">\(f\)</span> with a local linear approximation, given by the Taylor series expansion around the current mean <span class="math inline">\(m\)</span>, <span class="math display">\[
+\begin{align}
+f(v) \approx f(m) + Df(m)[v - m].
+\end{align}
+\]</span> Note that I am applying the Jacobian notation so that <span class="math inline">\(Df(m) \in \mathbb{R}^{m \times n}\)</span>. Under this approximation we use the fact that <span class="math inline">\(v \sim \mathcal{N}(m, C)\)</span> to obtain <span class="math display">\[
+\begin{align}
+u = f(v) &amp; \approx f(m) + Df(m)[v - m] \tag{8} \newline
+&amp;\sim \mathcal{N}(f(m), [Df(m)]C [Df(m)]^\top).
+\end{align}
+\]</span></p>
+<p>The situation for <span class="math inline">\(\tilde{f}\)</span> is quite similar: <span class="math display">\[
+\begin{align}
+\tilde{f}(v) &amp;\approx \tilde{f}(m) + D\tilde{f}(m)[v - m] \tag{9} \newline
+&amp;= \begin{bmatrix} m \newline f(m) \end{bmatrix} + \begin{bmatrix} I \newline Df(m) \end{bmatrix}[v-m] \newline
+&amp;\sim
+\mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
+\begin{bmatrix} I \newline Df(m) \end{bmatrix} C \begin{bmatrix} I \newline Df(m) \end{bmatrix}^\top \right) \newline
+&amp;= \mathcal{N}\left(\begin{bmatrix} m \newline f(m) \end{bmatrix},
+\begin{bmatrix} C &amp; C[Df(m)]^\top \newline [Df(m)]C &amp; [Df(m)]C[Df(m)]^\top \end{bmatrix} \right)
+\end{align}
+\]</span> where the last equality is in distribution. It is important to stress that these are <em>local</em> approximations; the linearization is constructed using only the local derivative information at the point <span class="math inline">\(m\)</span>. Thus, we would expect the quality of the approximation to decay for points farther from <span class="math inline">\(m\)</span>, and this decay to be more severe for <span class="math inline">\(f\)</span> which are highly nonlinear. Thus, intuitively we would expect the approximation (8) to be reasonable when the distribution of <span class="math inline">\(v\)</span> is tightly clustered around its mean. Distributions that are more diffuse will naturally lead to poorer approximations given that more of the probability mass exists in regions where the local linear approximation is not adequate. The situation in (9) presents an even greater concern; the quality of this approximation relies on the <em>joint</em> distribution of <span class="math inline">\((v, f(v))\)</span> staying close to its mean. Not only does this require the current distribution of <span class="math inline">\(v\)</span> to be concentrated about <span class="math inline">\(m\)</span>, but also the image <span class="math inline">\(f(v)\)</span> to be clustered about <span class="math inline">\(f(m)\)</span>. Thus, even if <span class="math inline">\(v\)</span> is tightly bound to its mean, highly nonlinear maps <span class="math inline">\(f\)</span> have the potential to yield a large spread of points in the codomain and thus reduce the quality of the approximation.</p>
 </section>
-<section id="todo" class="level1">
-<h1>TODO</h1>
-<ul>
-<li>Show alternative form of Gauss-Newton update by applying Woodbury (should show connection to EnKF).</li>
-<li>View G-N as line search method</li>
-</ul>
+<section id="application-the-extended-kalman-filter" class="level3">
+<h3 class="anchored" data-anchor-id="application-the-extended-kalman-filter">Application: The Extended Kalman Filter</h3>
+<p>We now apply these generic equations to the filtering settings (1) and (2), again breaking the problem into the forecast and analysis steps. The resulting approximate filtering algorithm is called the <strong>extended Kalman filter</strong> (EKF).</p>
+<section id="forecast-1" class="level4">
+<h4 class="anchored" data-anchor-id="forecast-1">Forecast</h4>
+<p>Assume the filtering distribution at time <span class="math inline">\(k\)</span> is given by <span class="math inline">\(v_k \sim \mathcal{N}(m_k, C_k)\)</span>. Starting with the additive noise model (1), we see that we must approximate the distribution <span class="math inline">\(g(v_k)\)</span>. Applying (8) and then adding the independent Gaussian <span class="math inline">\(\eta_{k+1}\)</span> yields the approximate forecast distribution <span class="math display">\[
+\begin{align}
+\hat{v}_{k+1} := v_{v+1}|Y_k \sim \mathcal{N}(g(m_k), [Dg(m_k)]C_k [Dg(m_k)]^\top + Q). \tag{10}
+\end{align}
+\]</span> This is quite similar to the forecast distribution for the Kalman filter, which is <span class="math inline">\(\mathcal{N}(Gm_k, GC_k G^\top + Q)\)</span> corresponding to the linear forward model <span class="math inline">\(g(v) = Gv\)</span>. We see that the EKF forecast covariance is equivalent to that obtained from the Kalman filter applied with the linear forward model <span class="math inline">\(G := Dg(m_k)\)</span>.</p>
+<p>The case of the non-additive noise (4) is similar, but now we must approximate <span class="math inline">\(g(v_k, \eta_{k+1})\)</span>. Recall that <span class="math inline">\((v_k, \eta_{k+1})\)</span> is joint Gaussian distributed, with mean <span class="math inline">\((m_k, 0)\)</span>. Applying (8) thus yields <span class="math display">\[
+\begin{align}
+v_{v+1}|Y_k &amp;\sim
+\mathcal{N}\left(g(m_k,0), [Dg(m_k,0)]\begin{bmatrix} C_k &amp; 0 \newline 0 &amp; Q \end{bmatrix} [Dg(m_k,0)]^\top\right) \newline
+&amp;= \mathcal{N}\left(g(m_k,0), [D_vg(m_k,0)]C_k [D_vg(m_k,0)]^\top + [D_{\eta}g(m_k,0)]Q [D_{\eta}g(m_k,0)]^\top\right), \tag{11}
+\end{align}
+\]</span> where the equality is in distribution and the subscripts <span class="math inline">\(D_v\)</span>, <span class="math inline">\(D_{\eta}\)</span> indicate the respective partial derivatives. Note the similarity between (10) and (11). The general form is the same, but the non-additive case requires derivatives with respect to the noise <span class="math inline">\(\eta\)</span> in order to approximate the effect of pushing <span class="math inline">\(\eta\)</span> through the nonlinear forward model. Following our intuition on when we expect the Taylor series linearization to be reasonable, we now observe that the approximation may deteriorate when either the current state <span class="math inline">\(v_k\)</span> or the stochastic noise <span class="math inline">\(\eta_{k+1}\)</span> is highly variable, in which case significant probability mass may be present in regions far from the point <span class="math inline">\((m_k, 0)\)</span> about which the Taylor series is expanded.</p>
 </section>
-<section id="references" class="level1">
-<h1>References</h1>
-<ul>
-<li>Nonlinear Least Squares (neos Guide)</li>
-<li>A multispectrum nonlinear least-squares fitting technique</li>
-<li>What to Do When Your Hessian Is Not Invertible (Gill and King)</li>
-</ul>
+<section id="analysis-1" class="level4">
+<h4 class="anchored" data-anchor-id="analysis-1">Analysis</h4>
+<p>Starting with the additive noise model, we recall that the analysis step requires approximation of (5). To this end, we apply (9) with <span class="math inline">\(\tilde{f}(\hat{v}_{k+1}) = (\hat{v}_{k+1}, h(\hat{v}_{k+1}))^\top\)</span> where <span class="math inline">\(\hat{v}_{k+1} \sim \mathcal{N}(\hat{m}_{k+1}, \hat{C}_{k+1})\)</span>. We actually require approximation of <span class="math inline">\((\hat{v}_{k+1}, y_{k+1})^\top = (\hat{v}_{k+1}, h(\hat{v}_{k+1}) + \epsilon_{k+1})^\top\)</span> but due to independence we can simply add <span class="math inline">\((0, \epsilon_{k+1})^\top\)</span> post-hoc. The combination of (9) with the addition of the noise term gives <span class="math display">\[
+\begin{align}
+\begin{bmatrix} \hat{v}_{k+1} \newline h(\hat{m}_{k+1}) + \epsilon_{k+1} \end{bmatrix}
+\sim \mathcal{N}\left(\begin{bmatrix} \hat{m}_{k+1} \newline h(\hat{m}_{k+1}) \end{bmatrix},
+\begin{bmatrix} \hat{C}_{k+1} &amp; \hat{C}_{k+1}[Dh(\hat{m}_{k+1})]^\top \newline
+[Dh(\hat{m}_{k+1})]\hat{C}_{k+1} &amp; [Dh(\hat{m}_{k+1})]\hat{C}_{k+1} [Dh(\hat{m}_{k+1})]^\top + R \end{bmatrix} \right) \tag{12}
+\end{align}
+\]</span></p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

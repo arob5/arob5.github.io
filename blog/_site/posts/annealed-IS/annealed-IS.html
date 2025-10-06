@@ -138,9 +138,9 @@ window.Quarto = {
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
-  <li class="nav-item">
-    <a class="nav-link" href="../../about.html"> 
-<span class="menu-text">About</span></a>
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../about.qmd"> 
+<span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
@@ -453,7 +453,7 @@ p_k(x_{0:k}) := \frac{1}{Z_k^p} f_k(x_k) \prod_{k=0}^{k-1} R_k(x_{k+1}, x_k).
 \end{equation}
 \tag{12}\]</span></span></p>
 <p>Notice that <span class="math inline">\(p_K = p\)</span> indeed holds. While the supports of the intermediate distributions <span class="math inline">\((\pi_k)_{k=0}^{K}\)</span> are all <span class="math inline">\(\mathbb{R}^d\)</span>, the supports of the extended intermediate distributions <span class="math inline">\((p_k)_{k=0}^{K}\)</span> grow with <span class="math inline">\(k\)</span>. For example, <span class="math inline">\(p_k\)</span> is defined over <span class="math inline">\(\mathbb{R}^{d(k+1)}\)</span>. As the AIS weighted sample is incrementally constructed, the partial weighted sample <span class="math inline">\(\{x_{0:k}, w(x_{0:k})\}\)</span> targets the intermediate distribution <span class="math inline">\(p_k\)</span>. These intermediate distributions are of interest only in that they help bridge to the final distribution, which is the one we ultimately care about.</p>
-<p>The extended intermediate distributions in <a href="#eq-ext-inter-dists" class="quarto-xref">Equation&nbsp;12</a> are utilized in algorithms other than AIS. For example, these same distributions are used in SMC, but they are approximated using particle filtering techniques rather than IS (e.g., see equation 1.12 in <span class="citation" data-cites="elementsSMC">(<a href="#ref-elementsSMC" role="doc-biblioref"><strong>elementsSMC?</strong></a>)</span>). In such settings, the <span class="math inline">\(R_k\)</span> may be defined as other “backwards” Markov kernels, rather than restricting them to be the reversals of the <span class="math inline">\(F_k\)</span>.</p>
+<p>The extended intermediate distributions in <a href="#eq-ext-inter-dists" class="quarto-xref">Equation&nbsp;12</a> are utilized in algorithms other than AIS. For example, these same distributions are used in SMC, but they are approximated using particle filtering techniques rather than IS (e.g., see equation 1.12 in <span class="citation" data-cites="elementsSMC">Naesseth, Lindsten, and Schön (<a href="#ref-elementsSMC" role="doc-biblioref">2024</a>)</span>). In such settings, the <span class="math inline">\(R_k\)</span> may be defined as other “backwards” Markov kernels, rather than restricting them to be the reversals of the <span class="math inline">\(F_k\)</span>.</p>
 
 
 
@@ -465,6 +465,9 @@ p_k(x_{0:k}) := \frac{1}{Z_k^p} f_k(x_k) \prod_{k=0}^{k-1} R_k(x_{k+1}, x_k).
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-Doucet" class="csl-entry" role="listitem">
 Doucet, Arnaud, Will Grathwohl, Alexander G. D. G. Matthews, and Heiko Strathmann. 2022. <span>“Score-Based Diffusion Meets Annealed Importance Sampling.”</span> <a href="https://arxiv.org/abs/2208.07698">https://arxiv.org/abs/2208.07698</a>.
+</div>
+<div id="ref-elementsSMC" class="csl-entry" role="listitem">
+Naesseth, Christian A., Fredrik Lindsten, and Thomas B. Schön. 2024. <span>“Elements of Sequential Monte Carlo.”</span> <a href="https://arxiv.org/abs/1903.04797">https://arxiv.org/abs/1903.04797</a>.
 </div>
 <div id="ref-Neal" class="csl-entry" role="listitem">
 Neal, Radford M. 1998. <span>“Annealed Importance Sampling.”</span> <a href="https://arxiv.org/abs/physics/9803008">https://arxiv.org/abs/physics/9803008</a>.

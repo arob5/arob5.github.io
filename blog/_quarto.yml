@@ -5,8 +5,8 @@ project:
   render:
     - index.qmd
     - posts/**
-  exclude:
-    - "posts/*draft*/**"
+  resources:
+    - "!posts/*draft*/**"
 
 website:
   title: "Andrew G. Roberts"

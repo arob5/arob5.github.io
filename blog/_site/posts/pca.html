@@ -7,8 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2023-12-15">
+<meta name="description" content="A deep dive into PCA.">
 
-<title>Principal Components Analysis – myblog</title>
+<title>Principal Components Analysis – Andrew G. Roberts</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -109,7 +110,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
-    <span class="navbar-title">myblog</span>
+    <span class="navbar-title">Andrew G. Roberts</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -118,17 +119,12 @@ window.Quarto = {
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
-  <li class="nav-item">
-    <a class="nav-link" href="../about.html"> 
-<span class="menu-text">About</span></a>
-  </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
-</i> 
+    <a class="nav-link" href="../about.qmd"> 
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com"> <i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -144,8 +140,12 @@ window.Quarto = {
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
       <h1 class="title">Principal Components Analysis</h1>
-            <p class="subtitle lead">A deep dive into PCA.</p>
-                                <div class="quarto-categories">
+                  <div>
+        <div class="description">
+          A deep dive into PCA.
+        </div>
+      </div>
+                          <div class="quarto-categories">
                 <div class="quarto-category">Statistics</div>
                 <div class="quarto-category">Linear-Algebra</div>
               </div>
@@ -225,8 +225,8 @@ W := X^c B,
 <p>This problem is also referred to as minimizing the <em>reconstruction error</em>, since <span class="math inline">\(\lVert \mathbf{x}_n - \mathbf{\hat{x}}_n \rVert_2 := \lVert \mathbf{x}_n - B\mathbf{w}_n \rVert_2\)</span> is the error between the original data point <span class="math inline">\(\mathbf{x}_n\)</span> and the <span class="math inline">\(D\)</span>-dimensional vector <span class="math inline">\(\mathbf{\hat{x}}_n\)</span> which can be thought of as an approximation to <span class="math inline">\(\mathbf{x}_n\)</span> that has been <em>reconstructed</em> from its lower-dimensional representation <span class="math inline">\(\mathbf{w}_n\)</span>. The key here is to re-write this objective function so that this optimization problem takes the form of an eigenvalue problem, which is something that we already know how to solve (see the appendix, A1).</p>
 <p>To start, we extend the orthonormal set <span class="math inline">\(\mathbf{b}_1, \dots, \mathbf{b}_R\)</span> to an orthonormal basis <span class="math inline">\(\mathbf{b}_1, \dots, \mathbf{b}_D\)</span> for <span class="math inline">\(\mathbb{R}^D\)</span>. Now we can write the original data point <span class="math inline">\(\mathbf{x}_n\)</span> and its approximation <span class="math inline">\(\mathbf{\hat{x}}_n\)</span> with respect to this basis as <span class="math display">\[
 \begin{align}
-&amp;\mathbf{x}\_n = \sum_{r=1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle \mathbf{b}_r,
-&amp;&amp;\mathbf{\hat{x}}\_n = \sum\_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle \mathbf{b}_r
+&amp;\mathbf{x}_n = \sum_{r=1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle \mathbf{b}_r,
+&amp;&amp;\mathbf{\hat{x}}_n = \sum_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle \mathbf{b}_r
 \end{align}
 \]</span></p>
 <p>and hence the residual <span class="math inline">\(\mathbf{x}_n - \mathbf{\hat{x}}_n\)</span> is given by <span class="math display">\[
@@ -236,28 +236,30 @@ W := X^c B,
 \]</span></p>
 <p>Thus, the objective function in (3) can be written as <span class="math display">\[
 \sum_{n=1}^{N} \lVert \mathbf{x}_n - \mathbf{\hat{x}}_n \rVert_2^2
-= \sum\_{n=1}^{N} \bigg\lVert \sum\_{r=R+1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle \mathbf{b}_r \bigg\rVert_2^2
-= \sum\_{n=1}^{N} \sum\_{r=R+1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2 \lVert \mathbf{b}_r \rVert_2^2
-= \sum\_{n=1}^{N} \sum\_{r=R+1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2,
+= \sum_{n=1}^{N} \bigg\lVert \sum_{r=R+1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle \mathbf{b}_r \bigg\rVert_2^2
+= \sum_{n=1}^{N} \sum_{r=R+1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2 \lVert \mathbf{b}_r \rVert_2^2
+= \sum_{n=1}^{N} \sum_{r=R+1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2,
 \]</span></p>
 <p>where the second and third equalities use the facts that the <span class="math inline">\(\mathbf{b}_r\)</span> are orthogonal and of unit norm, respectively.</p>
 <p>We could continue working with this formulation, but at this point it is convenient to re-write the minimization problem we have been working with as an equivalent maximization problem. Note that the above residual calculation is of the form <span class="math inline">\(\mathbf{\hat{e}}_n = \mathbf{x}_n - \mathbf{\hat{x}}_n\)</span> (and summed over <span class="math inline">\(n\)</span>). Since <span class="math inline">\(\mathbf{x}_n\)</span> is fixed, then minimizing the residual (i.e., the reconstruction error) is equivalent to maximizing <span class="math inline">\(\mathbf{\hat{x}}_n\)</span>. More rigorously, we have</p>
 <p><span class="math display">\[
 \begin{align}
-\text{argmin}_B \sum\_{n=1}^{N} \sum\_{r=R+1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2
-&amp;= \text{argmin}_B \sum\_{n=1}^{N}
-\left(\sum\_{r=1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2 - \sum\_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2\right) \newline
-&amp;= \text{argmin}_B \sum\_{n=1}^{N}
-\left(\lVert \mathbf{x}_n \rVert_2^2 - \sum\_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2\right) \newline
-&amp;= \text{argmax}_B \sum\_{n=1}^{N} \sum\_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2. \tag{4}
+\text{argmin}_B \sum_{n=1}^{N} \sum_{r=R+1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2
+&amp;= \text{argmin}_B \sum_{n=1}^{N}
+\left(\sum_{r=1}^{D} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2 - \sum\_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2\right) \\
+&amp;= \text{argmin}_B \sum_{n=1}^{N}
+\left(\lVert \mathbf{x}_n \rVert_2^2 - \sum_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2\right) \\
+&amp;= \text{argmax}_B \sum_{n=1}^{N} \sum_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2. \tag{4}
 \end{align}
 \]</span></p>
-<p>We can now re-write the squared inner product to obtain <span class="math display">\[\begin{align}
-\sum\_{n=1}^{N} \sum\_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2
-&amp;= \sum\_{n=1}^{N} \sum\_{r=1}^{R} \mathbf{b}_r^\top \mathbf{x}_n \mathbf{x}_n^\top \mathbf{b}_r
-= \sum\_{r=1}^{R} \mathbf{b}_r^\top \left(\sum\_{n=1}^{N}\mathbf{x}_n \mathbf{x}_n^\top\right) \mathbf{b}_r
-= \sum\_{r=1}^{R} \mathbf{b}_r^\top (X^\top X) \mathbf{b}_r^\top,
-\end{align}\]</span></p>
+<p>We can now re-write the squared inner product to obtain <span class="math display">\[
+\begin{align}
+\sum_{n=1}^{N} \sum_{r=1}^{R} \langle \mathbf{x}_n, \mathbf{b}_r \rangle^2
+&amp;= \sum_{n=1}^{N} \sum_{r=1}^{R} \mathbf{b}_r^\top \mathbf{x}_n \mathbf{x}_n^\top \mathbf{b}_r
+= \sum_{r=1}^{R} \mathbf{b}_r^\top \left(\sum_{n=1}^{N}\mathbf{x}_n \mathbf{x}_n^\top\right) \mathbf{b}_r
+= \sum_{r=1}^{R} \mathbf{b}_r^\top (X^\top X) \mathbf{b}_r^\top,
+\end{align}
+\]</span></p>
 <p>where the final step uses <a href="https://gregorygundersen.com/blog/2020/07/17/matmul/">this</a> fact. We have managed to re-write (3) as <span class="math display">\[
 \text{argmax}_{B} \sum_{r=1}^{D} \mathbf{b}_r^\top (X^\top X) \mathbf{b}_r^\top, \tag{5}
 \]</span> where we recall that this is also subject to the constraint that <span class="math inline">\(B\)</span> is orthogonal.</p>
@@ -265,9 +267,11 @@ W := X^c B,
 <p>We now notice in (5) that the objective function has been decomposed into <span class="math inline">\(R\)</span> different terms, each of which only depends on a single <span class="math inline">\(\mathbf{b}_r\)</span>. However, these do not constitute <span class="math inline">\(R\)</span> independent optimization problems, as they are all coupled through the orthogonality constraint. We will thus consider solving them in a recursive fashion, beginning with the first term, <span class="math display">\[
 \text{argmax}_{\lVert \mathbf{b}_1 \rVert_2=1} \mathbf{b}_1^\top (X^\top X) \mathbf{b}_1^\top
 = \text{argmax}_{\lVert \mathbf{b}_1 \rVert_2=1} \lVert X \mathbf{b}_1 \rVert_2^2.
-\]</span> This is an eigenvalue problem! It is precisely of the form (A4) (see appendix) and so we apply that result to conclude that the optimal argument is <span class="math inline">\(\mathbf{b}_1 = \mathbf{e}_1\)</span> with associated optimal value <span class="math inline">\(\lambda_1\)</span> (note the objective here is the <em>squared</em> norm, in contrast to the statement in the appendix). Taking this as the base case, we now proceed inductively. Assume that at the <span class="math inline">\(r^{\text{th}}\)</span> problem in the sequence, the solution is given by <span class="math inline">\((\mathbf{b}_1, \dots, \mathbf{b}_r) = (\mathbf{e}_1, \dots, \mathbf{e}_r)\)</span>. We must show the solution to the <span class="math inline">\((r+1)^{\text{st}}\)</span> problem is <span class="math inline">\(\mathbf{e}_{r+1}\)</span>. Under the inductive hypothesis, this problem is constrained so that <span class="math inline">\(\mathbf{b}_{r+1}\)</span> is orthogonal to each of <span class="math inline">\(\mathbf{e}_1, \dots, \mathbf{e}_r\)</span>; i.e., we require <span class="math inline">\(\mathbf{b}_{r+1} \perp \text{span}(\mathbf{e}_1, \dots, \mathbf{e}_r)\)</span>. If we denote <span class="math inline">\(\mathcal{E}_{r} := \text{span}(\mathbf{e}_1, \dots, \mathbf{e}_r)\)</span> and <span class="math inline">\(\mathcal{E}^{\perp}_{r}\)</span> the orthogonal complement of <span class="math inline">\(\mathcal{E}_{r}\)</span>, then a succinct way to write the orthogonality constraint is that <span class="math inline">\(\mathbf{b}_{r+1} \in \mathcal{E}^{\perp}_r\)</span>. The problem can thus be written as <span class="math display">\[\begin{align}
-\text{argmax}\_{\mathbf{b}\_{r+1} \in \mathcal{E}^{\perp}\_{r}, \lVert \mathbf{b}\_{r+1} \rVert_2=1} \lVert X \mathbf{b}\_{r+1} \rVert_2^2, \tag{6}
-\end{align}\]</span> which is another eigenvalue problem, precisely of the form (A3). Using this result from the appendix, we conclude that this is solved by <span class="math inline">\(\mathbf{b}_{r+1} = \mathbf{e}_{r+1}\)</span>, with the maximal objective value <span class="math inline">\(\lambda_{r+1}\)</span>.</p>
+\]</span> This is an eigenvalue problem! It is precisely of the form (A4) (see appendix) and so we apply that result to conclude that the optimal argument is <span class="math inline">\(\mathbf{b}_1 = \mathbf{e}_1\)</span> with associated optimal value <span class="math inline">\(\lambda_1\)</span> (note the objective here is the <em>squared</em> norm, in contrast to the statement in the appendix). Taking this as the base case, we now proceed inductively. Assume that at the <span class="math inline">\(r^{\text{th}}\)</span> problem in the sequence, the solution is given by <span class="math inline">\((\mathbf{b}_1, \dots, \mathbf{b}_r) = (\mathbf{e}_1, \dots, \mathbf{e}_r)\)</span>. We must show the solution to the <span class="math inline">\((r+1)^{\text{st}}\)</span> problem is <span class="math inline">\(\mathbf{e}_{r+1}\)</span>. Under the inductive hypothesis, this problem is constrained so that <span class="math inline">\(\mathbf{b}_{r+1}\)</span> is orthogonal to each of <span class="math inline">\(\mathbf{e}_1, \dots, \mathbf{e}_r\)</span>; i.e., we require <span class="math inline">\(\mathbf{b}_{r+1} \perp \text{span}(\mathbf{e}_1, \dots, \mathbf{e}_r)\)</span>. If we denote <span class="math inline">\(\mathcal{E}_{r} := \text{span}(\mathbf{e}_1, \dots, \mathbf{e}_r)\)</span> and <span class="math inline">\(\mathcal{E}^{\perp}_{r}\)</span> the orthogonal complement of <span class="math inline">\(\mathcal{E}_{r}\)</span>, then a succinct way to write the orthogonality constraint is that <span class="math inline">\(\mathbf{b}_{r+1} \in \mathcal{E}^{\perp}_r\)</span>. The problem can thus be written as <span class="math display">\[
+\begin{align}
+\text{argmax}_{\mathbf{b}_{r+1} \in \mathcal{E}^{\perp}_{r}, \lVert \mathbf{b}_{r+1} \rVert_2=1} \lVert X \mathbf{b}_{r+1} \rVert_2^2, \tag{6}
+\end{align}
+\]</span> which is another eigenvalue problem, precisely of the form (A3). Using this result from the appendix, we conclude that this is solved by <span class="math inline">\(\mathbf{b}_{r+1} = \mathbf{e}_{r+1}\)</span>, with the maximal objective value <span class="math inline">\(\lambda_{r+1}\)</span>.</p>
 <p>That was a lot, so before moving on let’s briefly summarize. First of all, recall that I have been abusing notation by writing <span class="math inline">\(\mathbf{x}_n\)</span> where I should be writing <span class="math inline">\(\mathbf{x}_n^c = \mathbf{x}_n - \mathbf{w}_0\)</span>. In summarizing the result here I will make this correction. Here we have considered the problem of finding the optimal orthonormal basis <span class="math inline">\(B\)</span>, for any fixed <span class="math inline">\(\mathbf{w}_0 \in \mathbb{R}^D\)</span>, but with the <span class="math inline">\(\mathbf{w}_n\)</span> set to their optimal values satisfying (2); i.e., <span class="math inline">\(\mathbf{w}_n = B^\top \mathbf{x}^c_n\)</span>. Given this, we showed that the reconstruction error (5) is minimized by setting <span class="math inline">\(B\)</span> equal to the matrix with columns given by the dominant <span class="math inline">\(R\)</span> (normalized) eigenvectors of <span class="math inline">\((X^c)^\top X^c\)</span>. We arrived at this solution by showing that the error minimization problem (5) could be viewed as a sequence of <span class="math inline">\(R\)</span> eigenvalue problems.</p>
 </section>
 <section id="optimizing-the-intercept" class="level2">
@@ -312,12 +316,14 @@ W := X^c B,
 \]</span> which can be re-written as <span class="math display">\[
 \hat{C} = \frac{1}{N-1} \sum_{n=1}^{N} \mathbf{x}^c_n (\mathbf{x}^c_n)^\top = \frac{1}{N-1} X^c (X^c)^\top, \tag{10}
 \]</span> where the superscript <em>c</em> indicates that the observations have been centered by subtracting off their empirical mean.</p>
-<p>Recall that solving the maximization problems (6) revealed that the optimal basis vectors are given by the dominant eigenvectors of the matrix <span class="math inline">\(X^c (X^c)^\top\)</span>, which is the (unscaled) covariance (10)! The scaling factor does not affect the optimal basis vectors, it simply scales the objective function. Specifically, <span class="math display">\[\begin{align}
-\text{argmax}\_{\mathbf{b}\_{r+1} \in \mathcal{E}^{\perp}\_{r}, \lVert \mathbf{b}\_{r+1} \rVert_2=1}
-\left(\mathbf{b}\_{r+1}^\top X^c (X^c)^\top \mathbf{b}\_{r+1}\right)
-= \text{argmax}\_{\mathbf{b}\_{r+1} \in \mathcal{E}^{\perp}\_{r}, \lVert \mathbf{b}\_{r+1} \rVert_2=1}
-\left(\mathbf{b}\_{r+1}^\top \hat{C} \mathbf{b}\_{r+1}\right). \tag{11}
-\end{align}\]</span> We haven’t changed anything from (6) here, other than noting that a re-scaling of the objective function allows us involve <span class="math inline">\(\hat{C}\)</span> in the expression.</p>
+<p>Recall that solving the maximization problems (6) revealed that the optimal basis vectors are given by the dominant eigenvectors of the matrix <span class="math inline">\(X^c (X^c)^\top\)</span>, which is the (unscaled) covariance (10)! The scaling factor does not affect the optimal basis vectors, it simply scales the objective function. Specifically, <span class="math display">\[
+\begin{align}
+\text{argmax}_{\mathbf{b}_{r+1} \in \mathcal{E}^{\perp}_{r}, \lVert \mathbf{b}_{r+1} \rVert_2=1}
+\left(\mathbf{b}_{r+1}^\top X^c (X^c)^\top \mathbf{b}_{r+1}\right)
+= \text{argmax}_{\mathbf{b}_{r+1} \in \mathcal{E}^{\perp}_{r}, \lVert \mathbf{b}_{r+1} \rVert_2=1}
+\left(\mathbf{b}_{r+1}^\top \hat{C} \mathbf{b}_{r+1}\right). \tag{11}
+\end{align}
+\]</span> We haven’t changed anything from (6) here, other than noting that a re-scaling of the objective function allows us involve <span class="math inline">\(\hat{C}\)</span> in the expression.</p>
 </section>
 <section id="sample-covariance-of-the-mathbfw_n" class="level3">
 <h3 class="anchored" data-anchor-id="sample-covariance-of-the-mathbfw_n">Sample covariance of the <span class="math inline">\(\mathbf{w}_n\)</span></h3>
@@ -367,16 +373,20 @@ W := X^c B,
 = \lVert X - WB^\top \rVert_F^2,
 \]</span> where <span class="math inline">\(\lVert \cdot \rVert_F\)</span> denotes the <a href="https://en.wikipedia.org/wiki/Matrix_norm#Frobenius_norm">Frobenius norm</a>. The PCA optimization problem can then be written as the matrix approximation problem <span class="math display">\[
 \text{argmin}_{B, W} \lVert X - WB^\top \rVert_F^2, \tag{10}
-\]</span> where <span class="math inline">\(B\)</span> is constrained to be an orthogonal matrix. We can equivalently write this as <span class="math display">\[\begin{align}
+\]</span> where <span class="math inline">\(B\)</span> is constrained to be an orthogonal matrix. We can equivalently write this as <span class="math display">\[
+\begin{align}
 &amp;\text{argmin}_{\hat{X} \in \mathcal{M}} \lVert X - \hat{X} \rVert_F^2,
-&amp;&amp;\mathcal{M} = \\{\hat{X} \in \mathbb{R}^{N \times D} : \hat{X}=WB^\top, B \in \mathbb{R}^{D \times R} \text{ is orthogonal}\\}, \tag{11}
-\end{align}\]</span> which makes it even more clear that PCA can generically be viewed as the problem of approximating the data matrix <span class="math inline">\(X\)</span> with another matrix <span class="math inline">\(\hat{X}\)</span> that is constrained to lie in a subset <span class="math inline">\(\mathcal{M}\)</span> of all <span class="math inline">\(N \times D\)</span> matrices. We can phrase this even more succinctly by noticing that <span class="math inline">\(\mathcal{M}\)</span> is precisely the set of all <span class="math inline">\(N \times D\)</span> matrices with rank at most <span class="math inline">\(R\)</span>. Indeed, if <span class="math inline">\(\hat{X} \in \mathcal{M}\)</span> then <span class="math inline">\(\text{rank}(\hat{X}) = \text{rank}(W B^\top) \leq R\)</span> since <span class="math inline">\(W\)</span> has <span class="math inline">\(R\)</span> columns and thus the rank of this matrix product cannot exceed <span class="math inline">\(R\)</span>. Conversely, if we let <span class="math inline">\(\hat{X}\)</span> be an arbirary <span class="math inline">\(N \times D\)</span> matrix of rank <span class="math inline">\(r \leq R\)</span> then <span class="math inline">\(\hat{X}\)</span> can be expanded using the <a href="https://en.wikipedia.org/wiki/Singular_value_decomposition#Reduced_SVDs">compact SVD</a> as <span class="math display">\[
+&amp;&amp;\mathcal{M} = \{\hat{X} \in \mathbb{R}^{N \times D} : \hat{X}=WB^\top, B \in \mathbb{R}^{D \times R} \text{ is orthogonal}\}, \tag{11}
+\end{align}
+\]</span> which makes it even more clear that PCA can generically be viewed as the problem of approximating the data matrix <span class="math inline">\(X\)</span> with another matrix <span class="math inline">\(\hat{X}\)</span> that is constrained to lie in a subset <span class="math inline">\(\mathcal{M}\)</span> of all <span class="math inline">\(N \times D\)</span> matrices. We can phrase this even more succinctly by noticing that <span class="math inline">\(\mathcal{M}\)</span> is precisely the set of all <span class="math inline">\(N \times D\)</span> matrices with rank at most <span class="math inline">\(R\)</span>. Indeed, if <span class="math inline">\(\hat{X} \in \mathcal{M}\)</span> then <span class="math inline">\(\text{rank}(\hat{X}) = \text{rank}(W B^\top) \leq R\)</span> since <span class="math inline">\(W\)</span> has <span class="math inline">\(R\)</span> columns and thus the rank of this matrix product cannot exceed <span class="math inline">\(R\)</span>. Conversely, if we let <span class="math inline">\(\hat{X}\)</span> be an arbirary <span class="math inline">\(N \times D\)</span> matrix of rank <span class="math inline">\(r \leq R\)</span> then <span class="math inline">\(\hat{X}\)</span> can be expanded using the <a href="https://en.wikipedia.org/wiki/Singular_value_decomposition#Reduced_SVDs">compact SVD</a> as <span class="math display">\[
 \hat{X} = U\tilde{\Sigma}V^\top = (U\tilde{\Sigma})V^\top,
 \]</span> where <span class="math inline">\(U \in \mathbb{R}^{N \times r}\)</span>, <span class="math inline">\(V \in \mathbb{R}^{D \times r}\)</span> are orthogonal and <span class="math inline">\(\tilde{\Sigma} \in \mathbb{R}^{r \times r}\)</span> is diagonal. By setting <span class="math inline">\(W := U\tilde{\Sigma}\)</span> and <span class="math inline">\(B := V\)</span> we have almost written things in the form required by (11), but (11) restricts <span class="math inline">\(B\)</span> to be orthogonal with exactly <span class="math inline">\(R\)</span> columns. Thus, we can simply extend <span class="math inline">\(V\)</span> to have <span class="math inline">\(R\)</span> orthonormal columns by appending columns <span class="math inline">\(B = [V|\mathbf{v}_{r+1}, \dots, \mathbf{v}_{R}]\)</span> (this is justified by Gram-Schmidt) and then set <span class="math inline">\(W = [U\tilde{\Sigma}|\boldsymbol{0}]\)</span>. Thus, <span class="math inline">\(\hat{X} = (U\tilde{\Sigma})V^\top = WB^\top\)</span> with <span class="math inline">\(B\)</span> now of the required form.</p>
-<p>We have thus verified that (11) can equivalently be written as the low-rank matrix approximation problem <span class="math display">\[\begin{align}
+<p>We have thus verified that (11) can equivalently be written as the low-rank matrix approximation problem <span class="math display">\[
+\begin{align}
 &amp;\text{argmin}_{\hat{X} \in \mathcal{M}} \lVert X - \hat{X} \rVert_F^2,
-&amp;&amp;\mathcal{M} = \\{\hat{X} \in \mathbb{R}^{N \times D} : \text{rank}(\hat{X}) \leq R \\}. \tag{12}
-\end{align}\]</span></p>
+&amp;&amp;\mathcal{M} = \{\hat{X} \in \mathbb{R}^{N \times D} : \text{rank}(\hat{X}) \leq R \}. \tag{12}
+\end{align}
+\]</span></p>
 <p>This is precisely the problem considered by the celebrated <a href="https://en.wikipedia.org/wiki/Low-rank_approximation">Eckart-Young theorem</a>. The theorem concludes that the optimal solution to (12) is given by the truncated SVD <span class="math inline">\(X = U_R \Sigma_R V_R^\top\)</span>, which is precisely the PCA solution computed using SVD as discussed in the previous section.</p>
 </section>
 <section id="regression-with-an-optimal-basis" class="level2">
@@ -399,15 +409,17 @@ W := X^c B,
 \text{argmin}_{\mathbf{w}} \mathbb{E} \lVert \mathbf{x} - B\mathbf{w} \rVert_2^2 = B^\top \mathbf{x}.
 \]</span> It is important to note that we have found the optimal <em>random vector</em> <span class="math inline">\(\mathbf{w}\)</span>, which was shown to be a linear transformation of the random vector <span class="math inline">\(\mathbf{x}\)</span>.</p>
 <p>Optimizing for <span class="math inline">\(B\)</span> with the optimal <span class="math inline">\(\mathbf{w}\)</span> fixed also follows similarly from previous derivations. Using some of the results already derived above (see the section on optimizing the basis), we have</p>
-<p><span class="math display">\[\begin{align}
-\text{argmin}\_{B} \mathbb{E}\lVert \mathbf{x} - B\mathbf{w} \rVert_2^2
-&amp;= \text{argmin}\_{B} \mathbb{E} \sum\_{r=R+1}^{D} \langle \mathbf{x}, \mathbf{b}_r \rangle^2 \newline
-&amp;= \text{argmin}\_{B} \mathbb{E} \left[\lVert \mathbf{x} \rVert_2^2 - \sum\_{r=1}^{R} \langle \mathbf{x}, \mathbf{b}_r \rangle^2 \right] \newline
-&amp;= \text{argmax}\_{B} \mathbb{E} \sum\_{r=1}^{R} \langle \mathbf{x}, \mathbf{b}_r \rangle^2 \newline
-&amp;= \text{argmax}\_{B} \mathbb{E} \sum\_{r=1}^{R} \mathbf{b}_r^\top \mathbf{x}\mathbf{x}^\top \mathbf{b}_r \newline
-&amp;= \text{argmax}\_{B} \sum\_{r=1}^{R} \mathbf{b}_r^\top \mathbb{E}\left[\mathbf{x}\mathbf{x}^\top\right] \mathbf{b}_r \newline
-&amp;= \text{argmax}\_{B} \sum\_{r=1}^{R} \mathbf{b}_r^\top C \mathbf{b}_r,
-\end{align}\]</span></p>
+<p><span class="math display">\[
+\begin{align}
+\text{argmin}_{B} \mathbb{E}\lVert \mathbf{x} - B\mathbf{w} \rVert_2^2
+&amp;= \text{argmin}_{B} \mathbb{E} \sum_{r=R+1}^{D} \langle \mathbf{x}, \mathbf{b}_r \rangle^2 \newline
+&amp;= \text{argmin}_{B} \mathbb{E} \left[\lVert \mathbf{x} \rVert_2^2 - \sum_{r=1}^{R} \langle \mathbf{x}, \mathbf{b}_r \rangle^2 \right] \newline
+&amp;= \text{argmax}_{B} \mathbb{E} \sum_{r=1}^{R} \langle \mathbf{x}, \mathbf{b}_r \rangle^2 \newline
+&amp;= \text{argmax}_{B} \mathbb{E} \sum_{r=1}^{R} \mathbf{b}_r^\top \mathbf{x}\mathbf{x}^\top \mathbf{b}_r \newline
+&amp;= \text{argmax}_{B} \sum_{r=1}^{R} \mathbf{b}_r^\top \mathbb{E}\left[\mathbf{x}\mathbf{x}^\top\right] \mathbf{b}_r \newline
+&amp;= \text{argmax}_{B} \sum_{r=1}^{R} \mathbf{b}_r^\top C \mathbf{b}_r,
+\end{align}
+\]</span></p>
 where <span class="math inline">\(C := \text{Cov}[\mathbf{x}]\)</span>. Here we have used the centering assumption <span class="math inline">\(\mathbb{E}[\mathbf{x}] = 0\)</span>, as well as the implicit assumption that the random vector <span class="math inline">\(\mathbf{x}\)</span> has a well-defined covariance matrix. At this point, the derivations go through exactly as before, with <span class="math inline">\(C\)</span> replacing the empirical covariance <span class="math inline">\(\hat{C}\)</span>; that is, the optimal basis <span class="math inline">\(B\)</span> is obtained by extracting the first <span class="math inline">\(R\)</span> columns of <span class="math inline">\(V\)</span>, where <span class="math inline">\(C = V\Lambda V^\top\)</span>. Unsurprisingly, the results that held for the sample covariance hold analogously in this setting. For example, since <span class="math inline">\(\mathbf{x}\)</span> has zero mean then <span class="math display">\[
 \mathbb{E}[\mathbf{w}_r] = \mathbb{E}[\mathbf{v}_r^\top \mathbf{x}] = 0.
 \]</span> Moreover, <span class="math display">\[
@@ -471,13 +483,17 @@ where <span class="math inline">\(C := \text{Cov}[\mathbf{x}]\)</span>. Here we 
 \frac{\lVert A\mathbf{u} \rVert_2}{\lVert \mathbf{u} \rVert_2}.
 \]</span> Using the linearity of <span class="math inline">\(A\)</span>, one can show that we need only consider vectors of unit length; that is, <span class="math display">\[
 \lVert A \rVert_2 = \max_{\lVert \mathbf{u}_2 \rVert=1} \lVert A\mathbf{u} \rVert_2. \tag{A1}
-\]</span> Optimization problems of this type are called <strong>eigenvalue problems</strong> for reasons that will shortly become clear. For the purposes of the PCA derivation, we will require consideration of a slightly more general eigenvalue problem. To define this problem, first note that the matrix <span class="math inline">\(A^\top A\)</span> is symmetric, positive semi-definite since <span class="math display">\[\begin{align}
+\]</span> Optimization problems of this type are called <strong>eigenvalue problems</strong> for reasons that will shortly become clear. For the purposes of the PCA derivation, we will require consideration of a slightly more general eigenvalue problem. To define this problem, first note that the matrix <span class="math inline">\(A^\top A\)</span> is symmetric, positive semi-definite since <span class="math display">\[
+\begin{align}
 &amp;(A^\top A)^\top = A^\top (A^\top)^\top = A^\top A,
 &amp;\mathbf{u}^\top (A^\top A)\mathbf{u} = \lVert A \mathbf{u} \rVert_2^2 \geq 0.
-\end{align}\]</span> Thus, by the spectral theorem <span class="math inline">\(A^\top A\)</span> has <span class="math inline">\(D\)</span> orthogonal eigenvectors, which we will denote by <span class="math inline">\(\mathbf{e}_1, \dots, \mathbf{e}_D\)</span> and assume that they have been normalized to have unit norm. By positive definiteness the respective eigenvalues <span class="math inline">\(\lambda_1, \dots, \lambda_D\)</span> (sorted in decreasing order) are all non-negative. For <span class="math inline">\(d = 1, \dots, D\)</span>, let <span class="math inline">\(\mathcal{E}_d := \text{span}(\mathbf{e}_1, \dots, \mathbf{e}_d)\)</span>, with <span class="math inline">\(\mathcal{E}^{\perp}_d := \text{span}(\mathbf{e}_{d+1}, \dots, \mathbf{e}_D)\)</span> its orthogonal complement. We now consider the eigenvalue problem</p>
-<p><span class="math display">\[\begin{align}
+\end{align}
+\]</span> Thus, by the spectral theorem <span class="math inline">\(A^\top A\)</span> has <span class="math inline">\(D\)</span> orthogonal eigenvectors, which we will denote by <span class="math inline">\(\mathbf{e}_1, \dots, \mathbf{e}_D\)</span> and assume that they have been normalized to have unit norm. By positive definiteness the respective eigenvalues <span class="math inline">\(\lambda_1, \dots, \lambda_D\)</span> (sorted in decreasing order) are all non-negative. For <span class="math inline">\(d = 1, \dots, D\)</span>, let <span class="math inline">\(\mathcal{E}_d := \text{span}(\mathbf{e}_1, \dots, \mathbf{e}_d)\)</span>, with <span class="math inline">\(\mathcal{E}^{\perp}_d := \text{span}(\mathbf{e}_{d+1}, \dots, \mathbf{e}_D)\)</span> its orthogonal complement. We now consider the eigenvalue problem</p>
+<p><span class="math display">\[
+\begin{align}
 \max_{\mathbf{u} \in \mathcal{E}^{\perp}_d, \lVert \mathbf{u} \rVert_2=1} \lVert A\mathbf{u} \rVert_2. \tag{A2}
-\end{align}\]</span></p>
+\end{align}
+\]</span></p>
 <p>We have generalized (A1) by adding an orthogonality constraint. Taking as a convention <span class="math inline">\(\mathcal{E}_0 := \{\mathbf{0}\}\)</span> we then have <span class="math inline">\(\mathcal{E}^{\perp}_0 = \mathbb{R}^D\)</span>, which means that setting <span class="math inline">\(d = 0\)</span> in (A2) recovers the original problem (A1) as a special case. We will prove the following result.</p>
 <blockquote class="blockquote">
 <p>
@@ -491,33 +507,39 @@ where <span class="math inline">\(C := \text{Cov}[\mathbf{x}]\)</span>. Here we 
 <p><strong>Proof.</strong> Let <span class="math inline">\(\mathbf{u} \in \mathcal{E}^{\perp}_d\)</span> be an arbitrary vector of unit length. This vector may be represented with respect to the eigenbasis as <span class="math display">\[
 \mathbf{u} = \sum_{r=d+1}^{D} u_r \mathbf{e}_r, \qquad u_r := \langle \mathbf{u}, \mathbf{e}_r \rangle
 \]</span> We will use this representation to show that 1. <span class="math inline">\(\lVert A\mathbf{u} \rVert_2\)</span> is upper bounded by <span class="math inline">\(\sqrt{\lambda_{d+1}}\)</span>. 2. The upper bound is achieved by some <span class="math inline">\(\mathbf{u} \in \mathcal{E}^{\perp}_d\)</span>,</p>
-<p>which together imply the claimed result. We will actually work with the squared norm instead, which allows us to leverage the inner product. We have <span class="math display">\[\begin{align}
+<p>which together imply the claimed result. We will actually work with the squared norm instead, which allows us to leverage the inner product. We have <span class="math display">\[
+\begin{align}
 \lVert A\mathbf{u} \rVert^2_2
 = \langle A\mathbf{u}, A\mathbf{u} \rangle
 = \langle A^\top A\mathbf{u}, \mathbf{u} \rangle
-&amp;= \left\langle A^\top A \sum\_{r=d+1}^{D} u_r \mathbf{e}_r,
-\sum\_{r=d+1}^{D} u_r \mathbf{e}_r \right\rangle \newline
-&amp;= \left\langle \sum\_{r=d+1}^{D} u_r (A^\top A \mathbf{e}_r),
-\sum\_{r=d+1}^{D} u_r \mathbf{e}_r \right\rangle \newline
-&amp;= \left\langle \sum\_{r=d+1}^{D} u_r \lambda_r \mathbf{e}_r,
-\sum\_{r=d+1}^{D} u_r \mathbf{e}_r \right\rangle,
-\end{align}\]</span> having used the fact the <span class="math inline">\(\mathbf{e}_r\)</span> are eigenvectors of <span class="math inline">\(A^\top A\)</span>. Now we can take advantage of the fact that the <span class="math inline">\(\mathbf{e}_r\)</span> are orthonormal to obtain <span class="math display">\[\begin{align}
-\left\langle \sum\_{r=d+1}^{D} u_r \lambda_r \mathbf{e}_r,
-\sum\_{r=d+1}^{D} u_r \mathbf{e}_r \right\rangle
-= \sum\_{r=d+1}^{D} u_r^2 \lambda_r \lVert \mathbf{e}_r \rVert^2_2
-= \sum\_{r=d+1}^{D} u_r^2 \lambda_r
-\leq \sum\_{r=d+1}^{D} u_r^2 \lambda\_{d+1}
-= \lambda\_{d+1} \lVert \mathbf{u} \rVert_2^2
-= \lambda\_{d+1}
-\end{align}\]</span> where the inequality follows from the fact that the eigenvalues are sorted in descending order. This verifies the upper bound <span class="math inline">\(\lVert A\mathbf{u} \rVert_2 \leq \sqrt{\lambda_{d+1}}\)</span>. To show that the bound is achieved, we consider setting <span class="math inline">\(\mathbf{u} = \mathbf{e}_{d+1}\)</span>. Then,</p>
-<p><span class="math display">\[\begin{align}
-\lVert A\mathbf{e}\_{d+1} \rVert^2_2
-= \langle A\mathbf{e}\_{d+1}, A\mathbf{e}\_{d+1} \rangle
-= \langle A^\top A\mathbf{e}\_{d+1}, \mathbf{e}\_{d+1} \rangle
-= \langle \lambda\_{d+1} \mathbf{e}\_{d+1}, \mathbf{e}\_{d+1} \rangle
-= \lambda\_{d+1} \lVert \mathbf{e}\_{d+1} \rVert^2_2
-= \lambda\_{d+1},
-\end{align}\]</span></p>
+&amp;= \left\langle A^\top A \sum_{r=d+1}^{D} u_r \mathbf{e}_r,
+\sum_{r=d+1}^{D} u_r \mathbf{e}_r \right\rangle \newline
+&amp;= \left\langle \sum_{r=d+1}^{D} u_r (A^\top A \mathbf{e}_r),
+\sum_{r=d+1}^{D} u_r \mathbf{e}_r \right\rangle \newline
+&amp;= \left\langle \sum_{r=d+1}^{D} u_r \lambda_r \mathbf{e}_r,
+\sum_{r=d+1}^{D} u_r \mathbf{e}_r \right\rangle,
+\end{align}
+\]</span> having used the fact the <span class="math inline">\(\mathbf{e}_r\)</span> are eigenvectors of <span class="math inline">\(A^\top A\)</span>. Now we can take advantage of the fact that the <span class="math inline">\(\mathbf{e}_r\)</span> are orthonormal to obtain <span class="math display">\[
+\begin{align}
+\left\langle \sum_{r=d+1}^{D} u_r \lambda_r \mathbf{e}_r,
+\sum_{r=d+1}^{D} u_r \mathbf{e}_r \right\rangle
+= \sum_{r=d+1}^{D} u_r^2 \lambda_r \lVert \mathbf{e}_r \rVert^2_2
+= \sum_{r=d+1}^{D} u_r^2 \lambda_r
+\leq \sum_{r=d+1}^{D} u_r^2 \lambda_{d+1}
+= \lambda_{d+1} \lVert \mathbf{u} \rVert_2^2
+= \lambda_{d+1}
+\end{align}
+\]</span> where the inequality follows from the fact that the eigenvalues are sorted in descending order. This verifies the upper bound <span class="math inline">\(\lVert A\mathbf{u} \rVert_2 \leq \sqrt{\lambda_{d+1}}\)</span>. To show that the bound is achieved, we consider setting <span class="math inline">\(\mathbf{u} = \mathbf{e}_{d+1}\)</span>. Then,</p>
+<p><span class="math display">\[
+\begin{align}
+\lVert A\mathbf{e}_{d+1} \rVert^2_2
+= \langle A\mathbf{e}_{d+1}, A\mathbf{e}_{d+1} \rangle
+= \langle A^\top A\mathbf{e}_{d+1}, \mathbf{e}_{d+1} \rangle
+= \langle \lambda_{d+1} \mathbf{e}_{d+1}, \mathbf{e}_{d+1} \rangle
+= \lambda_{d+1} \lVert \mathbf{e}_{d+1} \rVert^2_2
+= \lambda_{d+1},
+\end{align}
+\]</span></p>
 <p>so we have indeed verified that the equality <span class="math inline">\(\lVert A\mathbf{u} \rVert_2 = \sqrt{\lambda_{d+1}}\)</span> is achieved for some unit-norm vector <span class="math inline">\(\mathbf{u} \in \mathcal{E}^{\perp}_{d}\)</span>. The claim is thus proved. <span class="math inline">\(\qquad \blacksquare\)</span></p>
 </section>
 <section id="projections" class="level2">

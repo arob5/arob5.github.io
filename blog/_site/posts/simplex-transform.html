@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-07-11">
-<meta name="description" content="Exact MCMC with an intractable likelihood.">
+<meta name="dcterms.date" content="2025-03-07">
+<meta name="description" content="Walking through Stan’s parameter transformation for parameters that sum to one.">
 
-<title>Doubly Intractable MCMC – Andrew G. Roberts</title>
+<title>Transforming Simplex-values Parameters – Andrew G. Roberts</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -22,45 +22,25 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-  margin-bottom: 0em;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
-<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
-<script src="../../site_libs/quarto-html/quarto.js"></script>
-<script src="../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -119,7 +99,7 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-fixed fullcontent">
@@ -129,7 +109,7 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../../index.html">
+    <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Andrew G. Roberts</span>
     </a>
   </div>
@@ -140,7 +120,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="../../about.qmd"> 
+    <a class="nav-link" href="../about.qmd"> 
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
@@ -159,17 +139,14 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Doubly Intractable MCMC</h1>
-            <p class="subtitle lead">Doubly intractable MCMC, auxiliary variable methods, and the exchange algorithm.</p>
+      <h1 class="title">Transforming Simplex-values Parameters</h1>
                   <div>
         <div class="description">
-          Exact MCMC with an intractable likelihood.
+          Walking through Stan’s parameter transformation for parameters that sum to one.
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">MCMC</div>
-                <div class="quarto-category">Sampling</div>
-                <div class="quarto-category">Computational Statistics</div>
+                <div class="quarto-category">Statistics</div>
               </div>
                   </div>
   </div>
@@ -181,7 +158,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">July 11, 2025</p>
+        <p class="date">March 7, 2025</p>
       </div>
     </div>
     
@@ -200,120 +177,113 @@ window.Quarto = {
 
 
 
-<p>A typical Bayesian model consists of a joint probability distribution over a parameter <span class="math inline">\(u\)</span> and data <span class="math inline">\(y\)</span> of the form <span id="eq-joint-model"><span class="math display">\[
-p(u,y) = \pi_0(u)L(u;y)
-\tag{1}\]</span></span> where <span class="math inline">\(\pi_0(u)\)</span> is the prior density on <span class="math inline">\(u\)</span> and <span class="math inline">\(L(u;y) = p(y \mid u)\)</span> the likelihood. The posterior distribution is then given by <span id="eq-post"><span class="math display">\[
-\pi(u) := p(u \mid y) = \frac{1}{Z}\pi_0(u)L(u;y)
-\tag{2}\]</span></span> where <span class="math inline">\(Z\)</span> is a normalizing constant (independent of <span class="math inline">\(u\)</span>) that we are not typically able to compute. Fortunately, common algorithms for posterior inference such as Markov chain Monte Carlo (MCMC) only require pointwise evaluations of the <em>unnormalized</em> posterior density <span class="math inline">\(\pi_0(u)L(u;y)\)</span>.</p>
-<p>In this post, we consider a class of Bayesian models that adds an additional difficulty, rendering these standard inference algorithms infeasible. In particular, we assume a likelihood of the form <span id="eq-intractable-lik"><span class="math display">\[
-L(u;y) = \frac{f(y; u)}{C(u)},
-\tag{3}\]</span></span> such that we can evaluate <span class="math inline">\(f(y;u)\)</span> but not the normalizing function <span class="math inline">\(C(u)\)</span>. The posterior density in this setting becomes <span id="eq-doubly-intractable-post"><span class="math display">\[
-\pi(u) = \frac{1}{ZC(u)}\pi_0(u)f(y;u).
-\tag{4}\]</span></span> Distributions of the form <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> are known as <em>doubly intractable</em> owing to the two quantities we are unable to compute: <span class="math inline">\(Z\)</span> and <span class="math inline">\(C(u)\)</span>. While the former does not pose a problem for typical inference algorithms, the presence of the latter is problematic.</p>
-<section id="the-problem" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> The Problem</h1>
-<p>Recall the basic structure of a Metropolis-Hastings algorithm. If <span class="math inline">\(u\)</span> is the current state of the Markov chain, then a new proposed state is sampled as <span class="math inline">\(\tilde{u} \sim q(\cdot \mid u)\)</span> from some proposal distribution <span class="math inline">\(q\)</span>. The proposed state is then accepted with probability <span id="eq-MH-ratio"><span class="math display">\[
-\begin{align}
-&amp;\alpha(\tilde{u} \mid u) = \min\{1, r(\tilde{u} \mid u)\},
-&amp;&amp;r(\tilde{u} \mid u) = \frac{\pi(\tilde{u}) q(u \mid \tilde{u})}{\pi(u) q(\tilde{u} \mid u)}.
-\end{align}
-\tag{5}\]</span></span> If accepted, the updated state is set to <span class="math inline">\(\tilde{u}\)</span>, otherwise the chain remains at <span class="math inline">\(u\)</span>. A key requirement of the algorithm is the ability to compute <span class="math inline">\(r(\tilde{u} \mid u)\)</span>. Plugging the density in <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> into this expression, we see the ratio simplifies to <span id="eq-MH-ratio-intractable"><span class="math display">\[
-r(\tilde{u} \mid u)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
-\frac{C(u)}{C(\tilde{u})}.
-\tag{6}\]</span></span> The ratio depends on the intractable quantities <span class="math inline">\(C(u)\)</span> and <span class="math inline">\(C(\tilde{u})\)</span>, and thus we cannot apply the standard Metropolis-Hastings scheme in this setting.</p>
+<p>In this post we consider a <span class="math inline">\(d\)</span>-dimensional random vector <span class="math inline">\(x\)</span> that is constrained to lie in the unit simplex, <span class="math display">\[
+\Delta_d := \left\{x \in \mathbb{R}^d : x_j \geq 0, \sum_{j=1}^{d} x_j = 1 \right\}. \tag{1}
+\]</span> In words, the <span class="math inline">\(d\)</span> values <span class="math inline">\(x_1, \dots, x_d\)</span> must be nonnegative and sum to one. Performing statistical inference with respect to a parameter <span class="math inline">\(x \in \Delta_d\)</span> can be tricky; a common solution is to consider an invertible transformation <span class="math display">\[
+y = \phi(x) \tag{2}
+\]</span> such that <span class="math inline">\(y\)</span> is unconstrained. Inference can then be performed with respect to <span class="math inline">\(y\)</span> and we can transform back using <span class="math inline">\(\phi^{-1}\)</span> afterwards. This is the approach used by <a href="https://mc-stan.org/docs/reference-manual/transforms.html">Stan</a> for all constrained variables. In this post we walk through the transformation <span class="math inline">\(\phi\)</span> Stan uses for <a href="https://mc-stan.org/docs/reference-manual/transforms.html#simplex-transform.section">simplex</a> constraints. Stan’s linked documentation is already quite detailed; I simply walk through the derivations in a bit more depth for my own benefit.</p>
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>The first thing to note here is that a simplex-valued variable is completely defined by its first <span class="math inline">\(d-1\)</span> entries, since the final value is then immediately given by <span class="math display">\[
+x_d = 1 - \sum_{j=1}^{d-1} x_j. \tag{3}
+\]</span> Geometrically, the set <span class="math inline">\(\Delta_d\)</span> lives within a <span class="math inline">\((d-1)\)</span>-dimensional subspace embedded in <span class="math inline">\(\mathbb{R}^d\)</span>. Practically, this means we can represent the parameter <span class="math inline">\(x\)</span> using <span class="math inline">\(d-1\)</span> numbers. For convenience, we will thus overload notation and write <span class="math display">\[
+x := (x_1, \dots, x_{d-1}) \in \mathbb{R}^{d-1}. \tag{4}
+\]</span> To re-assemble the full parameter, the final value is computed using (3). We will thus consider a transformation <span class="math inline">\(\phi: \Delta_d \to \mathbb{R}^{d-1}\)</span>. Note the slight abuse of notation here, as we are thinking of <span class="math inline">\(\phi\)</span> as acting only on the first <span class="math inline">\(d-1\)</span> entries of the vectors in <span class="math inline">\(\Delta_d\)</span>. The transformation used by Stan takes the form of a composition <span class="math display">\[
+y = \phi(x) := (\phi_2 \circ \phi_1)(x), \tag{5}
+\]</span> where <span class="math inline">\(\phi_1: \Delta_d \to [0,1]^d\)</span> and <span class="math inline">\(\phi_2: [0,1]^d \to \mathbb{R}^d\)</span>. The first map accounts for the sum-to-one constraint by mapping to a set of intermediate variables <span class="math inline">\(z := \phi_1(x) \in [0,1]^d\)</span>, and the second map accounts for the bound constraints on the intermediate variables. Our goals in this post are to (i) define <span class="math inline">\(\phi\)</span>, (ii) derive <span class="math inline">\(\phi^{-1}\)</span>, and (iii) derive the density of the transformed variable <span class="math inline">\(y\)</span>. The latter goal is a key ingredient necessary to leverage the parameter transformation in a Markov chain Monte Carlo (MCMC) algorithm.</p>
 </section>
-<section id="an-auxiliary-variable-method" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> An Auxiliary Variable Method</h1>
-<p>In this section we summarize an auxiliary variable MCMC algorithm proposed by <span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> to address the doubly intractable problem. The authors show that, surprisingly, it is possible for a Markov chain to correctly target the exact posterior distribution <span class="math inline">\(\pi(u)\)</span>, despite the presence of the intractable normalizing function. The requirement of their method is the ability to draw independent realizations of data given any parameter value; i.e., to sample from the conditional <span class="math inline">\(p(y \mid u)\)</span>.</p>
-<section id="extending-the-state-space" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="extending-the-state-space"><span class="header-section-number">2.1</span> Extending the State Space</h2>
-<p>The main idea is to extend the joint probability space over <span class="math inline">\((u,y)\)</span> in <a href="#eq-joint-model" class="quarto-xref">Equation&nbsp;1</a> to a joint model over <span class="math inline">\((u,x,y)\)</span> for some <em>auxiliary variable</em> <span class="math inline">\(x\)</span>. The auxiliary variable will be defined on the same space as <span class="math inline">\(y\)</span>, so we might think of it as some sort of “pseudo data”. Once we define the conditional <span class="math inline">\(p(x \mid u, y)\)</span>, then we obtain the extended model <span id="eq-extended-model"><span class="math display">\[
-p(u, x, y)
-:= p(x \mid u, y)p(y \mid u)p(u)
-= p(x \mid u, y)f(y; u)\pi_0(u) / C(u).
-\tag{7}\]</span></span> Notice that <span class="math inline">\(\pi(u) = p(u \mid y)\)</span> is a marginal distribution of <span class="math inline">\(p(u,x \mid y)\)</span>. Therefore, if we can draw samples <span class="math inline">\((u,x) \sim p(u,x \mid y)\)</span> then the <span class="math inline">\(u\)</span>-component of these samples will have the desired distribution <span class="math inline">\(\pi\)</span>.</p>
-<p>We now consider a Metropolis-Hastings algorithm targeting the extended posterior <span class="math inline">\(p(u,x \mid y)\)</span>. Letting <span class="math inline">\(q(\tilde{u},\tilde{x} \mid u,x)\)</span> denote a proposal distribution on the extended state space, the acceptance ratio assumes the form <span id="eq-MH-ratio-ext-intractable"><span class="math display">\[
-r(\tilde{u},\tilde{x} \mid u,x)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u,x \mid \tilde{u},\tilde{x})}{\pi_0(u) f(y; u)q(\tilde{u},\tilde{x} \mid u,x)} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)}.
-\tag{8}\]</span></span> At present, the ratio still depends on <span class="math inline">\(C(u)/C(\tilde{u})\)</span> and thus remains intractable.</p>
+<section id="the-inverse-transformation" class="level1">
+<h1>The Inverse Transformation</h1>
+<p>We start by defining <span class="math inline">\(\phi^{-1}\)</span>. It will be then be straightforward to invert this map to obtain <span class="math inline">\(\phi\)</span>.</p>
+<section id="defining-phi_1-1-stick-breaking-procedure" class="level2">
+<h2 class="anchored" data-anchor-id="defining-phi_1-1-stick-breaking-procedure">Defining <span class="math inline">\(\phi_1^{-1}\)</span>: Stick-breaking procedure</h2>
+<p>The first part of the transformation <span class="math inline">\(\phi_1^{-1}\)</span> arises naturally when viewing simplex-valued variables through a stick-breaking procedure: 1. Start with a stick of length one. 2. Break off a portion of the stick, and let <span class="math inline">\(x_1\)</span> denote the length of this portion. 3. From the remaining piece, break off another portion and let <span class="math inline">\(x_2\)</span> denote its length. 4. Repeat the procedure to obain <span class="math inline">\(x_1, \dots, x_{d-1}\)</span>. 5. Set <span class="math inline">\(x_d := 1-\sum_{j=1}^{d-1} x_j\)</span>, the length of the final remaining piece.</p>
+<p>The nice thing about this viewpoint is that it enforces the sum-to-one constraint by construction. To take advantage of this, we define intermediate variables <span class="math inline">\(z_1, \dots, z_{d-1}\)</span> where <span class="math inline">\(z_j\)</span> represents the proportion of the <span class="math inline">\(j^{\text{th}}\)</span> broken piece, relative to the size of the stick from which it was broken. Note that this is in contrast to <span class="math inline">\(x_j\)</span>, which is the proportion relative to the size of the original unit length stick. Mathematically, <span class="math display">\[\begin{align}
+&amp;x_1 = z_1, &amp;&amp;x_j = \left(1 - \sum_{i=1}^{j-1} x_i \right)z_j, \qquad j=1,\dots,d-1. \tag{6}
+\end{align}\]</span> As they are proportions, these intermediate variables are constrained to lie in <span class="math inline">\([0,1]\)</span> but are not subject to any sum constraints. The equations in (6) provide the definition for the first part of the inverse map: <span class="math inline">\(x = \phi_1^{-1}(z)\)</span>.</p>
 </section>
-<section id="a-clever-choice-of-proposal" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="a-clever-choice-of-proposal"><span class="header-section-number">2.2</span> A clever choice of proposal</h2>
-<p>It would be nice to be able to choose <span class="math inline">\(p(x \mid u,y)\)</span> such that the dependence of <a href="#eq-extended-model" class="quarto-xref">Equation&nbsp;7</a> on <span class="math inline">\(C(u)\)</span> is eliminated. However, as pointed out by <span class="citation" data-cites="Murray">Murray, Ghahramani, and MacKay (<a href="#ref-Murray" role="doc-biblioref">2006</a>)</span>, no such choice of <span class="math inline">\(p(x \mid u,y)\)</span> is known. Instead, <span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> show that the proposal <span class="math inline">\(q(\tilde{u}, \tilde{x} \mid u, x)\)</span> can be chosen to eliminate the normalizing function from the acceptance ratio <span class="math inline">\(r(\tilde{u},\tilde{x} \mid u,x)\)</span>. We consider a proposal of the form <span id="eq-proposal-ext"><span class="math display">\[
-q(\tilde{u}, \tilde{x} \mid u, x) := q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u}),
-\tag{9}\]</span></span> implying a standard proposal for <span class="math inline">\(u\)</span>, followed by a proposal of the auxiliary variable that depends on <span class="math inline">\(\tilde{u}\)</span> but not <span class="math inline">\(x\)</span>. Given this setup, the necessary choice of <span class="math inline">\(q(\tilde{x} \mid \tilde{u})\)</span> to eliminate dependence on the normalizing function is <span id="eq-auxiliary-proposal"><span class="math display">\[
-q(\tilde{x} \mid \tilde{u}) := f(\tilde{x};\tilde{u}) / C(\tilde{u}).
-\tag{10}\]</span></span> Indeed, plugging <a href="#eq-auxiliary-proposal" class="quarto-xref">Equation&nbsp;10</a> into <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> yields <span id="eq-MH-ratio-ext-intractable"><span class="math display">\[
-r(\tilde{u},\tilde{x} \mid u,x)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
-\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}.
-\tag{11}\]</span></span></p>
-<div class="callout callout-style-default callout-note callout-titled" title="Derivation">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Derivation
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><span class="math display">\[
-\begin{align}
-r(\tilde{u},\tilde{x} \mid u,x)
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) q(x \mid u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u})} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)} \\
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) f(x;u)/ C(u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) f(\tilde{x};\tilde{u})/ C(\tilde{u})} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)} \\
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) f(x;u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) f(\tilde{x};\tilde{u})} \cdot
-\frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)}
-\end{align}
-\]</span></p>
-</div>
-</div>
-</div>
-<p>The ratio in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> no longer involves the intractable terms! This Metropolis-Hastings scheme therefore admits <span class="math inline">\(p(u,x \mid y)\)</span> as a stationary distribution without requiring the ability to evaluate <span class="math inline">\(C(u)\)</span>. The algorithm is thus “correct”, but its efficiency will depend heavily on the choice of the auxiliary distribution <span class="math inline">\(p(x \mid u,y)\)</span>, which is a free parameter of this method.</p>
+<section id="defining-phi_2-1-logit-transformation" class="level2">
+<h2 class="anchored" data-anchor-id="defining-phi_2-1-logit-transformation">Defining <span class="math inline">\(\phi_2^{-1}\)</span>: Logit transformation</h2>
+<p>We now define the second portion of the inverse map, <span class="math inline">\(z = \phi_2^{-1}(y)\)</span>. Dealing with the bound constraints <span class="math inline">\(z_j \in [0,1]\)</span> is straightforward; a standard approach involves using the <a href="https://mc-stan.org/docs/reference-manual/transforms.html#logit-transform-jacobian.section">logit</a> map <span class="math inline">\(\text{logit}: (0,1) \to \mathbb{R}\)</span>, defined by <span class="math display">\[
+\text{logit}(t) := \log \frac{t}{1-t}, \qquad t \in (0,1). \tag{7}
+\]</span> The inverse <span class="math inline">\(\text{logit}^{-1}: \mathbb{R} \to (0,1)\)</span> is given by the sigmoid <span class="math display">\[
+\text{logit}^{-1}(t) = \frac{1}{1+e^{-t}}. \tag{8}
+\]</span> At this point, we could define <span class="math inline">\(z := \text{logit}^{-1}(y)\)</span> (where the inverse logit map is applied elementwise). This would be fine, but note that the zero vector <span class="math inline">\(y=0\)</span> would map to <span class="math inline">\(z = (1/2, \dots, 1/2)\)</span>. This corresponds to all of the cut proportions, relative to the piece from which they are cut, being equal. This implies stick lengths <span class="math inline">\(x_1=\frac{1}{2}\)</span>, <span class="math inline">\(x_2=\frac{1}{4}\)</span>, etc. Since <span class="math inline">\(y=0\)</span> corresponds to a sort of “middle” value for <span class="math inline">\(y\)</span>, it would be nice for this to correspond to the balanced case where <span class="math inline">\(x_j=\frac{1}{d}\)</span> for <span class="math inline">\(j=1, \dots, d\)</span> (i.e., the case where all of the pieces are equal length). To achieve this, we need only make the slight adjustment <span class="math display">\[
+z_j := \text{logit}^{-1}\left(y_j + \log\left(\frac{1}{d-j}\right) \right),
+\qquad j=1, \dots, d-1. \tag{9}
+\]</span> Notice that the correction term can also be written as a logit, since <span class="math display">\[\begin{align}
+\text{logit}([d-j+1]^{-1})
+= \log\left(\frac{[d-j+1]^{-1}}{1-[d-j+1]^{-1}}\right)
+&amp;= \log\left(\frac{1}{(d-j+1)-1}\right) \newline
+&amp;= \log\left(\frac{1}{d-j}\right). \tag{10}
+\end{align}\]</span></p>
+<p>This adjustment implies that the zero vector <span class="math inline">\(y=0\)</span> maps to the relative cut proportions <span class="math display">\[\begin{align}
+z_1 &amp;= \text{logit}^{-1}\left(\text{logit}\left(\frac{1}{d}\right) \right) = \frac{1}{d} \newline
+z_2 &amp;= \text{logit}^{-1}\left(\text{logit}\left(\frac{1}{d-1}\right) \right) = \frac{1}{d-1} \tag{11} \newline
+&amp;\vdots
+\end{align}\]</span> Feeding these values back through the map (6), we then see that <span class="math inline">\(y=0\)</span> maps to <span class="math inline">\(x=(1/d, \dots, 1/d)\)</span>, as desired.</p>
 </section>
-<section id="choice-of-auxiliary-distribution" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="choice-of-auxiliary-distribution"><span class="header-section-number">2.3</span> Choice of Auxiliary Distribution</h2>
-<p>We now aim to build some intuition as to what the algorithm is doing, which will help inform the choice of <span class="math inline">\(p(x \mid u,y)\)</span>. The situation we find ourselves in is somewhat backwards when compared to the typical design of Metropolis-Hastings algorithms. In particular, the proposal <span class="math inline">\(q(x \mid u)\)</span> (typically a free parameter) has been prescribed, and we instead need to choose the distribution <span class="math inline">\(p(x \mid u,y)\)</span> (typically prescribed). Ideally, the proposal will look something like the target distribution. This intuition would lead us to set <span class="math inline">\(p(x \mid u,y) := f(x;u) / C(u)\)</span>. This is of course infeasible as it would reintroduce the normalizing function, but it does give a baseline goal to shoot for.</p>
-<p>To further understand the workings of this algorithm, notice that the first term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> is equal to the intractable ratio in <a href="#eq-MH-ratio-intractable" class="quarto-xref">Equation&nbsp;6</a> except that it is missing <span class="math inline">\(C(u)/C(\tilde{u})\)</span>. The second term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> might therefore be viewed as providing an estimate of <span class="math inline">\(C(u)/C(\tilde{u})\)</span>. Indeed, consider the random ratio <span id="eq-IS-est"><span class="math display">\[
-\begin{align}
-&amp;\frac{p(x \mid u,y)}{f(x;u)}, &amp;&amp;x \sim f(x;u)/C(u)
-\end{align}
-\tag{12}\]</span></span> which has expectation <span class="math display">\[
-\mathbb{E}\left[\frac{p(x \mid u,y)}{f(x;u)}\right]
-= \int \frac{p(x \mid u,y)}{f(x;u)} \frac{f(x;u)}{C(u)} dx
-= C(u)^{-1} \int p(x \mid u,y) dx = C(u)^{-1}.
-\]</span> Therefore, the ratio in <a href="#eq-IS-est" class="quarto-xref">Equation&nbsp;12</a> is a single-sample importance sampling estimate of <span class="math inline">\(C(u)^{-1}\)</span>. The second term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> can thus be viewed as <span class="math display">\[
-\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}
-\approx \frac{C(\tilde{u})^{-1}}{C(u)^{-1}}
-= \frac{C(u)}{C(\tilde{u})},
-\]</span> a biased estimate of the ratio <span class="math inline">\(C(u)/C(\tilde{u})\)</span> derived from the two importance sampling estimates. It is interesting that the algorithm is correct despite the use of this plug-in biased estimate. This importance sampling viewpoint further strengthens our intuition that <span class="math inline">\(p(x \mid u,y)\)</span> should be chosen to approximate <span class="math inline">\(f(x;u)/C(u)\)</span>.</p>
-<p><span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> give two options for choosing <span class="math inline">\(p(x \mid u,y)\)</span>. The simpler of the two is to choose <span id="eq-lik-approx"><span class="math display">\[
-\begin{align}
-&amp;p(x \mid u,y) := f(x;\hat{u})/C(\hat{u}), &amp;&amp;\hat{u} = \hat{u}(y)
-\end{align}
-\tag{13}\]</span></span> where <span class="math inline">\(\hat{u}\)</span> is a fixed estimate of <span class="math inline">\(u\)</span> derived from the data <span class="math inline">\(y\)</span>. Recall that <span class="math inline">\(f(x;u)/C(u)\)</span> describes the data-generating distribution as a function of the parameter <span class="math inline">\(u\)</span>. Fixing a single <span class="math inline">\(u\)</span> will therefore be a reasonable approximation if this distribution is not strongly dependent on <span class="math inline">\(u\)</span>. Alternatively, this may also work well if the posterior support is concentrated around <span class="math inline">\(\hat{u}\)</span>, so that a reasonable approximation is only required in this neighborhood. The second approach is to construct a more sophisticated <span class="math inline">\(u\)</span>-dependent approximation of <span class="math inline">\(f(x;u)/C(u)\)</span>. We will not consider this option here.</p>
-
-
-
-
+<section id="density-of-y" class="level2">
+<h2 class="anchored" data-anchor-id="density-of-y">Density of <span class="math inline">\(y\)</span></h2>
+<p>Let <span class="math inline">\(p_x(x)\)</span> denote a probability density on <span class="math inline">\(x\)</span>. The density of <span class="math inline">\(y = \phi(x)\)</span> (where <span class="math inline">\(\phi\)</span> is invertible and differentiable) is then given by the change-of-variables formula <span class="math display">\[
+p_y(y) = p_x(\phi^{-1}(y)) \lvert \text{det} D\phi^{-1}(y) \rvert. \tag{12}
+\]</span> Thus, we must compute the determinant of the Jacobian of the inverse transformation. In our present setting, notice that the stick-breaking procedure implies that <span class="math inline">\(x_j\)</span> depends only on <span class="math inline">\(y_1, \dots, y_{j-1}\)</span>. This means that <span class="math inline">\(D\phi^{-1}(y)\)</span> is a <span class="math inline">\((d-1) \times (d-1)\)</span> lower-triangular matrix. The determinant term is therefore given by <span class="math display">\[
+\text{det} D\phi^{-1}(y)
+= \prod_{j=1}^{d} [D\phi^{-1}(y)]_{jj}
+= \prod_{j=1}^{d} \frac{\partial x_j}{\partial y_j}
+= \prod_{j=1}^{d} \frac{\partial x_j}{\partial z_j} \frac{\partial z_j}{\partial y_j}, \tag{13}
+\]</span> where we have used the fact that the determinant of a triangular matrix is the product of its diagonal entries. The final step is an application of the chain rule for derivatives. We therefore need only concern ourselves with the diagonal entries of the Jacobian. The partial derivatives in (13) are computed as <span class="math display">\[\begin{align}
+\frac{\partial x_j}{\partial z_j}
+&amp;= \frac{\partial}{\partial z_j}\left[\left(1 - \sum_{i=1}^{j-1} x_i \right)z_j \right]
+= \left(1 - \sum_{i=1}^{j-1} x_i \right) \tag{14}
+\end{align}\]</span> and <span class="math display">\[
+\frac{\partial z_j}{\partial y_j}
+= \frac{\partial}{\partial y_j}\left[\text{logit}^{-1}\left(y_j + \log\left(\frac{1}{d-j}\right) \right) \right]
+= z_j(1-z_j). \tag{15}
+\]</span> In (14) we have used the fact that <span class="math inline">\(x_i\)</span> does not depend on <span class="math inline">\(z_j\)</span> for <span class="math inline">\(i &lt; j\)</span>. In the <span class="math inline">\(j=1\)</span> case we treat the summation as equaling zero, so that the derivative is one (recall that <span class="math inline">\(x_1=z_1\)</span>). In (15) we have used the fact that the derivative of the inverse logit is itself times one minus itself. Putting these two expressions together, we obtain <span class="math display">\[
+\frac{\partial x_j}{\partial y_j}
+= \left(1 - \sum_{i=1}^{j-1} x_i \right)z_j(1-z_j). \tag{16}
+\]</span> This expression can then be combined with (12) and (13) to compute the density <span class="math inline">\(p_y(y)\)</span>. Notice that (16) is defined recursively with respect to the intermediate variables <span class="math inline">\(z_j\)</span>. We now provide an algorithm for computing both <span class="math inline">\(x\)</span> and these partial derivatives. The helper variable <span class="math inline">\(\ell\)</span> tracks the length remaining from the original stick.</p>
+<blockquote class="blockquote">
+<p>
+</p><p><strong>Algorithmic implementation of <span class="math inline">\(\phi^{-1}\)</span> and its derivative.</strong> <br><br></p>
+<p><strong>Input:</strong> $ y = (y_1, , y_{d-1})$. <br> <strong>Returns:</strong> <span class="math inline">\(x=\phi^{-1}(y)\)</span>, <span class="math inline">\(g := \text{diag}\{D\phi^{-1}(y)\}\)</span>. <br></p>
+<ol>
+<li>
+<span class="math inline">\(z := \phi_2^{-1}(y)\)</span>, using (9).
+</li>
+<li>
+<span class="math inline">\(x_1 := z_1\)</span> and <span class="math inline">\(g_1 := 1\)</span>.
+</li>
+<li>
+<span class="math inline">\(\ell := 1-x_1\)</span>.
+</li>
+<li>
+For <span class="math inline">\(j=2, \dots, d-1\)</span>:
+</li>
+<pre><code>&lt;ol type="i"&gt;
+        &lt;li&gt;$x_j := \ell z_j$.&lt;/li&gt;
+        &lt;li&gt;$g_j := \ell z_j(1-z_j)$&lt;/li&gt;
+        &lt;li&gt;$\ell := \ell - x_j$&lt;/li&gt;
+    &lt;/ol&gt;
+&lt;li&gt;Return $x, g$.&lt;/li&gt;</code></pre>
+</ol>
+<p></p>
+</blockquote>
 </section>
 </section>
+<section id="the-forward-transformation" class="level1">
+<h1>The Forward Transformation</h1>
+<p>We finish up by writing out the forward transformation <span class="math inline">\(\phi\)</span>. For <span class="math inline">\(\phi_1\)</span>, we invert (6) to obtain <span class="math display">\[\begin{align}
+&amp;z_1 = x_1, &amp;&amp;z_j = \left(1 - \sum_{i=1}^{j-1} x_i \right)^{-1}x_j, \qquad j=1,\dots,d-1. \tag{17}
+\end{align}\]</span> For <span class="math inline">\(\phi_2\)</span>, we invert (9), which yields <span class="math display">\[
+y_j = \text{logit}(z_j) - \log\left(\frac{1}{d-j}\right), \qquad j=1, \dots, d-1. \tag{18}
+\]</span> Given <span class="math inline">\(x\)</span>, we can first compute <span class="math inline">\(z\)</span> in an iterative fashion using (17), and then compute <span class="math inline">\(y\)</span> by applying (18).</p>
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
-<div id="ref-Moller" class="csl-entry" role="listitem">
-Møller, J., A. N. Pettitt, R. Reeves, and K. K. Berthelsen. 2006. <span>“An Efficient Markov Chain Monte Carlo Method for Distributions with Intractable Normalising Constants.”</span> <em>Biometrika</em> 93 (2): 451–58. <a href="http://www.jstor.org/stable/20441294">http://www.jstor.org/stable/20441294</a>.
-</div>
-<div id="ref-Murray" class="csl-entry" role="listitem">
-Murray, Iain, Zoubin Ghahramani, and David J. C. MacKay. 2006. <span>“MCMC for Doubly-Intractable Distributions.”</span> In <em>Proceedings of the Twenty-Second Conference on Uncertainty in Artificial Intelligence</em>, 359–66. UAI’06. Arlington, Virginia, USA: AUAI Press.
-</div>
-</div></section></div></main> <!-- /main -->
+
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

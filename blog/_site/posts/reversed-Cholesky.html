@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-07-11">
-<meta name="description" content="Exact MCMC with an intractable likelihood.">
+<meta name="dcterms.date" content="2025-01-14">
+<meta name="description" content="Cholesky-like decomposition with upper-triangular matrices.">
 
-<title>Doubly Intractable MCMC – Andrew G. Roberts</title>
+<title>The Reversed Cholesky Decomposition – Andrew G. Roberts</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -22,45 +22,25 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-  margin-bottom: 0em;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
-<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
-<script src="../../site_libs/quarto-html/quarto.js"></script>
-<script src="../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -119,7 +99,7 @@ window.Quarto = {
 };
 </script>
 
-<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-fixed fullcontent">
@@ -129,7 +109,7 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../../index.html">
+    <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Andrew G. Roberts</span>
     </a>
   </div>
@@ -140,7 +120,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="../../about.qmd"> 
+    <a class="nav-link" href="../about.qmd"> 
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
@@ -159,17 +139,14 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Doubly Intractable MCMC</h1>
-            <p class="subtitle lead">Doubly intractable MCMC, auxiliary variable methods, and the exchange algorithm.</p>
+      <h1 class="title">The Reversed Cholesky Decomposition</h1>
                   <div>
         <div class="description">
-          Exact MCMC with an intractable likelihood.
+          Cholesky-like decomposition with upper-triangular matrices.
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">MCMC</div>
-                <div class="quarto-category">Sampling</div>
-                <div class="quarto-category">Computational Statistics</div>
+                <div class="quarto-category">Linear-Algebra</div>
               </div>
                   </div>
   </div>
@@ -181,7 +158,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">July 11, 2025</p>
+        <p class="date">January 14, 2025</p>
       </div>
     </div>
     
@@ -200,120 +177,111 @@ window.Quarto = {
 
 
 
-<p>A typical Bayesian model consists of a joint probability distribution over a parameter <span class="math inline">\(u\)</span> and data <span class="math inline">\(y\)</span> of the form <span id="eq-joint-model"><span class="math display">\[
-p(u,y) = \pi_0(u)L(u;y)
-\tag{1}\]</span></span> where <span class="math inline">\(\pi_0(u)\)</span> is the prior density on <span class="math inline">\(u\)</span> and <span class="math inline">\(L(u;y) = p(y \mid u)\)</span> the likelihood. The posterior distribution is then given by <span id="eq-post"><span class="math display">\[
-\pi(u) := p(u \mid y) = \frac{1}{Z}\pi_0(u)L(u;y)
-\tag{2}\]</span></span> where <span class="math inline">\(Z\)</span> is a normalizing constant (independent of <span class="math inline">\(u\)</span>) that we are not typically able to compute. Fortunately, common algorithms for posterior inference such as Markov chain Monte Carlo (MCMC) only require pointwise evaluations of the <em>unnormalized</em> posterior density <span class="math inline">\(\pi_0(u)L(u;y)\)</span>.</p>
-<p>In this post, we consider a class of Bayesian models that adds an additional difficulty, rendering these standard inference algorithms infeasible. In particular, we assume a likelihood of the form <span id="eq-intractable-lik"><span class="math display">\[
-L(u;y) = \frac{f(y; u)}{C(u)},
-\tag{3}\]</span></span> such that we can evaluate <span class="math inline">\(f(y;u)\)</span> but not the normalizing function <span class="math inline">\(C(u)\)</span>. The posterior density in this setting becomes <span id="eq-doubly-intractable-post"><span class="math display">\[
-\pi(u) = \frac{1}{ZC(u)}\pi_0(u)f(y;u).
-\tag{4}\]</span></span> Distributions of the form <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> are known as <em>doubly intractable</em> owing to the two quantities we are unable to compute: <span class="math inline">\(Z\)</span> and <span class="math inline">\(C(u)\)</span>. While the former does not pose a problem for typical inference algorithms, the presence of the latter is problematic.</p>
-<section id="the-problem" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> The Problem</h1>
-<p>Recall the basic structure of a Metropolis-Hastings algorithm. If <span class="math inline">\(u\)</span> is the current state of the Markov chain, then a new proposed state is sampled as <span class="math inline">\(\tilde{u} \sim q(\cdot \mid u)\)</span> from some proposal distribution <span class="math inline">\(q\)</span>. The proposed state is then accepted with probability <span id="eq-MH-ratio"><span class="math display">\[
-\begin{align}
-&amp;\alpha(\tilde{u} \mid u) = \min\{1, r(\tilde{u} \mid u)\},
-&amp;&amp;r(\tilde{u} \mid u) = \frac{\pi(\tilde{u}) q(u \mid \tilde{u})}{\pi(u) q(\tilde{u} \mid u)}.
-\end{align}
-\tag{5}\]</span></span> If accepted, the updated state is set to <span class="math inline">\(\tilde{u}\)</span>, otherwise the chain remains at <span class="math inline">\(u\)</span>. A key requirement of the algorithm is the ability to compute <span class="math inline">\(r(\tilde{u} \mid u)\)</span>. Plugging the density in <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> into this expression, we see the ratio simplifies to <span id="eq-MH-ratio-intractable"><span class="math display">\[
-r(\tilde{u} \mid u)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
-\frac{C(u)}{C(\tilde{u})}.
-\tag{6}\]</span></span> The ratio depends on the intractable quantities <span class="math inline">\(C(u)\)</span> and <span class="math inline">\(C(\tilde{u})\)</span>, and thus we cannot apply the standard Metropolis-Hastings scheme in this setting.</p>
+<p>The Cholesky decomposition of a positive definite matrix <span class="math inline">\(C\)</span> is the unique factorization of the form <span class="math display">\[
+C = LL^\top, \tag{1}
+\]</span> such that <span class="math inline">\(L\)</span> is lower triangular with positive entries on its diagonal. We refer to <span class="math inline">\(L\)</span> as the Cholesky factor of <span class="math inline">\(C\)</span>, and denote this relationship by <span class="math inline">\(L := \text{chol}(C)\)</span>. Intuitively, it seems that the focus on lower triangular matrices is just a convention, and that we could alternatively consider factorizations of the form <span class="math display">\[
+C = UU^\top , \tag{2}
+\]</span> where <span class="math inline">\(U\)</span> is upper triangular with positive diagonal entries. This is no longer what is commonly called the Cholesky decomposition, but is similar in spirit. We will refer to this as the <em>reversed Cholesky decomposition</em>, or <em>rCholesky</em> for short. We call <span class="math inline">\(U\)</span> the rCholesky factor, and write <span class="math inline">\(U := \text{rchol}(C)\)</span>. In this post, we explore this alternative factorization, and demonstrate (i.) its close connections to the Cholesky factorization of <span class="math inline">\(C^{-1}\)</span>; and (ii.) its interpretation as the Cholesky factorization under a reverse ordering of the variable indices. These connections have various applications, including in high-dimensional covariance estimation; see, e.g., {% cite SparseCholeskyVecchia %} for one such example.</p>
+<section id="connections-to-the-inverse-matrix" class="level1">
+<h1>Connections to the Inverse Matrix</h1>
+<p>The first order of business is to ensure that we have the same uniqueness and existence properties for (2) as we do for (1). The below result shows that the rCholesky factorization inherits these properties from the Cholesky factorization.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Existence and Uniqueness.</strong> <br> If <span class="math inline">\(C\)</span> is positive definite, then there exists a unique decomposition of the form <span class="math inline">\(C = UU^\top\)</span> such that <span class="math inline">\(U\)</span> is upper triangular with positive entries on the diagonal.
+</p>
+</blockquote>
+<p><strong>Proof.</strong> Since <span class="math inline">\(C\)</span> is positive definite, then <span class="math inline">\(C^{-1}\)</span> exists and is itself positive definite. Thus, there is a unique factorization of the form <span class="math inline">\(C^{-1} = LL^{\top}\)</span>, where <span class="math inline">\(L\)</span> is lower triangular with positive diagonal entries. Therefore, <span class="math inline">\(L\)</span> is invertible and <span class="math display">\[
+C = L^{-\top}L^{-1}. \tag{3}
+\]</span> Setting <span class="math inline">\(U := L^{-\top}\)</span>, we obtain <span class="math inline">\(C = UU^\top\)</span>. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+<p>We see from the above proof that the rCholesky factor of <span class="math inline">\(C\)</span> is closely related to the Cholesky factor of <span class="math inline">\(C^{-1}\)</span>. This corollary is summarized below.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Connection to Inverse Matrix.</strong> <br> Let <span class="math inline">\(C\)</span> be a positive definite matrix. Then <span class="math display">\[\begin{align}
+  \text{rchol}(C) &amp;= \text{chol}(C)^{-\top} \tag{4} \newline
+  \text{chol}(C) &amp;= \text{rchol}(C)^{-\top}. \tag{5}
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>A consequence of (4) and (5) is that we can easily transform between the Cholesky factorization of a matrix and the rCholesky factorization of its inverse.</p>
 </section>
-<section id="an-auxiliary-variable-method" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> An Auxiliary Variable Method</h1>
-<p>In this section we summarize an auxiliary variable MCMC algorithm proposed by <span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> to address the doubly intractable problem. The authors show that, surprisingly, it is possible for a Markov chain to correctly target the exact posterior distribution <span class="math inline">\(\pi(u)\)</span>, despite the presence of the intractable normalizing function. The requirement of their method is the ability to draw independent realizations of data given any parameter value; i.e., to sample from the conditional <span class="math inline">\(p(y \mid u)\)</span>.</p>
-<section id="extending-the-state-space" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="extending-the-state-space"><span class="header-section-number">2.1</span> Extending the State Space</h2>
-<p>The main idea is to extend the joint probability space over <span class="math inline">\((u,y)\)</span> in <a href="#eq-joint-model" class="quarto-xref">Equation&nbsp;1</a> to a joint model over <span class="math inline">\((u,x,y)\)</span> for some <em>auxiliary variable</em> <span class="math inline">\(x\)</span>. The auxiliary variable will be defined on the same space as <span class="math inline">\(y\)</span>, so we might think of it as some sort of “pseudo data”. Once we define the conditional <span class="math inline">\(p(x \mid u, y)\)</span>, then we obtain the extended model <span id="eq-extended-model"><span class="math display">\[
-p(u, x, y)
-:= p(x \mid u, y)p(y \mid u)p(u)
-= p(x \mid u, y)f(y; u)\pi_0(u) / C(u).
-\tag{7}\]</span></span> Notice that <span class="math inline">\(\pi(u) = p(u \mid y)\)</span> is a marginal distribution of <span class="math inline">\(p(u,x \mid y)\)</span>. Therefore, if we can draw samples <span class="math inline">\((u,x) \sim p(u,x \mid y)\)</span> then the <span class="math inline">\(u\)</span>-component of these samples will have the desired distribution <span class="math inline">\(\pi\)</span>.</p>
-<p>We now consider a Metropolis-Hastings algorithm targeting the extended posterior <span class="math inline">\(p(u,x \mid y)\)</span>. Letting <span class="math inline">\(q(\tilde{u},\tilde{x} \mid u,x)\)</span> denote a proposal distribution on the extended state space, the acceptance ratio assumes the form <span id="eq-MH-ratio-ext-intractable"><span class="math display">\[
-r(\tilde{u},\tilde{x} \mid u,x)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u,x \mid \tilde{u},\tilde{x})}{\pi_0(u) f(y; u)q(\tilde{u},\tilde{x} \mid u,x)} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)}.
-\tag{8}\]</span></span> At present, the ratio still depends on <span class="math inline">\(C(u)/C(\tilde{u})\)</span> and thus remains intractable.</p>
-</section>
-<section id="a-clever-choice-of-proposal" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="a-clever-choice-of-proposal"><span class="header-section-number">2.2</span> A clever choice of proposal</h2>
-<p>It would be nice to be able to choose <span class="math inline">\(p(x \mid u,y)\)</span> such that the dependence of <a href="#eq-extended-model" class="quarto-xref">Equation&nbsp;7</a> on <span class="math inline">\(C(u)\)</span> is eliminated. However, as pointed out by <span class="citation" data-cites="Murray">Murray, Ghahramani, and MacKay (<a href="#ref-Murray" role="doc-biblioref">2006</a>)</span>, no such choice of <span class="math inline">\(p(x \mid u,y)\)</span> is known. Instead, <span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> show that the proposal <span class="math inline">\(q(\tilde{u}, \tilde{x} \mid u, x)\)</span> can be chosen to eliminate the normalizing function from the acceptance ratio <span class="math inline">\(r(\tilde{u},\tilde{x} \mid u,x)\)</span>. We consider a proposal of the form <span id="eq-proposal-ext"><span class="math display">\[
-q(\tilde{u}, \tilde{x} \mid u, x) := q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u}),
-\tag{9}\]</span></span> implying a standard proposal for <span class="math inline">\(u\)</span>, followed by a proposal of the auxiliary variable that depends on <span class="math inline">\(\tilde{u}\)</span> but not <span class="math inline">\(x\)</span>. Given this setup, the necessary choice of <span class="math inline">\(q(\tilde{x} \mid \tilde{u})\)</span> to eliminate dependence on the normalizing function is <span id="eq-auxiliary-proposal"><span class="math display">\[
-q(\tilde{x} \mid \tilde{u}) := f(\tilde{x};\tilde{u}) / C(\tilde{u}).
-\tag{10}\]</span></span> Indeed, plugging <a href="#eq-auxiliary-proposal" class="quarto-xref">Equation&nbsp;10</a> into <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> yields <span id="eq-MH-ratio-ext-intractable"><span class="math display">\[
-r(\tilde{u},\tilde{x} \mid u,x)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
-\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}.
-\tag{11}\]</span></span></p>
-<div class="callout callout-style-default callout-note callout-titled" title="Derivation">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Derivation
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><span class="math display">\[
+<section id="reverse-ordering" class="level1">
+<h1>Reverse Ordering</h1>
+<section id="the-reversal-operator" class="level2">
+<h2 class="anchored" data-anchor-id="the-reversal-operator">The Reversal Operator</h2>
+<p>As we will see, the rCholesky decomposition can be interpreted as a Cholesky decomposition of a matrix under reverse ordering. By reverse ordering, we mean that the order of both the rows and the columns of <span class="math inline">\(C\)</span> are reversed. This notion is more intuitive when viewing <span class="math inline">\(C\)</span> as a <span class="math inline">\(n \times n\)</span> covariance matrix for some random variables <span class="math inline">\(x_1, \dots, x_n\)</span>, such that <span class="math inline">\(C_{ij} = \text{Cov}[x_i,x_j]\)</span>. We thus see that the ordering of the variables determines the ordering of the matrix. Let <span class="math inline">\(x := (x_1, \dots, x_n)^\top\)</span> be the vector of variables such that <span class="math inline">\(C = \text{Cov}[x]\)</span>. We will denote by <span class="math display">\[
+\tilde{x} := (x_n, \dots, x_1)^\top \tag{6}
+\]</span> the reversed vector. The reversal operation <span class="math inline">\(x \mapsto \tilde{x}\)</span> is linear and can thus be represented by a matrix. In particular, <span class="math inline">\(\tilde{x}\)</span> is given by <span class="math display">\[
+\tilde{x} = Px \tag{7}
+\]</span> where <span class="math inline">\(P\)</span> is the square permutation matrix with ones on the <a href="https://en.wikipedia.org/wiki/Anti-diagonal_matrix">anti-diagonal</a>; i.e., the non-main diagonal going from the lower-left to the upper-right corner. For example, if <span class="math inline">\(n=3\)</span> then <span class="math display">\[
 \begin{align}
-r(\tilde{u},\tilde{x} \mid u,x)
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) q(x \mid u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u})} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)} \\
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) f(x;u)/ C(u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) f(\tilde{x};\tilde{u})/ C(\tilde{u})} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)} \\
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) f(x;u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) f(\tilde{x};\tilde{u})} \cdot
-\frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)}
+P &amp;= \begin{bmatrix}
+0 &amp; 0 &amp; 1 \newline 0 &amp; 1 &amp; 0 \newline 1 &amp; 0 &amp; 0
+\end{bmatrix}. \tag{8}
 \end{align}
 \]</span></p>
-</div>
-</div>
-</div>
-<p>The ratio in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> no longer involves the intractable terms! This Metropolis-Hastings scheme therefore admits <span class="math inline">\(p(u,x \mid y)\)</span> as a stationary distribution without requiring the ability to evaluate <span class="math inline">\(C(u)\)</span>. The algorithm is thus “correct”, but its efficiency will depend heavily on the choice of the auxiliary distribution <span class="math inline">\(p(x \mid u,y)\)</span>, which is a free parameter of this method.</p>
+<p>We will make use of the following properties of the matrix <span class="math inline">\(P\)</span>.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Properties of Reversal Operator.</strong> <br> The matrix <span class="math inline">\(P\)</span> that reverses the order of a vector satisfies <span class="math display">\[
+  P = P^\top, \qquad P = P^{-1}, \qquad P^2 = P \tag{9}
+  \]</span>
+</p>
+</blockquote>
+<p>The first property is true of any anti-diagonal matrix, and the latter two simply reflect the fact that applying the reversal operation twice results in the original vector. With these properties in hand, note that <span class="math display">\[
+\tilde{C} := \text{Cov}[\tilde{x}] = \text{Cov}[Px]
+= P\text{Cov}[x]P^\top = PCP^\top = PCP. \tag{10}
+\]</span></p>
+<p>In words, this says that the covariance matrix of the reversed vector is given by <span class="math inline">\(PCP\)</span>, where <span class="math inline">\(C\)</span> is the covariance of the original vector. If you prefer to avoid probabilistic language, then <span class="math inline">\(PCP\)</span> is simply the result of reversing the order of the columns and rows of <span class="math inline">\(C\)</span>. Reversing <span class="math inline">\(C\)</span> induces the same operation on its inverse, since <span class="math display">\[
+(\tilde{C})^{-1} := (PCP)^{-1} = P^{-1}C^{-1}P = PC^{-1}P, \tag{11}
+\]</span> where we have used (9).</p>
 </section>
-<section id="choice-of-auxiliary-distribution" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="choice-of-auxiliary-distribution"><span class="header-section-number">2.3</span> Choice of Auxiliary Distribution</h2>
-<p>We now aim to build some intuition as to what the algorithm is doing, which will help inform the choice of <span class="math inline">\(p(x \mid u,y)\)</span>. The situation we find ourselves in is somewhat backwards when compared to the typical design of Metropolis-Hastings algorithms. In particular, the proposal <span class="math inline">\(q(x \mid u)\)</span> (typically a free parameter) has been prescribed, and we instead need to choose the distribution <span class="math inline">\(p(x \mid u,y)\)</span> (typically prescribed). Ideally, the proposal will look something like the target distribution. This intuition would lead us to set <span class="math inline">\(p(x \mid u,y) := f(x;u) / C(u)\)</span>. This is of course infeasible as it would reintroduce the normalizing function, but it does give a baseline goal to shoot for.</p>
-<p>To further understand the workings of this algorithm, notice that the first term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> is equal to the intractable ratio in <a href="#eq-MH-ratio-intractable" class="quarto-xref">Equation&nbsp;6</a> except that it is missing <span class="math inline">\(C(u)/C(\tilde{u})\)</span>. The second term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> might therefore be viewed as providing an estimate of <span class="math inline">\(C(u)/C(\tilde{u})\)</span>. Indeed, consider the random ratio <span id="eq-IS-est"><span class="math display">\[
+<section id="cholesky-factorization-of-reversed-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="cholesky-factorization-of-reversed-matrix">Cholesky Factorization of Reversed Matrix</h2>
+<p>We now derive the form of the Cholesky and rCholesky decompositions of the reversed matrix <span class="math inline">\(\tilde{C}\)</span>. Notation becomes a bit confusing here, so we separate the two results for clarity.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Cholesky under reverse ordering.</strong> <br> Let <span class="math inline">\(C = UU^\top\)</span> be the rCholesky decomposition of <span class="math inline">\(C\)</span>. Then the Cholesky decomposition of <span class="math inline">\(\tilde{C} = PCP\)</span> is given by <span class="math display">\[
+  \tilde{C} = (PUP)(PUP)^\top. \tag{12}
+  \]</span> This can be equivalently be written as <span class="math display">\[
+  \text{chol}(\tilde{C}) = \text{chol}(PCP) = PUP = P\text{rchol}(C)P. \tag{13}
+  \]</span> In words, this says that the Cholesky factor of <span class="math inline">\(\tilde{C}\)</span> is given by reversing the rCholesky factor of <span class="math inline">\(C\)</span>.
+</p>
+</blockquote>
+<p><strong>Proof.</strong> Using the fact that <span class="math inline">\(P^2 = I\)</span> we have <span class="math display">\[
+\tilde{C} = PCP = P(UU^\top)P = PUP^2 U^\top P = (PUP)(PUP)^\top.
+\]</span> The result is now immediate upon noticing that <span class="math inline">\(PUP\)</span> is lower triangular and has positive diagonal entries. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+<blockquote class="blockquote">
+<p>
+<strong>rCholesky under reverse ordering.</strong> <br> Let <span class="math inline">\(C = LL^\top\)</span> be the Cholesky decomposition of <span class="math inline">\(C\)</span>. Then the rCholesky decomposition of <span class="math inline">\(\tilde{C} = PCP\)</span> is given by <span class="math display">\[
+  \tilde{C} = (PLP)(PLP)^\top. \tag{14}
+  \]</span> This can be equivalently be written as <span class="math display">\[
+  \text{rchol}(\tilde{C}) = \text{rchol}(PCP) = PLP = P\text{chol}(C)P. \tag{15}
+  \]</span> In words, this says that the rCholesky factor of <span class="math inline">\(\tilde{C}\)</span> is given by reversing the Cholesky factor of <span class="math inline">\(C\)</span>.
+</p>
+</blockquote>
+<p><strong>Proof.</strong> Using the fact that <span class="math inline">\(P^2 = I\)</span> we have <span class="math display">\[
+\tilde{C} = PCP = P(LL^\top)P = PLP^2 L^\top P = (PLP)(PLP)^\top.
+\]</span> The result is now immediate upon noticing that <span class="math inline">\(PLP\)</span> is upper triangular and has positive diagonal entries. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+<p>These results tell us that we can use a Cholesky factorization of <span class="math inline">\(C\)</span> to immediately compute the rCholesky factorization of the reversed matrix <span class="math inline">\(\tilde{C}\)</span>. This statement is the same with the roles of Cholesky and rCholesky swapped. In (13) and (15) we can left and right multiply by <span class="math inline">\(P\)</span> to obtain the equivalent expressions <span class="math display">\[
 \begin{align}
-&amp;\frac{p(x \mid u,y)}{f(x;u)}, &amp;&amp;x \sim f(x;u)/C(u)
+\text{chol}(C) &amp;= P\text{rchol}(PCP)P \tag{16} \newline
+\text{rchol}(C) &amp;= P\text{chol}(PCP)P. \tag{17} \newline
 \end{align}
-\tag{12}\]</span></span> which has expectation <span class="math display">\[
-\mathbb{E}\left[\frac{p(x \mid u,y)}{f(x;u)}\right]
-= \int \frac{p(x \mid u,y)}{f(x;u)} \frac{f(x;u)}{C(u)} dx
-= C(u)^{-1} \int p(x \mid u,y) dx = C(u)^{-1}.
-\]</span> Therefore, the ratio in <a href="#eq-IS-est" class="quarto-xref">Equation&nbsp;12</a> is a single-sample importance sampling estimate of <span class="math inline">\(C(u)^{-1}\)</span>. The second term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> can thus be viewed as <span class="math display">\[
-\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}
-\approx \frac{C(\tilde{u})^{-1}}{C(u)^{-1}}
-= \frac{C(u)}{C(\tilde{u})},
-\]</span> a biased estimate of the ratio <span class="math inline">\(C(u)/C(\tilde{u})\)</span> derived from the two importance sampling estimates. It is interesting that the algorithm is correct despite the use of this plug-in biased estimate. This importance sampling viewpoint further strengthens our intuition that <span class="math inline">\(p(x \mid u,y)\)</span> should be chosen to approximate <span class="math inline">\(f(x;u)/C(u)\)</span>.</p>
-<p><span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> give two options for choosing <span class="math inline">\(p(x \mid u,y)\)</span>. The simpler of the two is to choose <span id="eq-lik-approx"><span class="math display">\[
-\begin{align}
-&amp;p(x \mid u,y) := f(x;\hat{u})/C(\hat{u}), &amp;&amp;\hat{u} = \hat{u}(y)
-\end{align}
-\tag{13}\]</span></span> where <span class="math inline">\(\hat{u}\)</span> is a fixed estimate of <span class="math inline">\(u\)</span> derived from the data <span class="math inline">\(y\)</span>. Recall that <span class="math inline">\(f(x;u)/C(u)\)</span> describes the data-generating distribution as a function of the parameter <span class="math inline">\(u\)</span>. Fixing a single <span class="math inline">\(u\)</span> will therefore be a reasonable approximation if this distribution is not strongly dependent on <span class="math inline">\(u\)</span>. Alternatively, this may also work well if the posterior support is concentrated around <span class="math inline">\(\hat{u}\)</span>, so that a reasonable approximation is only required in this neighborhood. The second approach is to construct a more sophisticated <span class="math inline">\(u\)</span>-dependent approximation of <span class="math inline">\(f(x;u)/C(u)\)</span>. We will not consider this option here.</p>
-
-
+\]</span> See remark 1 in {% cite SparseCholeskyVecchia %} for an example of an expression of this form, though the authors are decomposing <span class="math inline">\(C^{-1}\)</span> in place of <span class="math inline">\(C\)</span>.</p>
+</section>
+</section>
+<section id="other-resources" class="level1">
+<h1>Other Resources</h1>
+<ul>
+<li>Relevant StackExchange posts: <a href="https://math.stackexchange.com/questions/2039477/cholesky-decompostion-upper-triangular-or-lower-triangular">here</a>, <a href="https://math.stackexchange.com/questions/712993/cholesky-decomposition-of-the-inverse-of-a-matrix">here</a>, and <a href="https://mathoverflow.net/questions/230808/computing-the-inverse-of-a-cholesky-decomposition">here</a></li>
+<li>Permutation and Grouping Methods for Sharpening Gaussian Process Approximations (Guiness, 2018)</li>
+<li>Iterative methods for sparse linear systems (Saad, 2003)</li>
+</ul>
 
 
 </section>
-</section>
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
-<div id="ref-Moller" class="csl-entry" role="listitem">
-Møller, J., A. N. Pettitt, R. Reeves, and K. K. Berthelsen. 2006. <span>“An Efficient Markov Chain Monte Carlo Method for Distributions with Intractable Normalising Constants.”</span> <em>Biometrika</em> 93 (2): 451–58. <a href="http://www.jstor.org/stable/20441294">http://www.jstor.org/stable/20441294</a>.
-</div>
-<div id="ref-Murray" class="csl-entry" role="listitem">
-Murray, Iain, Zoubin Ghahramani, and David J. C. MacKay. 2006. <span>“MCMC for Doubly-Intractable Distributions.”</span> In <em>Proceedings of the Twenty-Second Conference on Uncertainty in Artificial Intelligence</em>, 359–66. UAI’06. Arlington, Virginia, USA: AUAI Press.
-</div>
-</div></section></div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

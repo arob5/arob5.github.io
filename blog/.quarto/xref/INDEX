@@ -52,5 +52,26 @@
   },
   "posts/enkf_perspectives/enkf_perspectives.qmd": {
     "enkf_perspectives.html": "daa60948"
+  },
+  "posts/basis-func-emulator.qmd": {
+    "basis-func-emulator.html": "37c7c8cd"
+  },
+  "posts/simplex-transform.qmd": {
+    "simplex-transform.html": "5a35bdab"
+  },
+  "posts/nonlinear-maps-of-Gaussians.qmd": {
+    "nonlinear-maps-of-Gaussians.html": "1f0f1f23"
+  },
+  "posts/ls-psd-cov.qmd": {
+    "ls-psd-cov.html": "69263a50"
+  },
+  "posts/reversed-Cholesky.qmd": {
+    "reversed-Cholesky.html": "f169fd34"
+  },
+  "posts/draft_enkf_perspectives/enkf_perspectives.qmd": {
+    "enkf_perspectives.html": "dd2b0747"
+  },
+  "posts/draft-function-space-mcmc/function-space-mcmc.qmd": {
+    "function-space-mcmc.html": "daae7aae"
   }
 }

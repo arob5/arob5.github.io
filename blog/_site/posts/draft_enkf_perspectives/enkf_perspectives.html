@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-07-11">
-<meta name="description" content="Exact MCMC with an intractable likelihood.">
+<meta name="dcterms.date" content="2025-10-03">
+<meta name="description" content="TODO.">
 
-<title>Doubly Intractable MCMC – Andrew G. Roberts</title>
+<title>Several Perspectives on the Ensemble Kalman Filter – Andrew G. Roberts</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -22,27 +22,7 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-  margin-bottom: 0em;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
 <script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
@@ -159,15 +139,17 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Doubly Intractable MCMC</h1>
-            <p class="subtitle lead">Doubly intractable MCMC, auxiliary variable methods, and the exchange algorithm.</p>
+      <h1 class="title">Several Perspectives on the Ensemble Kalman Filter</h1>
+            <p class="subtitle lead">TODO</p>
                   <div>
         <div class="description">
-          Exact MCMC with an intractable likelihood.
+          TODO.
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">MCMC</div>
+                <div class="quarto-category">Inverse-Problem</div>
+                <div class="quarto-category">Data-Assimilation</div>
+                <div class="quarto-category">Optimization</div>
                 <div class="quarto-category">Sampling</div>
                 <div class="quarto-category">Computational Statistics</div>
               </div>
@@ -181,7 +163,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">July 11, 2025</p>
+        <p class="date">October 3, 2025</p>
       </div>
     </div>
     
@@ -200,120 +182,132 @@ window.Quarto = {
 
 
 
-<p>A typical Bayesian model consists of a joint probability distribution over a parameter <span class="math inline">\(u\)</span> and data <span class="math inline">\(y\)</span> of the form <span id="eq-joint-model"><span class="math display">\[
-p(u,y) = \pi_0(u)L(u;y)
-\tag{1}\]</span></span> where <span class="math inline">\(\pi_0(u)\)</span> is the prior density on <span class="math inline">\(u\)</span> and <span class="math inline">\(L(u;y) = p(y \mid u)\)</span> the likelihood. The posterior distribution is then given by <span id="eq-post"><span class="math display">\[
-\pi(u) := p(u \mid y) = \frac{1}{Z}\pi_0(u)L(u;y)
-\tag{2}\]</span></span> where <span class="math inline">\(Z\)</span> is a normalizing constant (independent of <span class="math inline">\(u\)</span>) that we are not typically able to compute. Fortunately, common algorithms for posterior inference such as Markov chain Monte Carlo (MCMC) only require pointwise evaluations of the <em>unnormalized</em> posterior density <span class="math inline">\(\pi_0(u)L(u;y)\)</span>.</p>
-<p>In this post, we consider a class of Bayesian models that adds an additional difficulty, rendering these standard inference algorithms infeasible. In particular, we assume a likelihood of the form <span id="eq-intractable-lik"><span class="math display">\[
-L(u;y) = \frac{f(y; u)}{C(u)},
-\tag{3}\]</span></span> such that we can evaluate <span class="math inline">\(f(y;u)\)</span> but not the normalizing function <span class="math inline">\(C(u)\)</span>. The posterior density in this setting becomes <span id="eq-doubly-intractable-post"><span class="math display">\[
-\pi(u) = \frac{1}{ZC(u)}\pi_0(u)f(y;u).
-\tag{4}\]</span></span> Distributions of the form <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> are known as <em>doubly intractable</em> owing to the two quantities we are unable to compute: <span class="math inline">\(Z\)</span> and <span class="math inline">\(C(u)\)</span>. While the former does not pose a problem for typical inference algorithms, the presence of the latter is problematic.</p>
-<section id="the-problem" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> The Problem</h1>
-<p>Recall the basic structure of a Metropolis-Hastings algorithm. If <span class="math inline">\(u\)</span> is the current state of the Markov chain, then a new proposed state is sampled as <span class="math inline">\(\tilde{u} \sim q(\cdot \mid u)\)</span> from some proposal distribution <span class="math inline">\(q\)</span>. The proposed state is then accepted with probability <span id="eq-MH-ratio"><span class="math display">\[
-\begin{align}
-&amp;\alpha(\tilde{u} \mid u) = \min\{1, r(\tilde{u} \mid u)\},
-&amp;&amp;r(\tilde{u} \mid u) = \frac{\pi(\tilde{u}) q(u \mid \tilde{u})}{\pi(u) q(\tilde{u} \mid u)}.
-\end{align}
-\tag{5}\]</span></span> If accepted, the updated state is set to <span class="math inline">\(\tilde{u}\)</span>, otherwise the chain remains at <span class="math inline">\(u\)</span>. A key requirement of the algorithm is the ability to compute <span class="math inline">\(r(\tilde{u} \mid u)\)</span>. Plugging the density in <a href="#eq-doubly-intractable-post" class="quarto-xref">Equation&nbsp;4</a> into this expression, we see the ratio simplifies to <span id="eq-MH-ratio-intractable"><span class="math display">\[
-r(\tilde{u} \mid u)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
-\frac{C(u)}{C(\tilde{u})}.
-\tag{6}\]</span></span> The ratio depends on the intractable quantities <span class="math inline">\(C(u)\)</span> and <span class="math inline">\(C(\tilde{u})\)</span>, and thus we cannot apply the standard Metropolis-Hastings scheme in this setting.</p>
-</section>
-<section id="an-auxiliary-variable-method" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> An Auxiliary Variable Method</h1>
-<p>In this section we summarize an auxiliary variable MCMC algorithm proposed by <span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> to address the doubly intractable problem. The authors show that, surprisingly, it is possible for a Markov chain to correctly target the exact posterior distribution <span class="math inline">\(\pi(u)\)</span>, despite the presence of the intractable normalizing function. The requirement of their method is the ability to draw independent realizations of data given any parameter value; i.e., to sample from the conditional <span class="math inline">\(p(y \mid u)\)</span>.</p>
-<section id="extending-the-state-space" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="extending-the-state-space"><span class="header-section-number">2.1</span> Extending the State Space</h2>
-<p>The main idea is to extend the joint probability space over <span class="math inline">\((u,y)\)</span> in <a href="#eq-joint-model" class="quarto-xref">Equation&nbsp;1</a> to a joint model over <span class="math inline">\((u,x,y)\)</span> for some <em>auxiliary variable</em> <span class="math inline">\(x\)</span>. The auxiliary variable will be defined on the same space as <span class="math inline">\(y\)</span>, so we might think of it as some sort of “pseudo data”. Once we define the conditional <span class="math inline">\(p(x \mid u, y)\)</span>, then we obtain the extended model <span id="eq-extended-model"><span class="math display">\[
-p(u, x, y)
-:= p(x \mid u, y)p(y \mid u)p(u)
-= p(x \mid u, y)f(y; u)\pi_0(u) / C(u).
-\tag{7}\]</span></span> Notice that <span class="math inline">\(\pi(u) = p(u \mid y)\)</span> is a marginal distribution of <span class="math inline">\(p(u,x \mid y)\)</span>. Therefore, if we can draw samples <span class="math inline">\((u,x) \sim p(u,x \mid y)\)</span> then the <span class="math inline">\(u\)</span>-component of these samples will have the desired distribution <span class="math inline">\(\pi\)</span>.</p>
-<p>We now consider a Metropolis-Hastings algorithm targeting the extended posterior <span class="math inline">\(p(u,x \mid y)\)</span>. Letting <span class="math inline">\(q(\tilde{u},\tilde{x} \mid u,x)\)</span> denote a proposal distribution on the extended state space, the acceptance ratio assumes the form <span id="eq-MH-ratio-ext-intractable"><span class="math display">\[
-r(\tilde{u},\tilde{x} \mid u,x)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u,x \mid \tilde{u},\tilde{x})}{\pi_0(u) f(y; u)q(\tilde{u},\tilde{x} \mid u,x)} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)}.
-\tag{8}\]</span></span> At present, the ratio still depends on <span class="math inline">\(C(u)/C(\tilde{u})\)</span> and thus remains intractable.</p>
-</section>
-<section id="a-clever-choice-of-proposal" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="a-clever-choice-of-proposal"><span class="header-section-number">2.2</span> A clever choice of proposal</h2>
-<p>It would be nice to be able to choose <span class="math inline">\(p(x \mid u,y)\)</span> such that the dependence of <a href="#eq-extended-model" class="quarto-xref">Equation&nbsp;7</a> on <span class="math inline">\(C(u)\)</span> is eliminated. However, as pointed out by <span class="citation" data-cites="Murray">Murray, Ghahramani, and MacKay (<a href="#ref-Murray" role="doc-biblioref">2006</a>)</span>, no such choice of <span class="math inline">\(p(x \mid u,y)\)</span> is known. Instead, <span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> show that the proposal <span class="math inline">\(q(\tilde{u}, \tilde{x} \mid u, x)\)</span> can be chosen to eliminate the normalizing function from the acceptance ratio <span class="math inline">\(r(\tilde{u},\tilde{x} \mid u,x)\)</span>. We consider a proposal of the form <span id="eq-proposal-ext"><span class="math display">\[
-q(\tilde{u}, \tilde{x} \mid u, x) := q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u}),
-\tag{9}\]</span></span> implying a standard proposal for <span class="math inline">\(u\)</span>, followed by a proposal of the auxiliary variable that depends on <span class="math inline">\(\tilde{u}\)</span> but not <span class="math inline">\(x\)</span>. Given this setup, the necessary choice of <span class="math inline">\(q(\tilde{x} \mid \tilde{u})\)</span> to eliminate dependence on the normalizing function is <span id="eq-auxiliary-proposal"><span class="math display">\[
-q(\tilde{x} \mid \tilde{u}) := f(\tilde{x};\tilde{u}) / C(\tilde{u}).
-\tag{10}\]</span></span> Indeed, plugging <a href="#eq-auxiliary-proposal" class="quarto-xref">Equation&nbsp;10</a> into <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> yields <span id="eq-MH-ratio-ext-intractable"><span class="math display">\[
-r(\tilde{u},\tilde{x} \mid u,x)
-= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u})}{\pi_0(u) f(y; u)q(\tilde{u} \mid u)} \cdot
-\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}.
-\tag{11}\]</span></span></p>
-<div class="callout callout-style-default callout-note callout-titled" title="Derivation">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="hidden-macros">
+<p><span class="math display">\[
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pr}{\mathbb{P}}
+\newcommand{\given}{\mid}
+\newcommand{\Def}{:=}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Gaussian}{\mathcal{N}}
+\newcommand{\x}{x}
+\newcommand{\y}{y}
+\newcommand{\h}{h}
+\newcommand{\H}{\mathsf{H}}
+\newcommand{\yobs}{y^{\dagger}}
+\newcommand{\noise}{\epsilon}
+\newcommand{\covNoise}{\Sigma}
+\newcommand{\m}{m}
+\newcommand{\C}{C}
+\newcommand{\Cyx}{\C_{\y\x}}
+\newcommand{\Cxy}{\C_{\x\y}}
+\newcommand{\Cy}{\C_{\y}}
+\newcommand{\my}{m_y}
+\newcommand{\prior}{\pi}
+\newcommand{\priorEmp}{\pi_J}
+\newcommand{\post}{\pi^\star}
+\newcommand{\dimObs}{n}
+\newcommand{\dimPar}{d}
+\newcommand{\map}{\mathsf{T}}
+\newcommand{\proj}{\mathcal{P}_{\Gaussian}}
+\]</span></p>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Problem Setup">
+<div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-Derivation
+Problem Setup
 </div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p><span class="math display">\[
+<p>Consider the joint probability model over an unobserved variable <span class="math inline">\(x \in \R^\dimPar\)</span> and an observable <span class="math inline">\(\y \in \R^\dimObs\)</span> given by</p>
+<p><span id="eq-model"><span class="math display">\[
 \begin{align}
-r(\tilde{u},\tilde{x} \mid u,x)
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) q(x \mid u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) q(\tilde{x} \mid \tilde{u})} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)} \\
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) f(x;u)/ C(u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) f(\tilde{x};\tilde{u})/ C(\tilde{u})} \cdot
-\frac{C(u)}{C(\tilde{u})} \cdot \frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)} \\
-&amp;= \frac{\pi_0(\tilde{u})f(y; \tilde{u}) q(u \mid \tilde{u}) f(x;u)}{\pi_0(u) f(y; u)q(\tilde{u} \mid u) f(\tilde{x};\tilde{u})} \cdot
-\frac{p(\tilde{x} \mid \tilde{u},y)}{p(x \mid u,y)}
+&amp;\y = \h(\x) + \noise,
+&amp;&amp;\noise \sim \Gaussian(0, \covNoise) \\
+&amp;\x \sim \prior.
 \end{align}
-\]</span></p>
+\tag{1}\]</span></span></p>
+<p>In contrast to standard inverse problem formulations, we assume that the prior <span class="math inline">\(\prior\)</span> is only accessible via a finite set of samples <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span>. Given a particular data realization <span class="math inline">\(\yobs\)</span>, our goal is to produce samples <span class="math inline">\(\{\x^\star_j\}_{j=1}^{J}\)</span> that are (approximately) distributed according to the posterior distribution <span class="math inline">\(\post \Def \x \given [y = \yobs]\)</span>.</p>
 </div>
 </div>
+<p>We are interested in developing posterior inference methods that are fast and scalable to settings where the parameter dimension <span class="math inline">\(\dimPar\)</span> may be quite large. Standard inference algorithms like Markov chain Monte Carlo (MCMC) are not well-suited to these constraints. In particular, a key challenge here is the lack of access to the prior density. Instead, we must make do with the empirical approximation <span class="math display">\[
+\priorEmp \Def \frac{1}{J} \sum_{j=1}^{J} \delta_{\x_j},
+\]</span> where <span class="math inline">\(\delta_{\x_j}\)</span> denotes the Dirac delta centered at <span class="math inline">\(\x_j\)</span>.</p>
+<p>The positive definite noise covariance <span class="math inline">\(\covNoise \in \R^{n \times n}\)</span> is assumed known throughout this post.</p>
+<section id="linear-gaussian-inverse-problems" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Linear Gaussian Inverse Problems</h1>
+<p>TODO: define <span class="math inline">\(\Cxy, \Cyx, C, \Cy\)</span> and similar with the means in this section.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Linear Gaussian Conditional">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<p>The ratio in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> no longer involves the intractable terms! This Metropolis-Hastings scheme therefore admits <span class="math inline">\(p(u,x \mid y)\)</span> as a stationary distribution without requiring the ability to evaluate <span class="math inline">\(C(u)\)</span>. The algorithm is thus “correct”, but its efficiency will depend heavily on the choice of the auxiliary distribution <span class="math inline">\(p(x \mid u,y)\)</span>, which is a free parameter of this method.</p>
-</section>
-<section id="choice-of-auxiliary-distribution" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="choice-of-auxiliary-distribution"><span class="header-section-number">2.3</span> Choice of Auxiliary Distribution</h2>
-<p>We now aim to build some intuition as to what the algorithm is doing, which will help inform the choice of <span class="math inline">\(p(x \mid u,y)\)</span>. The situation we find ourselves in is somewhat backwards when compared to the typical design of Metropolis-Hastings algorithms. In particular, the proposal <span class="math inline">\(q(x \mid u)\)</span> (typically a free parameter) has been prescribed, and we instead need to choose the distribution <span class="math inline">\(p(x \mid u,y)\)</span> (typically prescribed). Ideally, the proposal will look something like the target distribution. This intuition would lead us to set <span class="math inline">\(p(x \mid u,y) := f(x;u) / C(u)\)</span>. This is of course infeasible as it would reintroduce the normalizing function, but it does give a baseline goal to shoot for.</p>
-<p>To further understand the workings of this algorithm, notice that the first term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> is equal to the intractable ratio in <a href="#eq-MH-ratio-intractable" class="quarto-xref">Equation&nbsp;6</a> except that it is missing <span class="math inline">\(C(u)/C(\tilde{u})\)</span>. The second term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> might therefore be viewed as providing an estimate of <span class="math inline">\(C(u)/C(\tilde{u})\)</span>. Indeed, consider the random ratio <span id="eq-IS-est"><span class="math display">\[
+<div class="callout-title-container flex-fill">
+Linear Gaussian Conditional
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The linear Gaussian model <span id="eq-linear-Gaussian"><span class="math display">\[
 \begin{align}
-&amp;\frac{p(x \mid u,y)}{f(x;u)}, &amp;&amp;x \sim f(x;u)/C(u)
+&amp;\y = \H\x + \noise,
+&amp;&amp;\noise \sim \Gaussian(0, \covNoise) \\
+&amp;\x \sim \Gaussian(m,C)
 \end{align}
-\tag{12}\]</span></span> which has expectation <span class="math display">\[
-\mathbb{E}\left[\frac{p(x \mid u,y)}{f(x;u)}\right]
-= \int \frac{p(x \mid u,y)}{f(x;u)} \frac{f(x;u)}{C(u)} dx
-= C(u)^{-1} \int p(x \mid u,y) dx = C(u)^{-1}.
-\]</span> Therefore, the ratio in <a href="#eq-IS-est" class="quarto-xref">Equation&nbsp;12</a> is a single-sample importance sampling estimate of <span class="math inline">\(C(u)^{-1}\)</span>. The second term in <a href="#eq-MH-ratio-ext-intractable" class="quarto-xref">Equation&nbsp;11</a> can thus be viewed as <span class="math display">\[
-\frac{p(\tilde{x} \mid \tilde{u},y)/f(\tilde{x};\tilde{u})}{p(x \mid u,y)/f(x;u)}
-\approx \frac{C(\tilde{u})^{-1}}{C(u)^{-1}}
-= \frac{C(u)}{C(\tilde{u})},
-\]</span> a biased estimate of the ratio <span class="math inline">\(C(u)/C(\tilde{u})\)</span> derived from the two importance sampling estimates. It is interesting that the algorithm is correct despite the use of this plug-in biased estimate. This importance sampling viewpoint further strengthens our intuition that <span class="math inline">\(p(x \mid u,y)\)</span> should be chosen to approximate <span class="math inline">\(f(x;u)/C(u)\)</span>.</p>
-<p><span class="citation" data-cites="Moller">Møller et al. (<a href="#ref-Moller" role="doc-biblioref">2006</a>)</span> give two options for choosing <span class="math inline">\(p(x \mid u,y)\)</span>. The simpler of the two is to choose <span id="eq-lik-approx"><span class="math display">\[
+\tag{2}\]</span></span></p>
+<p>admits a Gaussian conditional <span class="math inline">\(\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)\)</span>. The moments are given by <span id="eq-conditional-moments"><span class="math display">\[
 \begin{align}
-&amp;p(x \mid u,y) := f(x;\hat{u})/C(\hat{u}), &amp;&amp;\hat{u} = \hat{u}(y)
+m^\star &amp;= m + K(\yobs - \my) \\
+C^\star &amp;= C - K \Cyx,
 \end{align}
-\tag{13}\]</span></span> where <span class="math inline">\(\hat{u}\)</span> is a fixed estimate of <span class="math inline">\(u\)</span> derived from the data <span class="math inline">\(y\)</span>. Recall that <span class="math inline">\(f(x;u)/C(u)\)</span> describes the data-generating distribution as a function of the parameter <span class="math inline">\(u\)</span>. Fixing a single <span class="math inline">\(u\)</span> will therefore be a reasonable approximation if this distribution is not strongly dependent on <span class="math inline">\(u\)</span>. Alternatively, this may also work well if the posterior support is concentrated around <span class="math inline">\(\hat{u}\)</span>, so that a reasonable approximation is only required in this neighborhood. The second approach is to construct a more sophisticated <span class="math inline">\(u\)</span>-dependent approximation of <span class="math inline">\(f(x;u)/C(u)\)</span>. We will not consider this option here.</p>
-
+\tag{3}\]</span></span> where <span id="eq-Kalman-gain"><span class="math display">\[
+K = \Cxy \Cy^{-1} = C \H^\top (\H C \H^\top + \covNoise)^{-1}.
+\tag{4}\]</span></span></p>
+</div>
+</div>
+<p>The matrix <span class="math inline">\(K \in \R^{\dimPar \times \dimObs}\)</span> is known as the <strong>Kalman gain</strong>.</p>
+</section>
+<section id="linear-ensemble-transforms" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Linear Ensemble Transforms</h1>
+<p>There are many approaches to deal with the empirical nature of the prior. For example, a kernel density estimate can be employed to smooth the empirical prior <span class="math inline">\(\priorEmp\)</span>, yielding a continuous prior approximation. Alternatively, importance sampling techniques work directly with <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span>, re-weighting the particles to achieve a sample-based approximation of the posterior <span class="math inline">\(\post\)</span>. However, both of these methods are known to degenerate as the parameter dimension <span class="math inline">\(\dimPar\)</span> increases.</p>
+<p>This post focuses on methods that produce approximate samples from <span class="math inline">\(\post\)</span> by applying a map <span class="math inline">\(\map: \R^\dimPar \to \R^\dimPar\)</span> to each prior sample; that is, <span class="math display">\[
+x_j^\star \Def \map(x_j), \qquad j = 1, 2, \dots, J.
+\]</span> The function <span class="math inline">\(\map\)</span> is sometimes called a <em>transport map</em>, and may be deterministic or stochastic. In particular, we focus on linear transport maps, yielding a family of algorithms known as <em>linear ensemble transforms</em>. Ensemble Kalman transforms construct linear transport maps <span class="math inline">\(\map\)</span> that depend on the empirical distribution <span class="math inline">\(\priorEmp\)</span> only through its first two moments, the sample mean and covariance: <span id="eq-moments"><span class="math display">\[
+\begin{align}
+m &amp;\Def \frac{1}{J} \sum_{j=1}^{J} x_j \\
+C &amp;\Def \frac{1}{J-1} \sum_{j=1}^{J} (x_j - m)(x_j - m)^\top.
+\end{align}
+\tag{5}\]</span></span></p>
+</section>
+<section id="gaussian-prior-approximation" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Gaussian Prior Approximation</h1>
+<p>We first explore a perspective on the EnKF rooted in the idea of estimating a parametric prior approximation using <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span>. While different distributional families can be used, Ensemble Kalman methods employ a Gaussian approximation. Given a square-integrable distribution <span class="math inline">\(\nu\)</span>, let <span class="math inline">\(\proj \nu\)</span> denote the Gaussian “projection” of <span class="math inline">\(\nu\)</span>; that is, the Gaussian distribution that matches the mean and covariance of <span class="math inline">\(\nu\)</span>. Given this definition, the Gaussian prior approximation employed by the EnKF can be phrased as follows.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Gaussian Prior Approximation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Gaussian Prior Approximation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Given the setup in <a href="#eq-model" class="quarto-xref">Equation&nbsp;1</a>, the EnKF uses the samples <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span> to fit a Gaussian prior approximation <span id="eq-Gaussian-prior"><span class="math display">\[
+\hat{\prior} \Def \proj \priorEmp = \Gaussian(m, C),
+\tag{6}\]</span></span> where <span class="math inline">\(m,C\)</span> are the empirical mean and covariance, as defined in <a href="#eq-moments" class="quarto-xref">Equation&nbsp;5</a>.</p>
+</div>
+</div>
+<p>The parametric approximation has a regularizing effect in high-dimensions, and the choice of a Gaussian approximation allows for convenient analytical expressions. This is particularly true when the observation operator <span class="math inline">\(\h\)</span> is linear, in which case the linear Gaussian assumptions combine to produce a closed-form conditional distribution.</p>
 
 
 
 </section>
-</section>
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
-<div id="ref-Moller" class="csl-entry" role="listitem">
-Møller, J., A. N. Pettitt, R. Reeves, and K. K. Berthelsen. 2006. <span>“An Efficient Markov Chain Monte Carlo Method for Distributions with Intractable Normalising Constants.”</span> <em>Biometrika</em> 93 (2): 451–58. <a href="http://www.jstor.org/stable/20441294">http://www.jstor.org/stable/20441294</a>.
-</div>
-<div id="ref-Murray" class="csl-entry" role="listitem">
-Murray, Iain, Zoubin Ghahramani, and David J. C. MacKay. 2006. <span>“MCMC for Doubly-Intractable Distributions.”</span> In <em>Proceedings of the Twenty-Second Conference on Uncertainty in Artificial Intelligence</em>, 359–66. UAI’06. Arlington, Virginia, USA: AUAI Press.
-</div>
-</div></section></div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
