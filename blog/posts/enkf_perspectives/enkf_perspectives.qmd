@@ -1,0 +1,166 @@
+---
+title: "Several Perspectives on the Ensemble Kalman Filter"
+subtitle: TODO
+description: TODO.
+layout: default
+date: 2025-10-03
+draft: true
+categories: [Inverse-Problem, Data-Assimilation, Optimization, Sampling, Computational Statistics]
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+<div class="hidden-macros">
+$$
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pr}{\mathbb{P}}
+\newcommand{\given}{\mid}
+\newcommand{\Def}{:=}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Gaussian}{\mathcal{N}}
+\newcommand{\x}{x}
+\newcommand{\y}{y}
+\newcommand{\h}{h}
+\newcommand{\H}{\mathsf{H}}
+\newcommand{\yobs}{y^{\dagger}}
+\newcommand{\noise}{\epsilon}
+\newcommand{\covNoise}{\Sigma}
+\newcommand{\m}{m}
+\newcommand{\C}{C}
+\newcommand{\Cyx}{\C_{\y\x}}
+\newcommand{\Cxy}{\C_{\x\y}}
+\newcommand{\Cy}{\C_{\y}}
+\newcommand{\my}{m_y}
+\newcommand{\prior}{\pi}
+\newcommand{\priorEmp}{\pi_J}
+\newcommand{\post}{\pi^\star}
+\newcommand{\dimObs}{n}
+\newcommand{\dimPar}{d}
+\newcommand{\map}{\mathsf{T}}
+\newcommand{\proj}{\mathcal{P}_{\Gaussian}}
+$$
+</div>
+
+::: {.callout-note title="Problem Setup"}
+Consider the joint probability model over an unobserved variable $x \in \R^\dimPar$
+and an observable $\y \in \R^\dimObs$ given by
+
+$$
+\begin{align}
+&\y = \h(\x) + \noise,
+&&\noise \sim \Gaussian(0, \covNoise) \\
+&\x \sim \prior.
+\end{align}
+$$ {#eq-model}
+
+In contrast to standard inverse problem formulations, we assume that the prior
+$\prior$ is only accessible via a finite set of samples $\{x_j\}_{j=1}^{J}$.
+Given a particular data realization $\yobs$, our goal is to produce samples
+$\{\x^\star_j\}_{j=1}^{J}$ that are (approximately) distributed according to
+the posterior distribution $\post \Def \x \given [y = \yobs]$.
+:::
+
+We are interested in developing posterior
+inference methods that are fast and scalable to settings where the parameter
+dimension $\dimPar$ may be quite large. Standard inference algorithms like
+Markov chain Monte Carlo (MCMC) are not well-suited to these constraints.
+In particular, a key challenge here is the lack of access to the prior density.
+Instead, we must make do with the empirical approximation
+$$
+\priorEmp \Def \frac{1}{J} \sum_{j=1}^{J} \delta_{\x_j},
+$$
+where $\delta_{\x_j}$ denotes the Dirac delta centered at $\x_j$.
+
+
+The positive definite noise covariance $\covNoise \in \R^{n \times n}$ is
+assumed known throughout this post.
+
+# Linear Gaussian Inverse Problems
+
+TODO: define $\Cxy, \Cyx, C, \Cy$ and similar with the means in this section.
+
+::: {.callout-note title="Linear Gaussian Conditional"}
+The linear Gaussian model
+$$
+\begin{align}
+&\y = \H\x + \noise,
+&&\noise \sim \Gaussian(0, \covNoise) \\
+&\x \sim \Gaussian(m,C)
+\end{align}
+$$ {#eq-linear-Gaussian}
+
+admits a Gaussian conditional
+$\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)$. The moments are given by
+$$
+\begin{align}
+m^\star &= m + K(\yobs - \my) \\
+C^\star &= C - K \Cyx,
+\end{align}
+$$ {#eq-conditional-moments}
+where
+$$
+K = \Cxy \Cy^{-1} = C \H^\top (\H C \H^\top + \covNoise)^{-1}.
+$$ {#eq-Kalman-gain}
+:::
+
+The matrix $K \in \R^{\dimPar \times \dimObs}$ is known as the **Kalman gain**.
+
+
+# Linear Ensemble Transforms
+There are many approaches to deal with the empirical nature of the prior.
+For example, a kernel density estimate can be employed to smooth the
+empirical prior $\priorEmp$, yielding a continuous prior approximation.
+Alternatively, importance sampling techniques work directly with
+$\{x_j\}_{j=1}^{J}$, re-weighting the particles to achieve a sample-based
+approximation of the posterior $\post$. However, both of these methods
+are known to degenerate as the parameter dimension $\dimPar$ increases.
+
+This post focuses on methods that produce approximate samples from $\post$
+by applying a map $\map: \R^\dimPar \to \R^\dimPar$ to each prior sample; that is,
+$$
+x_j^\star \Def \map(x_j), \qquad j = 1, 2, \dots, J.
+$$
+The function $\map$ is sometimes called a *transport map*, and may be deterministic
+or stochastic. In particular, we focus on linear transport maps, yielding a
+family of algorithms known as *linear ensemble transforms*. Ensemble Kalman
+transforms construct linear transport maps $\map$ that depend on the empirical
+distribution $\priorEmp$ only through its first two moments, the sample mean
+and covariance:
+$$
+\begin{align}
+m &\Def \frac{1}{J} \sum_{j=1}^{J} x_j \\
+C &\Def \frac{1}{J-1} \sum_{j=1}^{J} (x_j - m)(x_j - m)^\top.
+\end{align}
+$$ {#eq-moments}
+
+# Gaussian Prior Approximation
+We first explore a perspective on the EnKF rooted in the idea of estimating
+a parametric prior approximation using $\{x_j\}_{j=1}^{J}$. While different
+distributional families can be used, Ensemble Kalman methods employ a Gaussian
+approximation. Given a square-integrable distribution $\nu$, let $\proj \nu$
+denote the Gaussian "projection" of $\nu$; that is, the Gaussian distribution
+that matches the mean and covariance of $\nu$. Given this definition, the
+Gaussian prior approximation employed by the EnKF can be phrased as follows.
+
+::: {.callout-note title="Gaussian Prior Approximation"}
+Given the setup in @eq-model, the EnKF uses the samples $\{x_j\}_{j=1}^{J}$
+to fit a Gaussian prior approximation
+$$
+\hat{\prior} \Def \proj \priorEmp = \Gaussian(m, C),
+$$ {#eq-Gaussian-prior}
+where $m,C$ are the empirical mean and covariance, as defined in @eq-moments.
+:::
+
+The parametric approximation has a regularizing effect in high-dimensions, and
+the choice of a Gaussian approximation allows for convenient analytical expressions.
+This is particularly true when the observation operator $\h$ is linear, in which
+case the linear Gaussian assumptions combine to produce a closed-form
+conditional distribution.
