@@ -14,11 +14,30 @@ format:
       method: mathjax
 ---
 
+<div class="hidden-macros">
+$$
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pr}{\mathbb{P}}
+\newcommand{\given}{\mid}
+\newcommand{\Def}{:=}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Gaussian}{\mathcal{N}}
+\newcommand{\u}{u}
+\newcommand{\yobs}{y^{\dagger}}
+\newcommand{\y}{y}
+\newcommand{\noise}{\epsilon}
+\newcommand{\covNoise}{\Sigma}
+$$
+</div>
+
+
 This post focuses on Bayesian inverse problems with the following features:
 1. Linear forward model.
 2. Additive Gaussian observation noise.
 3. Gaussian prior distribution.
-4. Prior independence of the observation noise and prior.  
+4. Prior independence of the observation noise and prior.
 
 We refer to such inverse problems as *linear Gaussian*. The typical Bayesian
 linear regression model with a Gaussian prior on the coefficients constitutes
@@ -30,44 +49,62 @@ Gaussian regime.
 
 # Setup
 We consider the following linear Gaussian regression model
+::: {.callout-note title="Linear Gaussian Model}
+A linear Gaussian model is a joint probability distribution on data
+$y \in \R^n$ and a parameter $u \in \R^d$ taking the form
 $$
 \begin{align}
-y &= Gu + \epsilon \tag{1} \newline
-\epsilon &\sim \mathcal{N}(0, \Sigma) \newline
-u &\sim \mathcal{N}(m, C), && u \perp \epsilon
+y \mid u &\sim \Gaussian(Gu, \Sigma) \\
+u &\sim \Gaussian(m, C),
 \end{align}
-$$
-consisting of the observation (i.e., data) $y \in \mathbb{R}^n$, parameter $u \in \mathbb{R}^d$,
-noise $\epsilon \in \mathbb{R}^n$, and linear forward model represented by the
-matrix $G \in \mathbb{R}^{n \times d}$. The observation covariance
-$\Sigma \in \mathbb{R}^{n \times n}$ and prior covariance $C \in \mathbb{R}^{d \times d}$
-are both fixed positive definite matrices. The vector $m \in \mathbb{R}^d$ is the
-*prior mean*. We write $u \perp \epsilon$ to indicate the key assumption that
-$u$ and $\epsilon$ are a priori probabilistically independent. The model (1) can
-equivalently be written as
-$$
-\begin{align}
-y|u &\sim \mathcal{N}(Gu, \Sigma) \tag{2} \newline
-u &\sim \mathcal{N}(m, C),
-\end{align}
-$$
-which gives the explicit expression for the Gaussian likelihood $p(y|u)$.
-The solution of the Bayesian inverse problem is the posterior distribution
-$p(u|y)$. We provide two approaches to calculating this distribution below, which
-yield different (but equivalent) expressions.
+$$ {#eq-inv-prob}
 
-# The Posterior Distribution
-The ubiquity of the linear Gaussian models stems from its analytic tractability.
-The assumptions of linearity and Gaussianity play nicely together, resulting
-in a Gaussian posterior distribution that we can characterize in closed form.
+Here, $G \in \mathbb{R}^{n \times d}$ is a linear forward model mapping the
+parameter to the observable. The observation covariance
+$\Sigma \in \R^{n \times n}$ and prior covariance $C \in \R^{d \times d}$
+are both fixed positive definite matrices.
+
+The model can equivalently be written by introducing another random variable
+$\noise$ to explicitly represent the observation noise
+$$
+\begin{align}
+y &= Gu + \epsilon \newline
+\noise &\sim \mathcal{N}(0, \Sigma) \\
+u &\sim \mathcal{N}(m, C), && u \perp \epsilon,
+\end{align}
+$$ {#eq-inv-prob-2}
+
+where $u \perp \epsilon$ is used to indicate the key assumption that
+$u$ and $\epsilon$ are a priori probabilistically independent.
+:::
+
+Upon observing a particular realization $\yobs$ of the data, the Bayesian
+inverse problem is solved by computing the **posterior distribution**
+$$
+\begin{align}
+p(u \mid y = \yobs)
+&= \frac{1}{Z} \Gaussian(u \mid m, C) \Gaussian(y \mid Gu, \Sigma),
+&& Z = \int \Gaussian(u \mid m, C) \Gaussian(\yobs \mid Gu, \Sigma) du.
+\end{align}
+$$
+
+The ubiquity of the linear Gaussian models stems from its analytic tractability;
+the assumptions of linearity and Gaussianity play nicely together, yielding
+a closed-form characterization of the posterior. In the following section,
+we derive the posterior in two different ways, each providing a different
+(but equivalent) solution.
+
+# Deriving the Posterior Distribution
+In this section, we will find that the linear Gaussian assumptions combine
+to produce a Gaussian posterior.
 In Bayesian statistics, this is called a *conjugate* model, as the prior and
-posterior belong to the same distributional family (Gaussian). Once it is
+posterior belong to the same distributional family. Once it is
 established that the posterior is Gaussian, it remains only to specify its
 mean and covariance matrix. We give two equivalent expressions for these
-quantities below, with complete derivations given in the appendix. The first
+quantities below. The first
 formulation is the one typically seen in a standard Bayesian linear regression
 context where $d \leq n$. It is therefore advantageous to work with quantities
-in $\mathbb{R}^d$ rather than $\mathbb{R}^n$. In the first set of equations, the
+in $\R^d$ rather than $\R^n$. In the first set of equations, the
 main computation - the inversion of a matrix - takes place in $\mathbb{R}^d$, so
 we refer to this formulation as the *parameter space update*. The second set of
 equations instead requires the inversion of a $n \times n$ matrix. This

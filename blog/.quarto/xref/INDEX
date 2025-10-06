@@ -49,5 +49,8 @@
   },
   "posts/linear-Gaussian/linear_Gaussian_inverse_problems.qmd": {
     "linear_Gaussian_inverse_problems.html": "4a3abbc5"
+  },
+  "posts/enkf_perspectives/enkf_perspectives.qmd": {
+    "enkf_perspectives.html": "daa60948"
   }
 }

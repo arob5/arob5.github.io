@@ -316,20 +316,23 @@ Goal 3: Posterior Sampling
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>We seek to draw samples from the posterior distribution <span class="math inline">\(\u \given \yobs\)</span> under the model <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>. We can phrase this as the task of sampling the probability distribution with density <span id="eq-post-dens"><span class="math display">\[
+<p>We seek to draw samples from the posterior distribution <span class="math inline">\(\u \given \yobs\)</span> under the model in <a href="#eq-bip" class="quarto-xref">Equation&nbsp;5</a>. We can phrase this as the task of sampling the probability distribution with density <span id="eq-post-dens"><span class="math display">\[
 \postDens(\u) \propto \exp\left\{\misfitPost(\u)\right\},
 \tag{8}\]</span></span> where <span id="eq-misfit-post"><span class="math display">\[
-\misfitPost(\u) := -\log \postDens(\u)
-= -\log p(\y \given \u) - \log \priorDens(\u)
-= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} - \log \priorDens(\u) + C,
+\begin{align}
+\misfitPost(\u)
+:= -\log \postDens(\u)
+&amp;= -\log p(\y \given \u) - \log \priorDens(\u) \\
+&amp;= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} - \log \priorDens(\u) + C,
+\end{align}
 \tag{9}\]</span></span> is the (unnormalized) negative log posterior density, up to an additive constant <span class="math inline">\(C\)</span> that is independent of <span class="math inline">\(\u\)</span>.</p>
 </div>
 </div>
-<p>We introduce the notation <span class="math inline">\(\misfitPost(\u)\)</span> in order to draw a connection with the optimization goals. Indeed, note that the log-likelihood term in <a href="#eq-misfit-post" class="quarto-xref">Equation&nbsp;9</a> is precisely the least squares misfit function <a href="#eq-misfit" class="quarto-xref">Equation&nbsp;1</a> (up to an additive constant). Moreover, if we choose Gaussian prior <span class="math inline">\(\priorDens(\u) = \Gaussian(\u \given \meanPrior, \covPrior)\)</span>, then <span class="math inline">\(\misfitPost(\u)\)</span> agrees with <span class="math inline">\(\misfitReg(\u)\)</span> (again, up to an additive constant). We will explore certain algorithms that assume the prior is Gaussian, but in general we will allow <span class="math inline">\(\priorDens\)</span> to be non-Gaussian.</p>
+<p>We introduce the notation <span class="math inline">\(\misfitPost(\u)\)</span> in order to draw a connection with the optimization goals. Indeed, note that the log-likelihood term in <a href="#eq-misfit-post" class="quarto-xref">Equation&nbsp;9</a> is precisely the least squares misfit function from <a href="#eq-misfit" class="quarto-xref">Equation&nbsp;1</a> (up to an additive constant). Moreover, if we choose a Gaussian prior <span class="math inline">\(\priorDens(\u) = \Gaussian(\u \given \meanPrior, \covPrior)\)</span>, then <span class="math inline">\(\misfitPost(\u)\)</span> agrees with <span class="math inline">\(\misfitReg(\u)\)</span> (again, up to an additive constant). We will explore certain algorithms that assume the prior is Gaussian, but in general allow <span class="math inline">\(\priorDens\)</span> to be non-Gaussian.</p>
 </section>
 <section id="roadmap" class="level2" data-number="1.3">
 <h2 data-number="1.3" class="anchored" data-anchor-id="roadmap"><span class="header-section-number">1.3</span> Roadmap</h2>
-<p>With the setup and goals established, we will now take steps towards practical algorithms. It is important to recognize that the application of EnKF methodology to the optimization and sampling problems will yield <em>approximate</em> algorithms in general. The methods will be exact (in a manner which will be made precise) in the linear Gaussian setting, where the forward model <span class="math inline">\(\fwd\)</span> is linear and the prior <span class="math inline">\(\priorDens\)</span> is Gaussian. The EKI algorithms we consider are derivative-free, suitable for the black-box setting whereby we can only evaluate <span class="math inline">\(\fwd(\cdot)\)</span> pointwise. In typical applications, function evaluations <span class="math inline">\(\fwd(\cdot)\)</span> may be quite computationally expensive; e.g., they might require numerically solving partial differential equations. Another benefit of the EnKF methodology is that they allow for many model evaluations to be performed in parallel. These features will become clear as we dive into the methods. We start in this post by focusing on the sampling problem; the optimization setting will be explored in future posts.</p>
+<p>With the setup and goals established, we will now take steps towards practical algorithms. It is important to recognize that the application of EnKF methodology to the optimization and sampling problems will yield <em>approximate</em> algorithms in general. The methods will be exact (in a manner which will be made precise) in the linear Gaussian setting, where the forward model <span class="math inline">\(\fwd\)</span> is linear and the prior <span class="math inline">\(\priorDens\)</span> is Gaussian. The EKI algorithms we consider are derivative-free, suitable for the black-box setting where we can only evaluate <span class="math inline">\(\fwd(\cdot)\)</span> pointwise. In typical applications, function evaluations <span class="math inline">\(\fwd(\cdot)\)</span> may be quite computationally expensive; e.g., they might require numerically solving partial differential equations. Another benefit of the EnKF methodology is that they allow for many model evaluations to be performed in parallel. These features will become clear as we dive into the methods. We start in this post by focusing on the sampling problem; the optimization setting will be explored in future posts.</p>
 </section>
 </section>
 <section id="joint-gaussian-approximation" class="level1" data-number="2">
@@ -361,7 +364,7 @@ Goal 3: Posterior Sampling
 &amp;\covCross \Def \Cov[\u,\y], &amp;&amp;\tcovCross \Def [\covCross]^\top
 \end{align}
 \tag{13}\]</span></span></p>
-<p>is the cross-covariance between <span class="math inline">\(\u\)</span> and <span class="math inline">\(\y\)</span>. Following <span class="citation" data-cites="meanField">Calvello, Reich, and Stuart (<a href="#ref-meanField" role="doc-biblioref">2024</a>)</span>, we refer to <span class="math inline">\(\GaussProj\joint\)</span> as the Gaussian “projection” of <span class="math inline">\(\joint\)</span>. This terminology is motivated by the fact that <span class="math inline">\(\GaussProj\joint\)</span> can be seen to minimize the Kullback-Leibler divergence <span class="math inline">\(\text{KL}(\joint \parallel q)\)</span> over the space of Gaussians <span class="math inline">\(q = \Gaussian(\meanVec^\prime, \covMat^\prime)\)</span> (see <span class="citation" data-cites="invProbDA">Sanz-Alonso, Stuart, and Taeb (<a href="#ref-invProbDA" role="doc-biblioref">2023</a>)</span>, chapter 4 for details).</p>
+<p>are the cross-covariances between <span class="math inline">\(\u\)</span> and <span class="math inline">\(\y\)</span>. Following <span class="citation" data-cites="meanField">Calvello, Reich, and Stuart (<a href="#ref-meanField" role="doc-biblioref">2024</a>)</span>, we refer to <span class="math inline">\(\GaussProj\joint\)</span> as the Gaussian “projection” of <span class="math inline">\(\joint\)</span>. This terminology is motivated by the fact that <span class="math inline">\(\GaussProj\joint\)</span> can be seen to minimize the Kullback-Leibler divergence <span class="math inline">\(\text{KL}(\joint \parallel q)\)</span> over the space of Gaussians <span class="math inline">\(q = \Gaussian(\meanVec^\prime, \covMat^\prime)\)</span> (see <span class="citation" data-cites="invProbDA">Sanz-Alonso, Stuart, and Taeb (<a href="#ref-invProbDA" role="doc-biblioref">2023</a>)</span>, chapter 4 for details).</p>
 <p>Having invoked the joint Gaussian approximation in <a href="#eq-Gaussian-proj" class="quarto-xref">Equation&nbsp;10</a>, we can now approximate <span class="math inline">\(\u \given \yobs\)</span> with the Gaussian conditional. Gaussian conditionals are also Gaussian, and are thus characterized by the well-known conditional mean and covariance formulas given below.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Posterior Approximation: Gaussian Conditional">
 <div class="callout-header d-flex align-content-center">
@@ -373,7 +376,7 @@ Posterior Approximation: Gaussian Conditional
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Let <span class="math inline">\((\tilde{\u}, \tilde{y})\)</span> be a random vector with distribution <span class="math inline">\(\GaussProj\joint\)</span>. We consider approximating the posterior <span class="math inline">\(\u \given (\y=\yobs)\)</span> with <span class="math inline">\(\tilde{\u} \given (\tilde{\y}=\yobs)\)</span>. As it is the conditional of a Gaussian distribution, this posterior approximation is Gaussian, with moments <span id="eq-Gaussian-cond"><span class="math display">\[
+<p>Let <span class="math inline">\((\tilde{\u}, \tilde{y})\)</span> be a random vector with distribution <span class="math inline">\(\GaussProj\joint\)</span>. We consider approximating the posterior <span class="math inline">\(\u \given (\y=\yobs)\)</span> with <span class="math inline">\(\tilde{\u} \given (\tilde{\y}=\yobs)\)</span>. As the conditional of a Gaussian distribution, this posterior approximation is Gaussian, with moments <span id="eq-Gaussian-cond"><span class="math display">\[
 \begin{align}
 \meanPost &amp;= \meanPrior + \covCross [\covObs]^{-1} (\yobs - \meanObs) \newline
 \covPost &amp;= \covPrior + \covCross [\covObs]^{-1} \tcovCross.
@@ -384,7 +387,7 @@ Posterior Approximation: Gaussian Conditional
 </section>
 <section id="monte-carlo-approximations" class="level2" data-number="2.2">
 <h2 data-number="2.2" class="anchored" data-anchor-id="monte-carlo-approximations"><span class="header-section-number">2.2</span> Monte Carlo Approximations</h2>
-<p>With the closed-form approximation <a href="#eq-Gaussian-cond" class="quarto-xref">Equation&nbsp;14</a> in hand, we can simulate approximate posterior draws by constructing <span class="math inline">\(\meanPost\)</span> and <span class="math inline">\(\covPost\)</span>, then sampling from <span class="math inline">\(\Gaussian(\meanPost, \covPost)\)</span>. Interestingly, we can actually bypass the step of computing conditional moments and directly sample from the Gaussian conditional using a result known as <strong>Matheron’s rule</strong>.</p>
+<p>With the closed-form approximation from <a href="#eq-Gaussian-cond" class="quarto-xref">Equation&nbsp;14</a> in hand, we can simulate approximate posterior draws by constructing <span class="math inline">\(\meanPost\)</span> and <span class="math inline">\(\covPost\)</span>, then sampling from <span class="math inline">\(\Gaussian(\meanPost, \covPost)\)</span>. Interestingly, we can actually bypass the step of computing conditional moments and directly sample from the Gaussian conditional using a result known as <strong>Matheron’s rule</strong>.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Matheron's Rule: Gaussian Conditional Simulation">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -432,12 +435,17 @@ Proof
 \]</span> Similarly, the covariance is <span class="math display">\[
 \begin{align}
 \Cov[\transport(\tilde{\u}, \tilde{\y})]
+&amp;= \Cov[\tilde{\u} + \covCross [\covObs]^{-1} \tcovCross] \\
+&amp;= C + \covCross [\covObs]^{-1} \tcovCross -
+  2\covCross [\covObs]^{-1} \tcovCross \\
+&amp;= C - \covCross [\covObs]^{-1} \tcovCross \\
+&amp;= \Cov[\tilde{\u} \given \tilde{\y} = \yobs],
 \end{align}
-\]</span> □</p>
+\]</span> where the second equality follows from simplifying the two cross terms that come out of the covariance expression. □</p>
 </div>
 </div>
 </div>
-<p>The map <span class="math inline">\(\transport(\cdot, \cdot)\)</span> is a deterministic function that <em>transports</em> samples from the joint Gaussian to its conditional distribution. Note that this map depends on the first two moments of <span class="math inline">\(\GaussProj\joint\)</span>.</p>
+<p>The map <span class="math inline">\(\transport(\cdot, \cdot)\)</span> is a deterministic function that <em>transports</em> samples from the joint Gaussian to its conditional distribution. Note that this map depends on the first two moments of <span class="math inline">\(\joint\)</span>.</p>
 <p>We next consider a slight adjustment to the Matheron update, which results in (potentially) non-Gaussian approximate posterior samples. This yields the classical EnKF update equation.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="EnKF Update: Conditional Simulation">
 <div class="callout-header d-flex align-content-center">

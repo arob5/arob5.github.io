@@ -168,16 +168,19 @@ We omit the dependence on $\yobs$ in the notation $\postDens(\u)$ and $Z$.
 
 ::: {.callout-note title="Goal 3: Posterior Sampling"}
 We seek to draw samples from the posterior distribution
-$\u \given \yobs$ under the model @eq-bip. We can phrase this as the task
+$\u \given \yobs$ under the model in @eq-bip. We can phrase this as the task
 of sampling the probability distribution with density
 $$
 \postDens(\u) \propto \exp\left\{\misfitPost(\u)\right\},
 $$ {#eq-post-dens}
 where
 $$
-\misfitPost(\u) := -\log \postDens(\u)
-= -\log p(\y \given \u) - \log \priorDens(\u)
-= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} - \log \priorDens(\u) + C,
+\begin{align}
+\misfitPost(\u)
+:= -\log \postDens(\u)
+&= -\log p(\y \given \u) - \log \priorDens(\u) \\
+&= \frac{1}{2}\lVert \yobs - \fwd(\u)\rVert^2_{\covNoise} - \log \priorDens(\u) + C,
+\end{align}
 $$ {#eq-misfit-post}
 is the (unnormalized) negative log posterior density,
 up to an additive constant $C$ that is independent of $\u$.
@@ -185,12 +188,12 @@ up to an additive constant $C$ that is independent of $\u$.
 
 We introduce the notation $\misfitPost(\u)$ in order to draw a connection with
 the optimization goals. Indeed, note that the log-likelihood term in
-@eq-misfit-post is precisely the least squares misfit function @eq-misfit
-(up to an additive constant). Moreover, if we choose Gaussian prior
+@eq-misfit-post is precisely the least squares misfit function from @eq-misfit
+(up to an additive constant). Moreover, if we choose a Gaussian prior
 $\priorDens(\u) = \Gaussian(\u \given \meanPrior, \covPrior)$, then $\misfitPost(\u)$
 agrees with $\misfitReg(\u)$ (again, up to an additive constant). We will explore
-certain algorithms that assume the prior is Gaussian, but in general we
-will allow $\priorDens$ to be non-Gaussian.
+certain algorithms that assume the prior is Gaussian, but in general
+allow $\priorDens$ to be non-Gaussian.
 
 ## Roadmap
 With the setup and goals established, we will now take steps towards practical
@@ -199,7 +202,7 @@ to the optimization and sampling problems will yield *approximate* algorithms
 in general. The methods will be exact (in a manner which will be made precise)
 in the linear Gaussian setting, where the forward model $\fwd$ is linear and
 the prior $\priorDens$ is Gaussian. The EKI algorithms we consider are
-derivative-free, suitable for the black-box setting whereby we can only
+derivative-free, suitable for the black-box setting where we can only
 evaluate $\fwd(\cdot)$ pointwise. In typical applications, function
 evaluations $\fwd(\cdot)$ may be quite computationally expensive; e.g., they
 might require numerically solving partial differential equations. Another benefit
@@ -253,7 +256,7 @@ $$
 \end{align}
 $$ {#eq-cross-cov}
 
-is the cross-covariance between $\u$ and $\y$.
+are the cross-covariances between $\u$ and $\y$.
 Following @meanField, we refer to $\GaussProj\joint$ as
 the Gaussian "projection" of $\joint$. This terminology is motivated by the
 fact that $\GaussProj\joint$ can be seen to minimize the Kullback-Leibler
@@ -270,7 +273,7 @@ well-known conditional mean and covariance formulas given below.
 Let $(\tilde{\u}, \tilde{y})$ be a random vector with distribution
 $\GaussProj\joint$. We consider approximating the posterior
 $\u \given (\y=\yobs)$ with $\tilde{\u} \given (\tilde{\y}=\yobs)$.
-As it is the conditional of a Gaussian
+As the conditional of a Gaussian
 distribution, this posterior approximation is Gaussian, with moments
 $$
 \begin{align}
@@ -281,12 +284,18 @@ $$ {#eq-Gaussian-cond}
 :::
 
 ## Monte Carlo Approximations
-With the closed-form approximation @eq-Gaussian-cond in hand, we can
-simulate approximate posterior draws by constructing $\meanPost$ and
-$\covPost$, then sampling from $\Gaussian(\meanPost, \covPost)$.
-Interestingly, we can actually bypass the step of computing conditional moments
-and directly sample from the Gaussian conditional using a result known
-as **Matheron's rule**.
+The assumption from the preceding section yielded the analytically
+tractable approximation in @eq-Gaussian-cond. In the algorithms we are building
+towards, we will require a Monte Carlo representation of the posterior
+approximation. To build towards this approach,
+let's first review how we might obtain a Monte Carlo representation of
+the Gaussian posterior in @eq-Gaussian-cond.
+With the closed-form approximation from @eq-Gaussian-cond in hand, we can
+of course simply compute $\meanPost$ and $\covPost$ using the above
+equations, then sample $\Gaussian(\meanPost, \covPost)$ using standard
+methods. Interestingly, we can actually bypass the step of computing
+conditional moments and directly sample from the Gaussian conditional using a
+result known as **Matheron's rule**.
 
 ::: {.callout-note title="Matheron's Rule: Gaussian Conditional Simulation"}
 Let $(\tilde{\u}, \tilde{y})$ be random variables with distribution
@@ -327,14 +336,21 @@ Similarly, the covariance is
 $$
 \begin{align}
 \Cov[\transport(\tilde{\u}, \tilde{\y})]
+&= \Cov[\tilde{\u} + \covCross [\covObs]^{-1} \tcovCross] \\
+&= C + \covCross [\covObs]^{-1} \tcovCross -
+  2\covCross [\covObs]^{-1} \tcovCross \\
+&= C - \covCross [\covObs]^{-1} \tcovCross \\
+&= \Cov[\tilde{\u} \given \tilde{\y} = \yobs],
 \end{align}
 $$
+where the second equality follows from simplifying the two
+cross terms that come out of the covariance expression.
 □
 :::
 
 The map $\transport(\cdot, \cdot)$ is a deterministic function that
 *transports* samples from the joint Gaussian to its conditional distribution.
-Note that this map depends on the first two moments of $\GaussProj\joint$.
+Note that this map depends only on the first two moments of $\joint$.
 
 We next consider a slight adjustment to the Matheron update, which results in
 (potentially) non-Gaussian approximate posterior samples. This yields the
@@ -348,12 +364,13 @@ modifying the above sampling strategy as follows:
 2. Return $\transport(\u^\prime, \y^\prime)$
 
 Here, $\transport(\cdot, \cdot)$ is the same transport map as defined in
-@eq-Matheron-transport. Sampling from the joint distribution in step one above
+@eq-Matheron-transport. Sampling $(u^\prime, \y^\prime)$
 entails sampling a parameter from the prior, then sampling from the likelihood:
 $$
 \begin{align}
 &\u^\prime \sim \priorDens \newline
-&\y^\prime \Def \fwd(\u^\prime) + \noise^\prime, &&\noise^\prime \sim \Gaussian(0, \covNoise)
+&\y^\prime \Def \fwd(\u^\prime) + \noise^\prime,
+&&\noise^\prime \sim \Gaussian(0, \covNoise)
 \end{align}
 $$ {#eq-enkf-update}
 :::
@@ -385,14 +402,15 @@ $$ {#eq-Matheron-transport-Kalman}
 We thus see that the transport map takes the prior sample $\u^\prime$ and
 adds a "correction" term based on the data. The correction is the linear map
 $K$ applied to the residual $\yobs - \y^\prime$ (i.e., the difference between
-the observed and predicted data).
+the observed and predicted data). Note that the Kalman gain is a linear
+map that operates in the observation space (i.e., $\R^n$).
 
 ## Practical Algorithms
 The methods presented above do not yet constitute algorithms, as we have
 not specified how to compute the moments defining the Gaussian projection
 @eq-Gaussian-proj. By replacing the exact moments with Monte Carlo estimates,
-we obtain an algorithm which we will refer to as *single-step ensemble
-Kalman inversion (EKI)*. Given samples,
+we obtain an algorithm which we will refer to as **single-step ensemble
+Kalman inversion (EKI)**. Given samples,
 $\{u^{(j)}, \y^{(j)}\}_{j=1}^{\nens} \sim \joint$,
 we can estimate the required moments via the standard Monte Carlo estimates:
 $$
@@ -431,11 +449,13 @@ $$
 The definition of the empirical moments is given in @eq-empirical-moments.
 :::
 
+<!--
 Other considerations:
   - If prior is Gaussian, then no need to estimate m, C
   - Reducing sampling bias in covariance estimate of Cy.
   - Gaussian algorithm algorithm can be defined by returning conditional moments.
   - Cite Higdon paper.
+-->
 
 # Generalizing to Iterative Algorithms
 In the previous section, we developed an algorithm for approximate posterior
@@ -459,9 +479,9 @@ more amenable to linear-Gaussian approximation.
 ## Interpolating between probability densities
 There are many ways to construct the sequence @eq-dist-sequence; i.e.,
 to interpolate between two probability distributions $\priorDens$ and
-$\postDens$. We will start by considering the following basic tempering schedule.
-We start with a generic result for two arbitrary densities, and then specialize
-to our particular setting.
+$\postDens$. We consider the following basic tempering schedule,
+starting with a generic result for two arbitrary densities, and then
+specializing to our particular setting.
 
 ::: {.callout-note title="Interpolating between two densities"}
 Let $\priorDens(\u)$ and $\postDens(\u) = \frac{1}{\normCst}\tilde{\dens}(\u)$
@@ -546,7 +566,7 @@ $$
 □
 :::
 
-We conclude this section with another corollary that specializes the result
+The following corollary specializes the result
 even further to the particular Bayesian inverse problem @eq-bip.
 
 ::: {.callout-note title="Prior-to-Posterior Map with Gaussian Likelihood"}
@@ -597,285 +617,9 @@ or the likelihood.
 :::
 
 
+<!--
 
-
-
-
-
-
-
-As noted above, the approximation algorithm summarized in (27) can be viewed as
-performing an iteration of the EnKF algorithm. In this section, we take this idea
-further by encoding the structure of the inverse problem (1) in a dynamical
-system. Once these artificial dynamics are introduced, we can then consider
-applying standard algorithms for Bayesian estimation of time-evolving systems
-(e.g., the EnKF) to solve the inverse problem. We emphasize that (1),
-the original problem we are trying to solve, is static. The dynamics we
-introduce here are purely artificial, introduced for the purpose of making
-a mathematical connection with the vast field of time-varying systems. This
-allows us to port methods that have demonstrated success in the time-varying
-domain to our current problem of interest.
-
-## Prior-to-Posterior Map in Finite Time
-We start by generically considering how to construct a sequence of probability
-distributions that maps from the prior $\pi_0$ to the posterior $\pi$ in
-a finite number of steps. We will find it convenient to write the likelihood
-with respect to the potential $\Phi(u)$ defined in (3), such that the
-posterior distribution solving (1) is given by
-
-
-
-
-# Appendix
-
-## Notation
-We write
-$$
-\lVert x \rVert^2_A := \langle x, x\rangle_A := x^\top A^{-1}x
-$$
-to denote the Euclidean norm weighted by the inverse of a positive definite matrix
-$A$.
-
-# Background: Joint Gaussian Conditioning
-
-## Joint Gaussian Assumption
-We now begin by considering approximation of the posterior $u|y$ by way of
-a certain Gaussian approximation. In particular, we will assume that $(u,y)$
-are jointly Gaussian distributed, in which case standard Gaussian conditioning
-identities can be implied to yield an approximation of $u|y$. Given that
-conditionals of Gaussians are also Gaussian, this approach produces a Gaussian
-approximation to the posterior $u|y$. However, borrowing an idea from EnKF
-methodology, we will consider a slight modification with the ability to produce
-non-Gaussian approximations. To avoid notational confusion between
-exact and approximate distributions, we will denote by $(\hat{u}, \hat{y})$
-the random variables defining the joint Gaussian approximation. The Gaussian
-assumption thus takes the form
-$$
-\begin{align}
-\begin{bmatrix} \hat{u} \newline \hat{y} \end{bmatrix}
-\sim
-\mathcal{N}\left(
-\begin{bmatrix} \overline{u} \newline \overline{y} \end{bmatrix},
-\begin{bmatrix} \hat{C} & \hat{C}^{uy} \newline
-                \hat{C}^{yu} & \hat{C}^{y} \end{bmatrix}
-\right) \tag{6}
-\end{align}
-$$
-where the moments $\overline{u}$, $\overline{y}$, $\hat{C}$,
-$\hat{C}^y$, and $\hat{C}^{uy}$ defining this approximation are quantities that
-we must specify. We use the notation $\hat{C}^{yu} := \hat{C}^{uy}$.
-Note that if the forward model $\mathcal{G}$ is linear and
-the prior distribution $\pi_0$ is Gaussian, then the joint Gaussian approximation
-(6) is actually exact, and the moments can be computed in closed-form. In other
-words, with the moments properly defined,
-$(\hat{u},\hat{y}) \overset{d}{=} (u,y)$ and therefore
-$(\hat{u}|\hat{y}) \overset{d}{=} (u|y)$; that is, the posterior approximation
-is exact. This special case is typically referred to as the *linear Gaussian*
-setting, which I discuss in depth in this
-[this](https://arob5.github.io/blog/2024/07/03/lin-Gauss/) post. When
-$\mathcal{G}$ is nonlinear and/or $\pi_0$ is non-Gaussian, then (6) will truly
-be an approximation and the above equalities will not hold.
-
-In the following subsections, we briefly review some properties of joint Gaussians
-and their conditional distributions. We work with the joint distribution (6),
-assuming the means and covariances are known. With the necessary background
-established, we then discuss practical algorithms for estimating these moments
-and producing approximations of $u|y$.
-
-## Gaussian Conditional Moments
-Regardless of whether or not we are truly in the linear Gaussian setting, let
-us suppose that we have constructed the joint distribution (6). Using standard
-facts about Gaussian distributions, we know the conditional is also Gaussian
-$$
-\hat{u}|[\hat{y}=y] \sim \mathcal{N}(\hat{m}_*, \hat{C}_*), \tag{7}
-$$
-with moments given by
-
-$$
-\hat{m}_* = \overline{u} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y - \overline{y}) \tag{8}
-$$
-$$
-\hat{C}_* = \hat{C} - \hat{C}^{uy}[\hat{C}^y]^{-1}\hat{C}^{yu}. \tag{9}
-$$
-
-## Gaussian Conditional Simulation
-As an alternative to explicitly computing the conditional moments (8) and (9),
-we can consider a Monte Carlo representation of $\hat{u}|\hat{y}$. The conditional
-distribution can be directly simulated (without computing (8) and (9)) using the
-fact
-$$
-(\hat{u}|[\hat{y}=y]) \overset{d}{=} \hat{u} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}), \tag{10}
-$$
-which can be quickly verified by computing the mean and covariance of each
-side. Note that the randomness in the righthand side is inherited from
-the random variables $\hat{u}$ and $\hat{y}$, while $y$ here is viewed as
-a specific realization of the data (and is thus non-random).
-The result (10), known as *Matheron's Rule*, provides the basis for the
-following algorithm to draw independent samples from the conditional
-distribution $\hat{u}|[\hat{y}=y]$.
-
-<blockquote>
-  <p><strong>Gaussian Conditional Simulation via Matheron's Rule.</strong> <br>
-  Independent samples $\hat{u}_*^{(1)}, \dots, \hat{u}_*^{(J)}$ can be simulated from the
-  distribution $\hat{u}|[\hat{y}=y]$ by repeating the following procedure
-  for each $j=1,\dots,J$: <br> <br>
-
-  1. Draw independent samples $\hat{u}^{(j)}$ and $\hat{y}^{(j)}$ from the marginal
-  distributions of $\hat{u}$ and $\hat{y}$, respectively. That is,
-  \begin{align}
-  &\hat{u}^{(j)} \sim \mathcal{N}(\overline{u},\hat{C})
-  &&\hat{y}^{(j)} \sim \mathcal{N}(\overline{y},\hat{C}^y). \tag{11}
-  \end{align}
-  2. Return
-  $$
-  \hat{u}^{(j)}_* := \hat{u}^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}^{(j)}). \tag{12}
-  $$
-  </p>
-</blockquote>
-
-# Posterior Approximation Algorithm
-Up to this point, we have not discussed the choice of the moments defining the
-joint Gaussian approximation (6). We now provide these definitions, leading to
-concrete algorithms for posterior approximation. We will adopt a Monte Carlo
-strategy by sampling independently from the *true* joint distribution $(u,y)$
-defined by (1); i.e., $(u^{(j)}, y^{(j)}) \sim p(u,y)$. We next compute the
-empirical means and covariances of these random draws and insert them into
-the joint Gaussian approximation (6). The below subsection focuses on the
-estimation of these moments, which we will then follow by utilizing the above
-Gaussian conditioning results to derive various approximations of $u|y$.
-
-## Estimating the Gaussian Moments
-The first step in our approach requires generating the prior
-*ensemble*
-$$
-\{(u^{(j)}, \epsilon^{(j)})\}, \qquad j = 1, \dots, J \tag{13}
-$$
-constructed by sampling according to model (1); i.e.,
-$$
-\begin{align}
-&u^{(j)} \sim \pi_0, &&\epsilon^{(j)} \sim \mathcal{N}(0, \Sigma). \tag{14}
-\end{align}
-$$
-We now consider estimating the first two moments of this joint distribution.
-Starting with the $u$ marginal, we define the sample estimates
-$$
-\begin{align}
-\overline{u} &:= \frac{1}{J}\sum_{j=1}^{J} u^{(j)} \tag{15} \newline
-\hat{C} &:= \frac{1}{J-1}\sum_{j=1}^{J} (u^{(j)}-\overline{u})(u^{(j)}-\overline{u})^\top. \tag{16}
-\end{align}
-$$
-Alternatively, if the prior $\pi_0$ takes the form of a well-known distribution,
-then we can simply set $\overline{u}$ and/or $\hat{C}$ to the known moments
-of this distribution. We can likewise consider such mean and covariance estimates
-for the $\hat{y}$ portion of (6), defined with respect to the ensemble
-$$
-\{y^{(j)}\}_{j=1}^{J}, \qquad\qquad y^{(j)} := \mathcal{G}(u^{(j)}) + \epsilon^{(j)}. \tag{17}
-$$
-However, we can simplify matters a bit by performing part of the calculations
-analytically, owing to the simple additive Gaussian error structure. Noting that
-under (1) we have
-$$
-\begin{align}
-\mathbb{E}[y]
-&= \mathbb{E}[\mathcal{G}(u) + \epsilon]
-= \mathbb{E}[\mathcal{G}(u)] \tag{18} \newline
-\text{Cov}[y]
-&= \text{Cov}[\mathcal{G}(u) + \epsilon]
-= \text{Cov}[\mathcal{G}(u)] + \text{Cov}[\epsilon]
-= \text{Cov}[\mathcal{G}(u)] + \Sigma, \tag{19}
-\end{align}
-we can focus our efforts on substituting sample-based estimates for the first
-term in both (18) and (19). Doing so yields,
-\begin{align}
-\overline{y} &:= \frac{1}{J} \sum_{j=1}^{J} \mathcal{G}(u^{(j)}) \tag{20} \newline
-\hat{C}^y &:= \frac{1}{J-1} \sum_{j=1}^{J} (\mathcal{G}(u^{(j)})-\overline{y})(\mathcal{G}(u^{(j)})-\overline{y})^\top + \Sigma. \tag{21}
-\end{align}
-$$
-We similarly define the last remaining quantity $\hat{C}^{uy}$ by noting that
-$$
-\text{Cov}[u,y]
-= \text{Cov}[u,\mathcal{G}(u)+\epsilon]
-= \text{Cov}[u,\mathcal{G}(u)] + \text{Cov}[u,\epsilon]
-= \text{Cov}[u,\mathcal{G}(u)]. \tag{22}
-$$
-We thus consider the estimator
-$$
-\hat{C}^{uy} := \frac{1}{J-1} \sum_{j=1}^{J} (u^{(j)}-\overline{u})(\mathcal{G}(u^{(j)})-\overline{y})^\top. \tag{23}
-$$
-
-## Gaussian Approximations
-At this point, we have obtained the joint approximation (6) derived by computing
-the sample moments as described in the previous subsection. The question is now
-how best to use this joint approximation in approximating the true posterior.
-The most straightforward approach is to simply define our approximate posterior
-to be $\hat{u}|[\hat{y}=y]$, the Gaussian conditional. This conditional is
-available in closed-form and is defined in equations (7), (8), and (9). Suppose,
-for whatever reason, we are only interested in a sample-based representation
-of this Gaussian conditional. In this case, we can apply the algorithm summarized
-in (11) and (12) based on Matheron's Rule. Explicitly, we construct an
-approximate posterior ensemble $\{\hat{u}_*^{(j)}\}_{j=1}^{J^\prime}$ via the
-update equation in (12),
-$$
-\hat{u}^{(j)}_* := \hat{u}^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-\hat{y}^{(j)}), \tag{24}
-$$
-for $j = 1, \dots, J^\prime$. At this point we should be quite clear about the
-definition of each term in (24). The mean and covariance estimates appearing in
-this expression are all derived from the ensemble
-$\{(u^{(j)}, \epsilon^{(j)})\}_{j=1}^{J}$ sampled from the *true* joint distribution
-implied by (1). On the other hand, $\{\hat{u}^{(j)}, \hat{y}^{(j)}\}_{j=1}^{J^\prime}$
-are samples from the *approximate* joint distribution defined in (6). This
-is simply an exact implementation of Matheron's rule under the joint distribution
-(6); i.e., the resulting ensemble $\{\hat{u}^{(j)}_*\}_{j=1}^{J^\prime}$ contains
-iid samples from $\hat{u}|[\hat{y}=y]$. If it seems odd to dwell on this point,
-we note that we are primarily doing so to provide motivation for the alternative
-method discussed below.
-
-## Non-Gaussian Approximation via EnKF Update
-As discussed above, a direct application of Matheron's rule to (6) results in
-an ensemble of samples from a Gaussian distribution, which we interpret as
-a sample-based approximation to the true posterior. We now consider constructing
-the ensemble $\{\hat{u}_*^{(j)}\}_{j=1}^{J}$ via the slightly different
-update rule
-$$
-\hat{u}^{(j)}_* := u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-y^{(j)}), \tag{25}
-$$
-for $j = 1, \dots, J$. This is precisely the update equation used in the analysis
-(i.e., update) step of the EnKF, so we refer to (25) as the *EnKF update*.
-The only difference from (24) is that we have replaced
-the samples $(\hat{u}^{(j)},\hat{y}^{(j)})$ from (6) with the samples
-$(u^{(j)}, y^{(j)})$ from the true joint distribution, as defined in (14) and
-(17). In other words, we now utilize the samples from the initial ensemble (the
-same samples used to compute the mean and covariance estimates). Thus, equation
-(25) can be viewed as a particle-by-particle update to the initial ensemble,
-$$
-\{u^{(j)}\}_{j=1}^{J} \mapsto \{\hat{u}^{(j)}_*\}_{j=1}^{J}. \tag{26}
-$$
-The update (25) is somewhat heuristic, and it is difficult to assess the properties
-of the updated ensemble. Given that the initial ensemble will not in general
-constitute samples from a Gaussian (since $p(u,y)$ is in general non-Gaussian),
-then the updated ensemble will also generally be non-Gaussian distributed.
-If the inverse problem (1) is linear Gaussian, then the updates (24) and (25)
-are essentially equivalent. Beyond this special case, the hope is that the use
-of the true prior samples in (25) will better approximate
-non-Gaussianity in the posterior distribution, as opposed to the Gaussian
-approximation implied by (24). The EnKF update can alternatively be justified
-from an optimization perspective, which we won't discuss here; see my
-[post](https://arob5.github.io/blog/2024/07/30/enkf/) on the EnKF for details.
-We conclude this section by summarizing the final algorithm.
-<blockquote>
-  <p><strong>Posterior Approximation via EnKF Update.</strong> <br><br>
-  1. Generate the initial ensembles $\{u^{(j)}\}_{j=1}^{J}$ and $\{\mathcal{G}(u^{(j)})\}_{j=1}^{J}$, where $u^{(j)} \sim \pi_0$. <br>
-  2. Compute the sample estimates $\overline{u}$, $\overline{y}$,
-  $\hat{C}$, $\hat{C}^y$, and $\hat{C}^{uy}$ as defined in (20)-(23). <br>
-  3. Return the updated ensemble $\{\hat{u}^{(j)}_*\}_{j=1}^{J}$ by applying the
-  EnKF update
-  \begin{align}
-  \hat{u}^{(j)}_* &:= u^{(j)} + \hat{C}^{uy}[\hat{C}^y]^{-1}(y-y^{(j)}),
-  &&y^{(j)} \sim \mathcal{N}(\mathcal{G}(u^{(j)}), \Sigma). \tag{27}
-  \end{align}
-  </p>
-</blockquote>
-
+## Extended State Space Viewpoint
 
 # Artificial Dynamics
 As noted above, the approximation algorithm summarized in (27) can be viewed as
@@ -1114,3 +858,5 @@ EnKF to the system (40) gives the following recursive algorithm.
 
 # References
 1. The Ensemble Kalman Filter for Inverse Problems (Iglesias et al, 2012)
+
+-->
