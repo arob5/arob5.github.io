@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-11-26">
+<meta name="description" content="Gauss-Newton, Levenberg-Marquardt">
+
+<title>Nonlinear Least Squares – Andrew G. Roberts</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../headshot_photo.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Andrew G. Roberts</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog/index.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+    <a href="https://github.com/arob5/" title="" class="quarto-navigation-tool px-1" aria-label=""><i class="bi bi-github"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Nonlinear Least Squares</h1>
+                  <div>
+        <div class="description">
+          Gauss-Newton, Levenberg-Marquardt
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Statistics</div>
+                <div class="quarto-category">Optimization</div>
+                <div class="quarto-category">Inverse-Problem</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">November 26, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#notation" id="toc-notation" class="nav-link active" data-scroll-target="#notation">Notation</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#statistical-perspective" id="toc-statistical-perspective" class="nav-link" data-scroll-target="#statistical-perspective">Statistical Perspective</a></li>
+  <li><a href="#gradient-and-hessian" id="toc-gradient-and-hessian" class="nav-link" data-scroll-target="#gradient-and-hessian">Gradient and Hessian</a></li>
+  </ul></li>
+  <li><a href="#numerical-optimization" id="toc-numerical-optimization" class="nav-link" data-scroll-target="#numerical-optimization">Numerical Optimization</a>
+  <ul class="collapse">
+  <li><a href="#newtons-method" id="toc-newtons-method" class="nav-link" data-scroll-target="#newtons-method">Newton’s Method</a></li>
+  <li><a href="#gauss-newton" id="toc-gauss-newton" class="nav-link" data-scroll-target="#gauss-newton">Gauss-Newton</a>
+  <ul class="collapse">
+  <li><a href="#approximate-hessian" id="toc-approximate-hessian" class="nav-link" data-scroll-target="#approximate-hessian">Approximate Hessian</a></li>
+  <li><a href="#local-least-squares-perspective" id="toc-local-least-squares-perspective" class="nav-link" data-scroll-target="#local-least-squares-perspective">Local Least Squares Perspective</a></li>
+  </ul></li>
+  <li><a href="#levenberg-marquardt" id="toc-levenberg-marquardt" class="nav-link" data-scroll-target="#levenberg-marquardt">Levenberg-Marquardt</a></li>
+  </ul></li>
+  <li><a href="#todo" id="toc-todo" class="nav-link" data-scroll-target="#todo">TODO</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<p>This post provides an introduction to nonlinear least squares (NLS), which generalizes the familiar least squares problem by allowing for a nonlinear forward map. Unlike least squares, the NLS problem does not admit closed-form solutions, but a great deal of work has been devoted to numerical schemes tailored to this specific problem. We introduce two of the most popular algorithms: Gauss-Newton and Levenberg-Marquardt.</p>
+<section id="notation" class="level1">
+<h1>Notation</h1>
+<p>For a positive definite matrix <span class="math inline">\(A\)</span>, we use the following notation for the norm and inner product, weighted by <span class="math inline">\(A\)</span>:</p>
+<p><span class="math display">\[
+\langle u, v \rangle_A := \langle A^{-1}u, v\rangle = u^\top A^{-1}v \newline
+\]</span> <span class="math display">\[
+\lVert u \rVert^2_{A} := \langle u, u\rangle_{A} = u^\top A^{-1}u,
+\]</span></p>
+<p>where <span class="math inline">\(\langle \cdot, \cdot \rangle\)</span> and <span class="math inline">\(\lVert \cdot \rVert\)</span> denote the standard Euclidean inner product and norm, respectively. For a function <span class="math inline">\(\mathcal{G}: \mathbb{R}^d \to \mathbb{R}^n\)</span> we write <span class="math inline">\(D\mathcal{G}(u)\)</span> to denote the <span class="math inline">\(n \times d\)</span> Jacobian matrix evaluated at <span class="math inline">\(u\)</span>, with <span class="math inline">\(\nabla \mathcal{G}(u) := D\mathcal{G}(u)^\top\)</span> its transpose. When <span class="math inline">\(n=1\)</span> then <span class="math inline">\(\nabla \mathcal{G}(u)\)</span> is the gradient vector, but note that we extend the notation beyond this typical case. Let <span class="math inline">\(D_j\mathcal{G}(u)\)</span> denote the <span class="math inline">\(1 \times n\)</span> matrix storing the derivative of <span class="math inline">\(\mathcal{G}(u)\)</span> with respect to <span class="math inline">\(u_j\)</span>, and <span class="math inline">\(\nabla_j \mathcal{G}(u) := D_j\mathcal{G}(u)^\top\)</span>. Similarly, let <span class="math inline">\(D\mathcal{G}_i(u)\)</span> denote the <span class="math inline">\(1 \times d\)</span> matrix storing the derivative of <span class="math inline">\(\mathcal{G}(u)\)</span> with respect to the <span class="math inline">\(i^{\text{th}}\)</span> output <span class="math inline">\(\mathcal{G}_i(u)\)</span>, and <span class="math inline">\(\nabla \mathcal{G}_i(u) := D\mathcal{G}_i(u)^\top\)</span> Finally, we denote the <span class="math inline">\(d \times d\)</span> Hessian matrix for a scalar-valued function <span class="math inline">\(g: \mathbb{R}^d \to \mathbb{R}\)</span> by <span class="math inline">\(\nabla^2 g(u) := D\nabla g(u)\)</span>. Similarly, <span class="math inline">\(\nabla^2_i \mathcal{G}(u)\)</span> is the <span class="math inline">\(d \times d\)</span> Hessian of the map <span class="math inline">\(u \mapsto \mathcal{G}_i(u)\)</span>.</p>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>In this post we investigate optimization problems of the form</p>
+<p><span class="math display">\[
+\begin{align}
+u_{\star} &amp;\in \text{argmin}_{u \in \mathbb{R}^d} J(u) \newline
+J(u) &amp;:= \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma} + \frac{1}{2}\lVert u - m\rVert_C^2, \tag{1}
+\end{align}
+\]</span></p>
+<p>where <span class="math inline">\(u,m \in \mathbb{R}^d\)</span> and <span class="math inline">\(y \in \mathbb{R}^n\)</span>, and <span class="math inline">\(\Sigma\)</span> and <span class="math inline">\(C\)</span> are positive definite matrices. Notice that if <span class="math inline">\(\mathcal{G}\)</span> is linear, then (1) is simply a regularized least squares objective. I discuss this special case in <a href="https://arob5.github.io/blog/2024/07/03/lin-Gauss/">this</a> post. Allowing <span class="math inline">\(\mathcal{G}\)</span> to be nonlinear generalizes linear least squares, and is therefore referred to as nonlinear least squares (NLS). Unlike the linear case, (1) no longer admits a closed-form solution in general, so we will consider various numerical algorithms that seek to minimize <span class="math inline">\(J(u)\)</span>. While the usual suspects (gradient descent, Newton’s method) can be applied, the quadratic structure of (1) is conducive to some bespoke algorithms that tend to work well in this setting. We will discuss the most well-known, the Gauss-Newton algorithm, in addition to the closely related Levenberg-Marquardt method.</p>
+<p>Note that other treatments of this topic will often leave out the regularization term <span class="math inline">\(\frac{1}{2}\lVert u - m\rVert_C^2\)</span>, and assume <span class="math inline">\(\Sigma\)</span> to be the identity matrix. Alternatively, sometimes the more generic perspective <span class="math inline">\(J(u) = \lVert r(u) \rVert^2\)</span> is taken. Setting <span class="math inline">\(r(u) := \Sigma^{-1/2}(y - \mathcal{G}(u))\)</span> recovers the first term in our present formulation in (1).</p>
+<section id="statistical-perspective" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-perspective">Statistical Perspective</h2>
+<p>The solution <span class="math inline">\(u_{\star}\)</span> to the optimization problem in (1) can be viewed as the maximum a posterior (MAP) estimate of the Bayesian model <span class="math display">\[
+\begin{align}
+y|u &amp;\sim \mathcal{N}(\mathcal{G}(u), \Sigma) \tag{2} \newline
+u &amp;\sim \mathcal{N}(m, C).
+\end{align}
+\]</span> In particular, the posterior density of (2) satisfies <span class="math display">\[
+p(u|y) \propto \exp\left[-J(u)\right], \tag{3}
+\]</span> where <span class="math inline">\(J(u)\)</span> is the nonlinear least squares objective (1).</p>
+</section>
+<section id="gradient-and-hessian" class="level2">
+<h2 class="anchored" data-anchor-id="gradient-and-hessian">Gradient and Hessian</h2>
+The gradient and Hessian of <span class="math inline">\(J(u)\)</span> play a prominent role in numerical algorithms that seek to solve (1). We provide the expressions for these quantities below, with derivations given in the appendix.
+<blockquote class="blockquote">
+<p>
+<strong>Gradient and Hessian.</strong> <br> The gradient <span class="math inline">\(\nabla J(u)\)</span> and Hessian <span class="math inline">\(\nabla^2 J(u)\)</span> of the cost function defined in (1) are given by <span class="math display">\[\begin{align}
+  \nabla J(u) &amp;= -\nabla \mathcal{G}(u)\Sigma^{-1}(y-\mathcal{G}(u)) + C^{-1}(u-m) \tag{4} \newline
+  \nabla^2 J(u) &amp;= [\nabla \mathcal{G}(u)]\Sigma^{-1}[\nabla \mathcal{G}(u)]^\top  +
+  \sum_{i=1}^{n} \epsilon_i(u) \nabla^2 \mathcal{G}_i(u) + C^{-1} \tag{5},
+  \end{align}\]</span> where <span class="math inline">\(\epsilon_i(u)\)</span> is the <span class="math inline">\(i^{\text{th}}\)</span> entry of the vector <span class="math inline">\(\epsilon(u) := \Sigma^{-1}(\mathcal{G}(u) - y)\)</span>.
+</p>
+</blockquote>
+<p>In contrast to least squares, the Hessian <span class="math inline">\(\nabla^2 J(u)\)</span> depends on <span class="math inline">\(u\)</span> in general.</p>
+</section>
+</section>
+<section id="numerical-optimization" class="level1">
+<h1>Numerical Optimization</h1>
+<p>We now discuss numerical schemes that construct a sequence of iterates <span class="math inline">\(u_1, u_2, \dots\)</span> with the goal of converging to an optimum of <span class="math inline">\(J(u)\)</span>.</p>
+<section id="newtons-method" class="level2">
+<h2 class="anchored" data-anchor-id="newtons-method">Newton’s Method</h2>
+<p>Given a current iterate <span class="math inline">\(u_k\)</span>, Newton’s method constructs a quadratic approximation of <span class="math inline">\(J(u)\)</span> centered at the point <span class="math inline">\(u_k\)</span>, then minimizes this quadratic function to select the next iterate <span class="math inline">\(u_{k+1}\)</span>. The specific quadratic approximation considered is the second order Taylor expansion <span class="math display">\[
+J_k(u) := J(u_k) + DJ(u_k)[u-u_k] + \frac{1}{2}(u-u_k)^\top [\nabla^2 J(u_k)] (u-u_k). \tag{6}
+\]</span> The next iterate <span class="math inline">\(u_{k+1}\)</span> is thus chosen by solving <span class="math display">\[
+\nabla J_k(u_{k+1}) = 0, \tag{7}
+\]</span> which yields <span class="math display">\[
+\nabla J_k(u_k) = \nabla J(u_k) + [\nabla^2 J(u_k)] (u_{k+1}-u_k) = 0. \tag{8}
+\]</span> At this point, note that it is possible <span class="math inline">\(J_k\)</span> doesn’t even have a minimum, which can happen when <span class="math inline">\(\nabla^2 J(u_k)\)</span> is not positive definite (and hence not invertible). We will not get into this issue here, and instead simply assume that <span class="math inline">\(\nabla^2 J(u_k)\)</span> is invertible. Then we can solve for <span class="math inline">\(u_{k+1}\)</span> in (7) as <span class="math display">\[
+u_{k+1} = u_k - [\nabla^2 J(u_k)]^{-1} \nabla J(u_k). \tag{9}
+\]</span> Working with the Hessian here can be difficult in certain settings; note in (5) that computing the Hessian of <span class="math inline">\(J\)</span> requires computing the Hessian of <span class="math inline">\(\mathcal{G}\)</span> for each output dimension. Since <span class="math inline">\(\mathcal{G}\)</span> can be a very complicated and computationally-expensive function, this presents challenges. The below methods maintain the spirit of the Newton update (9), but replace the Hessian with something that is easier to compute.</p>
+</section>
+<section id="gauss-newton" class="level2">
+<h2 class="anchored" data-anchor-id="gauss-newton">Gauss-Newton</h2>
+<p>We introduce the Gauss-Newton update from two different perspectives. The first simply approximates the Hessian by ignoring the “difficult” terms, while the second views the update as solving a local least squares problem.</p>
+<section id="approximate-hessian" class="level3">
+<h3 class="anchored" data-anchor-id="approximate-hessian">Approximate Hessian</h3>
+<p>The Gauss-Newton procedure performs the Newton update (9) with an approximate Hessian constructed by simply dropping the higher-order terms in (5). Doing so yields the Hessian approximation <span class="math display">\[
+\hat{H}_k := G_k^\top \Sigma^{-1}G_k + C^{-1}, \tag{10}
+\]</span> where we have introduced the shorthand for the Jacobian of <span class="math inline">\(\mathcal{G}\)</span> evaluated at <span class="math inline">\(u_k\)</span>, <span class="math display">\[
+G_k := D\mathcal{G}(u_k). \tag{11}
+\]</span> Notice that (10) no longer requires extracting second order derivative information from <span class="math inline">\(\mathcal{G}\)</span>. The resulting Gauss-Newton update takes the form <span class="math display">\[
+u_{k+1} = u_k - \hat{H}_k^{-1} \nabla J(u_k). \tag{12}
+\]</span> Plugging in the expressions for <span class="math inline">\(\hat{H}_k\)</span> and <span class="math inline">\(\nabla J(u_k)\)</span> yields the explicit update</p>
+<blockquote class="blockquote">
+<p>
+<strong>Gauss Newton Update: Parameter Space</strong> <span class="math display">\[
+  u_{k+1}
+  = u_k - \left(G_k^\top \Sigma^{-1}G_k + C^{-1} \right)^{-1} \left[C^{-1}(u_k-m) - G_k^\top \Sigma^{-1}(y-\mathcal{G}(u_k)) \right]. \tag{13}
+  \]</span>
+</p>
+</blockquote>
+<p>A nice consequence of using <span class="math inline">\(\hat{H}_k\)</span> is that, unlike the Hessian, it is guaranteed to be positive definite. This follows from the fact that <span class="math inline">\(G^\top_k \Sigma^{-1}G_k\)</span> is positive semidefinite, <span class="math inline">\(C^{-1}\)</span> is positive definite, and the sum of a positive semidefinite and positive definite matrix is positive definite. The invertibility of <span class="math inline">\(\hat{H}_k\)</span> is thus guaranteed, and the local quadratic function that Gauss-Newton is implicitly minimizing is guaranteed to have a minimum.</p>
+<p>We refer to (13) as the parameter space version of the Gauss-Newton update, as it requires a <span class="math inline">\(d\)</span>-dimensional linear solve <span class="math inline">\(\hat{H}_k^{-1} \nabla J(u_k)\)</span>. By applying the Woodbury matrix inversion identity, we obtain an alternative, but equivalent, update that instead requires a linear solve in <span class="math inline">\(n\)</span>-dimensional data space.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Gauss Newton Update: Data Space</strong> <span class="math display">\[
+  u_{k+1}
+  = m + CG_k^\top \left(G_k CG_k^\top + \Sigma \right)^{-1}\left[y-\left\{\mathcal{G}(u_k) + G_k(u_k-m)\right\}\right]. \tag{14}
+  \]</span>
+</p>
+</blockquote>
+<p>Notice that the expression in curly brackets is the linearization <span class="math display">\[
+\begin{align}
+\mathcal{G}(u_k) + G_k(u_k-m)
+&amp;= \mathcal{G}(u_k) - G_k(m-u_k) \newline
+&amp;\approx \mathcal{G}(u_k) - \left[\mathcal{G}(m) - \mathcal{G}(u_k) \right] \newline
+&amp;= \mathcal{G}(m), \tag{15}
+\end{align}
+\]</span> and can thus be interpreted as the approximation to <span class="math inline">\(\mathcal{G}(m)\)</span> induced by the first order Taylor expansion around <span class="math inline">\(\mathcal{G}(u_k)\)</span>. With this in mind, the update (14) looks exactly like a regularized least squares estimator. We explore this perspective below.</p>
+</section>
+<section id="local-least-squares-perspective" class="level3">
+<h3 class="anchored" data-anchor-id="local-least-squares-perspective">Local Least Squares Perspective</h3>
+<p>The Gauss-Newton update can alternatively be viewed as minimizing the following linear least squares cost function: <span class="math display">\[
+J_k(u) := \frac{1}{2}\lVert y - [\mathcal{G}(u_k)+G_k(u-u_k)] \rVert^2_{\Sigma} + \frac{1}{2}\lVert u - m\rVert_C^2. \tag{16}
+\]</span> In other words, the NLS objective <span class="math inline">\(J(u)\)</span> is approximated by replacing the true forward model <span class="math inline">\(\mathcal{G}(u)\)</span> with its linearization, centered at the current iterate <span class="math inline">\(u_k\)</span>. It should be emphasized that we are linearizing <span class="math inline">\(\mathcal{G}\)</span>, and then simply plugging the linearization into <span class="math inline">\(J(u)\)</span>. This is not the same as directly linearizing <span class="math inline">\(J(u)\)</span>, which is the approach taken in gradient descent.</p>
+<p>This approach of linearizing <span class="math inline">\(\mathcal{G}\)</span> is quite convenient, since (16) is simply a linear least squares objective function, which we know how to optimize in closed-form. Thus, the Gauss-Newton algorithm can be viewed as iteratively solving a sequence of linear least squares problems. We now try to gain some intuition on the structure of these local least squares problems.</p>
+<p><span class="math display">\[
+\begin{align}
+y_k|u &amp;\sim \mathcal{N}(G_k u, \Sigma) \tag{17} \newline
+u &amp;\sim \mathcal{N}(m, C),
+\end{align}
+\]</span> where <span class="math inline">\(y_k := y - \mathcal{G}(u_k) + G_k u_k\)</span>.</p>
+</section>
+</section>
+<section id="levenberg-marquardt" class="level2">
+<h2 class="anchored" data-anchor-id="levenberg-marquardt">Levenberg-Marquardt</h2>
+</section>
+</section>
+<section id="todo" class="level1">
+<h1>TODO</h1>
+<ul>
+<li>Show alternative form of Gauss-Newton update by applying Woodbury (should show connection to EnKF).</li>
+<li>View G-N as line search method</li>
+</ul>
+</section>
+<section id="references" class="level1">
+<h1>References</h1>
+<ul>
+<li>Nonlinear Least Squares (neos Guide)</li>
+<li>A multispectrum nonlinear least-squares fitting technique</li>
+<li>What to Do When Your Hessian Is Not Invertible (Gill and King)</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/arob5\.github\.io\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="arob5/arob5.github.io" issue-term="title" theme="body-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2025 Andrew G. Roberts ∙ Made with <a href="https://quarto.org">Quarto</a></p>
+</div>   
+    <div class="nav-footer-center">
+<p><a class="link-dark me-1" href="https://github.com/arob5" title="github" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:github" aria-label="Icon github from fa6-brands Iconify.design set." title="Icon github from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://orcid.org/0009-0002-4274-7914" title="orcid" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:orcid" aria-label="Icon orcid from fa6-brands Iconify.design set." title="Icon orcid from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://scholar.google.com/citations?user=E2erpCwAAAAJ&amp;hl=en" title="Google Scholar" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:google-scholar" aria-label="Icon google-scholar from fa6-brands Iconify.design set." title="Icon google-scholar from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://linkedin.com/in/andrew-roberts5" title="LinkedIn" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:linkedin" aria-label="Icon linkedin from fa6-brands Iconify.design set." title="Icon linkedin from fa6-brands Iconify.design set."></iconify-icon></a></p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
