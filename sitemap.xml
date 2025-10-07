@@ -9,76 +9,72 @@
     <lastmod>2025-10-07T03:18:31.431Z</lastmod>
   </url>
   <url>
-    <loc>https://arob5.github.io/blog/posts/annealed-IS/annealed-IS.html</loc>
-    <lastmod>2025-10-07T03:18:31.432Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/reversed-Cholesky.html</loc>
-    <lastmod>2025-10-07T03:18:31.441Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/pseudo-marginal-mcmc/pseudo-marginal-mcmc.html</loc>
-    <lastmod>2025-10-07T03:18:31.440Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/nonlinear-maps-of-Gaussians.html</loc>
-    <lastmod>2025-10-07T03:18:31.439Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/eki_1/eki_introduction.html</loc>
-    <lastmod>2025-10-07T03:18:31.435Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/gp-specifications.html</loc>
-    <lastmod>2025-10-07T03:18:31.437Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/basis-func-emulator.html</loc>
-    <lastmod>2025-10-07T03:18:31.432Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/enkf_perspectives/enkf_perspectives.html</loc>
-    <lastmod>2025-10-07T03:49:40.090Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/index.html</loc>
-    <lastmod>2025-10-07T03:18:31.444Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/involutive-mcmc/MH_Tierney.html</loc>
-    <lastmod>2025-10-07T03:18:31.437Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/linear-Gaussian/linear_Gaussian_inverse_problems.html</loc>
-    <lastmod>2025-10-07T03:18:31.438Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/nonlinear-LS.html</loc>
-    <lastmod>2025-10-07T03:18:31.439Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/simplex-transform.html</loc>
-    <lastmod>2025-10-07T03:18:31.441Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/MH-update-from-kernel.html</loc>
-    <lastmod>2025-10-07T03:18:31.431Z</lastmod>
-  </url>
-  <url>
-    <loc>https://arob5.github.io/blog/posts/ls-psd-cov.html</loc>
-    <lastmod>2025-10-07T03:18:31.438Z</lastmod>
+    <loc>https://arob5.github.io/blog/posts/doubly-intractable-mcmc/doubly-intractable.html</loc>
+    <lastmod>2025-10-07T03:18:31.433Z</lastmod>
   </url>
   <url>
     <loc>https://arob5.github.io/blog/posts/pca.html</loc>
     <lastmod>2025-10-07T03:18:31.440Z</lastmod>
   </url>
   <url>
-    <loc>https://arob5.github.io/blog/posts/doubly-intractable-mcmc/doubly-intractable.html</loc>
-    <lastmod>2025-10-07T03:18:31.433Z</lastmod>
+    <loc>https://arob5.github.io/blog/posts/ls-psd-cov.html</loc>
+    <lastmod>2025-10-07T03:18:31.438Z</lastmod>
   </url>
   <url>
-    <loc>https://arob5.github.io/blog/posts/draft_enkf_perspectives/enkf_perspectives.html</loc>
+    <loc>https://arob5.github.io/blog/posts/MH-update-from-kernel.html</loc>
+    <lastmod>2025-10-07T03:18:31.431Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/simplex-transform.html</loc>
+    <lastmod>2025-10-07T03:18:31.441Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/nonlinear-LS.html</loc>
+    <lastmod>2025-10-07T03:18:31.439Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/linear-Gaussian/linear_Gaussian_inverse_problems.html</loc>
+    <lastmod>2025-10-07T03:18:31.438Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/involutive-mcmc/MH_Tierney.html</loc>
+    <lastmod>2025-10-07T03:18:31.437Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/index.html</loc>
+    <lastmod>2025-10-07T03:18:31.444Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/enkf_perspectives/enkf_perspectives.html</loc>
+    <lastmod>2025-10-07T13:46:14.358Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/basis-func-emulator.html</loc>
+    <lastmod>2025-10-07T03:18:31.432Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/gp-specifications.html</loc>
+    <lastmod>2025-10-07T03:18:31.437Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/eki_1/eki_introduction.html</loc>
     <lastmod>2025-10-07T03:18:31.435Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/nonlinear-maps-of-Gaussians.html</loc>
+    <lastmod>2025-10-07T03:18:31.439Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/pseudo-marginal-mcmc/pseudo-marginal-mcmc.html</loc>
+    <lastmod>2025-10-07T03:18:31.440Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/reversed-Cholesky.html</loc>
+    <lastmod>2025-10-07T03:18:31.441Z</lastmod>
+  </url>
+  <url>
+    <loc>https://arob5.github.io/blog/posts/annealed-IS/annealed-IS.html</loc>
+    <lastmod>2025-10-07T03:18:31.432Z</lastmod>
   </url>
   <url>
     <loc>https://arob5.github.io/blog/about.html</loc>

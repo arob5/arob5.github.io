@@ -3,7 +3,6 @@
     "listing": "/blog/index.html",
     "items": [
       "/blog/posts/enkf_perspectives/enkf_perspectives.html",
-      "/blog/posts/draft_enkf_perspectives/enkf_perspectives.html",
       "/blog/posts/involutive-mcmc/MH_Tierney.html",
       "/blog/posts/annealed-IS/annealed-IS.html",
       "/blog/posts/doubly-intractable-mcmc/doubly-intractable.html",

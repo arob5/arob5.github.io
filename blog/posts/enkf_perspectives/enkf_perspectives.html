@@ -194,7 +194,6 @@ window.Quarto = {
 
 
 
-<p>TEST EDIT</p>
 <div class="hidden-macros">
 <p><span class="math display">\[
 \newcommand{\R}{\mathbb{R}}
@@ -227,10 +226,10 @@ window.Quarto = {
 \newcommand{\proj}{\mathcal{P}_{\Gaussian}}
 \]</span></p>
 </div>
-<p>The ensemble Kalman filter (EnKF) is a family of algorithms that perform approximate inference in probabilistic state space models. The crux of this inference task is the requirement of solving a sequence of nonlinear, potentially high-dimensional, inverse problems. To approximate the solutions to these inverse problems, EnKF algorithms employ Monte Carlo methods motivated by the linear Gaussian methodology of the Kalman filter. In this post, we take a deep dive into this methodology, viewing the EnKF approximations from several different perspectives. Our goal is not to focus on the algorithmic aspects of state space inference (I cover this in other posts), but rather to strip away unnecessary details to really understand the approximations driving the EnKF.</p>
+<p>The ensemble Kalman filter (EnKF) is a family of algorithms that perform approximate inference in probabilistic state space models. The crux of this inference task is the requirement of solving a sequence of nonlinear, potentially high-dimensional, inverse problems. To approximate the solutions to these inverse problems, EnKF algorithms employ Monte Carlo methods rooted in the linear Gaussian methodology of the Kalman filter. In this post, we take a deep dive into this methodology, viewing the EnKF approximations from several different perspectives. Our goal is not to focus on the algorithmic aspects of state space inference (I cover this in other posts), but rather to strip away unnecessary details to really understand the approximations driving the EnKF.</p>
 <section id="the-core-inverse-problem" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> The Core Inverse Problem</h1>
-<p>The celebrated “EnKF update equations” describe how to update a model’s forecast distribution (represented via samples) based on the information in newly observed data. This act of “assimilating” the data point is often referred to as the <em>analysis step</em> of the EnKF.</p>
+<p>The celebrated “EnKF update equations” describe how to update a model’s forecast distribution (represented via samples) based on the information in newly observed data. This act of “assimilating” the data point is often referred to as the <em>analysis step</em> of the EnKF. From a generic perspective, the analysis step requires approximating the solution of an inverse problem.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Problem Setup">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -246,20 +245,33 @@ Problem Setup
 \begin{align}
 &amp;\y = \h(\x) + \noise,
 &amp;&amp;\noise \sim \Gaussian(0, \covNoise) \\
-&amp;\x \sim \prior.
+&amp;\x \sim \prior,
 \end{align}
 \tag{1}\]</span></span></p>
-<p>In contrast to standard inverse problem formulations, we assume that the prior <span class="math inline">\(\prior\)</span> is only accessible via a finite set of samples <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span>. Given a particular data realization <span class="math inline">\(\yobs\)</span>, our goal is to produce samples <span class="math inline">\(\{\x^\star_j\}_{j=1}^{J}\)</span> that are (approximately) distributed according to the posterior distribution <span class="math inline">\(\post \Def \x \given [y = \yobs]\)</span>.</p>
+<p>where <span class="math inline">\(\x\)</span> and <span class="math inline">\(\noise\)</span> are a priori independent and <span class="math inline">\(\covNoise \in \R^{n \times n}\)</span> is a known positive definite matrix.</p>
+<p>In contrast to standard inverse problem formulations, we assume that the prior <span class="math inline">\(\prior\)</span> is only accessible via a finite set of samples <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span>. Given a particular data realization <span class="math inline">\(\yobs\)</span>, our goal is to produce samples <span class="math inline">\(\{\x^\star_j\}_{j=1}^{J}\)</span> that are (approximately) distributed according to the posterior distribution <span class="math inline">\(\post \Def \mathrm{law}(\x \given \y = \yobs)\)</span>.</p>
 </div>
 </div>
-<p>We are interested in developing posterior inference methods that are fast and scalable to settings where the parameter dimension <span class="math inline">\(\dimPar\)</span> may be quite large. Standard inference algorithms like Markov chain Monte Carlo (MCMC) are not well-suited to these constraints. In particular, a key challenge here is the lack of access to the prior density. Instead, we must make do with the empirical approximation <span class="math display">\[
+<p>We are interested in developing posterior inference methods that are fast and scalable to settings where the parameter dimension <span class="math inline">\(\dimPar\)</span> may be quite large. Standard inference algorithms like Markov chain Monte Carlo (MCMC) are not well-suited to these constraints. In particular, a key challenge here is the lack of access to the prior density. Instead, we must make do with the empirical approximation <span id="eq-empirical-prior"><span class="math display">\[
 \priorEmp \Def \frac{1}{J} \sum_{j=1}^{J} \delta_{\x_j},
-\]</span> where <span class="math inline">\(\delta_{\x_j}\)</span> denotes the Dirac delta centered at <span class="math inline">\(\x_j\)</span>.</p>
-<p>The positive definite noise covariance <span class="math inline">\(\covNoise \in \R^{n \times n}\)</span> is assumed known throughout this post.</p>
+\tag{2}\]</span></span> where <span class="math inline">\(\delta_{\x_j}\)</span> denotes the Dirac delta centered at <span class="math inline">\(\x_j\)</span>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Notation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Notation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>We utilize the notation <span class="math inline">\(\my \Def \E(\y)\)</span>, <span class="math inline">\(\Cy \Def \Cov(\y)\)</span>, <span class="math inline">\(\Cxy \Def \Cov(\x,\y)\)</span>, and <span class="math inline">\(\Cyx \Def \Cxy^\top\)</span> for the first two moments of <span class="math inline">\(\x\)</span> and <span class="math inline">\(\y\)</span> under the probability distribution implied by <a href="#eq-model" class="quarto-xref">Equation&nbsp;1</a>.</p>
+</div>
+</div>
 </section>
 <section id="linear-gaussian-inverse-problems" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Linear Gaussian Inverse Problems</h1>
-<p>TODO: define <span class="math inline">\(\Cxy, \Cyx, C, \Cy\)</span> and similar with the means in this section.</p>
+<p>When the observation operator <span class="math inline">\(\h\)</span> is linear and the prior is Gaussian, the inverse problem in <a href="#eq-model" class="quarto-xref">Equation&nbsp;1</a> can be solved analytically. The results from this linear Gaussian setting form the foundation for methods that address the more challenging general setting. See this <a href="https://arob5.github.io/blog/posts/linear-Gaussian/linear_Gaussian_inverse_problems.html">post</a> for a detailed exploration of linear Gaussian inverse problems. For our present purposes, the following result will suffice.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Linear Gaussian Conditional">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -270,36 +282,37 @@ Linear Gaussian Conditional
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The linear Gaussian model <span id="eq-linear-Gaussian"><span class="math display">\[
+<p>The linear Gaussian inverse problem</p>
+<p><span id="eq-linear-Gaussian"><span class="math display">\[
 \begin{align}
 &amp;\y = \H\x + \noise,
 &amp;&amp;\noise \sim \Gaussian(0, \covNoise) \\
 &amp;\x \sim \Gaussian(m,C)
 \end{align}
-\tag{2}\]</span></span></p>
-<p>admits a Gaussian conditional <span class="math inline">\(\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)\)</span>. The moments are given by <span id="eq-conditional-moments"><span class="math display">\[
+\tag{3}\]</span></span></p>
+<p>admits a Gaussian conditional <span class="math inline">\(\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)\)</span>. The conditional moments are given by <span id="eq-conditional-moments"><span class="math display">\[
 \begin{align}
 m^\star &amp;= m + K(\yobs - \my) \\
 C^\star &amp;= C - K \Cyx,
 \end{align}
-\tag{3}\]</span></span> where <span id="eq-Kalman-gain"><span class="math display">\[
+\tag{4}\]</span></span> where <span id="eq-Kalman-gain"><span class="math display">\[
 K = \Cxy \Cy^{-1} = C \H^\top (\H C \H^\top + \covNoise)^{-1}.
-\tag{4}\]</span></span></p>
-</div>
-</div>
+\tag{5}\]</span></span></p>
 <p>The matrix <span class="math inline">\(K \in \R^{\dimPar \times \dimObs}\)</span> is known as the <strong>Kalman gain</strong>.</p>
+</div>
+</div>
 </section>
 <section id="linear-ensemble-transforms" class="level1" data-number="3">
 <h1 data-number="3"><span class="header-section-number">3</span> Linear Ensemble Transforms</h1>
-<p>There are many approaches to deal with the empirical nature of the prior. For example, a kernel density estimate can be employed to smooth the empirical prior <span class="math inline">\(\priorEmp\)</span>, yielding a continuous prior approximation. Alternatively, importance sampling techniques work directly with <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span>, re-weighting the particles to achieve a sample-based approximation of the posterior <span class="math inline">\(\post\)</span>. However, both of these methods are known to degenerate as the parameter dimension <span class="math inline">\(\dimPar\)</span> increases.</p>
+<p>We now return to the general problem in <a href="#eq-model" class="quarto-xref">Equation&nbsp;1</a>, which is made challenging by the nonlinear observation operator and empirical nature of the prior. There are many approaches to deal with the latter issue. For example, a kernel density estimate can be employed to smooth <span class="math inline">\(\priorEmp\)</span>, yielding a continuous prior approximation. Alternatively, importance sampling techniques work directly with <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span>, re-weighting the particles to achieve a sample-based approximation of the posterior <span class="math inline">\(\post\)</span>. However, both of these methods are known to degenerate as the parameter dimension <span class="math inline">\(\dimPar\)</span> increases.</p>
 <p>This post focuses on methods that produce approximate samples from <span class="math inline">\(\post\)</span> by applying a map <span class="math inline">\(\map: \R^\dimPar \to \R^\dimPar\)</span> to each prior sample; that is, <span class="math display">\[
 x_j^\star \Def \map(x_j), \qquad j = 1, 2, \dots, J.
 \]</span> The function <span class="math inline">\(\map\)</span> is sometimes called a <em>transport map</em>, and may be deterministic or stochastic. In particular, we focus on linear transport maps, yielding a family of algorithms known as <em>linear ensemble transforms</em>. Ensemble Kalman transforms construct linear transport maps <span class="math inline">\(\map\)</span> that depend on the empirical distribution <span class="math inline">\(\priorEmp\)</span> only through its first two moments, the sample mean and covariance: <span id="eq-moments"><span class="math display">\[
 \begin{align}
-m &amp;\Def \frac{1}{J} \sum_{j=1}^{J} x_j \\
-C &amp;\Def \frac{1}{J-1} \sum_{j=1}^{J} (x_j - m)(x_j - m)^\top.
+\hat{m} &amp;\Def \frac{1}{J} \sum_{j=1}^{J} x_j \\
+\hat{C} &amp;\Def \frac{1}{J-1} \sum_{j=1}^{J} (x_j - \hat{m})(x_j - \hat{m})^\top.
 \end{align}
-\tag{5}\]</span></span></p>
+\tag{6}\]</span></span></p>
 </section>
 <section id="gaussian-prior-approximation" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Gaussian Prior Approximation</h1>
@@ -315,11 +328,11 @@ Gaussian Prior Approximation
 </div>
 <div class="callout-body-container callout-body">
 <p>Given the setup in <a href="#eq-model" class="quarto-xref">Equation&nbsp;1</a>, the EnKF uses the samples <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span> to fit a Gaussian prior approximation <span id="eq-Gaussian-prior"><span class="math display">\[
-\hat{\prior} \Def \proj \priorEmp = \Gaussian(m, C),
-\tag{6}\]</span></span> where <span class="math inline">\(m,C\)</span> are the empirical mean and covariance, as defined in <a href="#eq-moments" class="quarto-xref">Equation&nbsp;5</a>.</p>
+\hat{\prior} \Def \proj \priorEmp = \Gaussian(\hat{m}, \hat{C}),
+\tag{7}\]</span></span> where <span class="math inline">\(\hat{m},\hat{C}\)</span> are the empirical mean and covariance, as defined in <a href="#eq-moments" class="quarto-xref">Equation&nbsp;6</a>.</p>
 </div>
 </div>
-<p>The parametric approximation has a regularizing effect in high-dimensions, and the choice of a Gaussian approximation allows for convenient analytical expressions. This is particularly true when the observation operator <span class="math inline">\(\h\)</span> is linear, in which case the linear Gaussian assumptions combine to produce a closed-form conditional distribution.</p>
+<p>The parametric approximation has a regularizing effect in high-dimensions, and the choice of a Gaussian distribution allows for convenient analytical expressions. This is particularly true when the observation operator <span class="math inline">\(\h\)</span> is linear, in which case the problem reduces to the linear Gaussian setting.</p>
 
 
 
