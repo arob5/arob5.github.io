@@ -2,6 +2,9 @@ project:
   type: website
   output-dir: _site
 
+posts:
+  - blog/posts
+
 # For blog: don't render posts with "draft" in filename/path
 # render:
 # - index.qmd
