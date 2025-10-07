@@ -49,6 +49,29 @@ $$
 $$
 </div>
 
+The ensemble Kalman filter (EnKF) is a family of algorithms that perform
+approximate inference in probabilistic state space models. The crux of this
+inference task is the requirement of solving a sequence of nonlinear,
+potentially high-dimensional, inverse problems. To approximate the solutions
+to these inverse problems, EnKF algorithms employ Monte Carlo methods
+motivated by the linear Gaussian methodology of the Kalman filter.
+In this post, we take a deep dive into this methodology, viewing the
+EnKF approximations from several different perspectives. Our goal is not to
+focus on the algorithmic aspects of state space inference (I cover this in
+other posts), but rather to strip away unnecessary details to really
+understand the approximations driving the EnKF.
+
+# The Core Inverse Problem
+
+The celebrated "EnKF update equations" describe how to update a model's
+forecast distribution (represented via samples) based on the information
+in newly observed data. This act of "assimilating" the data point is often
+referred to as the *analysis step* of the EnKF. 
+
+
+
+
+
 ::: {.callout-note title="Problem Setup"}
 Consider the joint probability model over an unobserved variable $x \in \R^\dimPar$
 and an observable $\y \in \R^\dimObs$ given by
