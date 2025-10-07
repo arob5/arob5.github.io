@@ -2,6 +2,13 @@ project:
   type: website
   output-dir: docs
 
+  # For blog: don't render posts with "draft" in filename/path
+  render:
+  - index.qmd
+  - about.qmd
+  - blog/**.qmd
+  - "!blog/posts/*draft*/**"
+
 website:
   title: "Andrew G. Roberts"
   site-url: https://arob5.github.io/

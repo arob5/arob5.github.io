@@ -1,13 +1,6 @@
 project:
   type: website
 
-  # render all posts except those in folders with "draft" in the name
-  render:
-    - index.qmd
-    - posts/**
-  resources:
-    - "!posts/*draft*/**"
-
 website:
   title: "Andrew G. Roberts"
   navbar:
