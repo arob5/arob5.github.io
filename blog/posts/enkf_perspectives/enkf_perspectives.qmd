@@ -4,7 +4,7 @@ subtitle: TODO
 description: TODO.
 layout: default
 date: 2025-10-03
-draft: true
+draft: false
 categories: [Inverse-Problem, Data-Assimilation, Optimization, Sampling, Computational Statistics]
 format:
   html:
@@ -66,11 +66,7 @@ understand the approximations driving the EnKF.
 The celebrated "EnKF update equations" describe how to update a model's
 forecast distribution (represented via samples) based on the information
 in newly observed data. This act of "assimilating" the data point is often
-referred to as the *analysis step* of the EnKF. 
-
-
-
-
+referred to as the *analysis step* of the EnKF.
 
 ::: {.callout-note title="Problem Setup"}
 Consider the joint probability model over an unobserved variable $x \in \R^\dimPar$
@@ -80,10 +76,11 @@ $$
 \begin{align}
 &\y = \h(\x) + \noise,
 &&\noise \sim \Gaussian(0, \covNoise) \\
-&\x \sim \prior.
+&\x \sim \prior,
 \end{align}
 $$ {#eq-model}
 
+where $\x$ and $\noise$ are a priori independent.
 In contrast to standard inverse problem formulations, we assume that the prior
 $\prior$ is only accessible via a finite set of samples $\{x_j\}_{j=1}^{J}$.
 Given a particular data realization $\yobs$, our goal is to produce samples
@@ -102,16 +99,29 @@ $$
 $$
 where $\delta_{\x_j}$ denotes the Dirac delta centered at $\x_j$.
 
-
 The positive definite noise covariance $\covNoise \in \R^{n \times n}$ is
 assumed known throughout this post.
 
+::: {.callout-note title="Notation"}
+We utilize the notation $\my \Def \E(\y)$,
+$\Cy \Def \Cov(\y)$, $\Cxy \Def \Cov(\x,\y)$, and $\Cyx \Def \Cxy^\top$
+for the first two moments of $\x$ and $\y$ under the probability distribution
+defined by @eq-model.
+:::
+
 # Linear Gaussian Inverse Problems
 
-TODO: define $\Cxy, \Cyx, C, \Cy$ and similar with the means in this section.
+When the observation operator $\h$ is linear and the prior is Gaussian, the
+inverse problem in @eq-model can be solved analytically. The results from
+this linear Gaussian setting form the foundation for methods that address
+the more challenging problem in @eq-model. See this
+[post](https://arob5.github.io/blog/posts/linear-Gaussian/linear_Gaussian_inverse_problems.html)
+for a detailed exploration of linear Gaussian inverse problems.
+For our present purposes, the following result will suffice.
 
 ::: {.callout-note title="Linear Gaussian Conditional"}
-The linear Gaussian model
+The linear Gaussian inverse problem
+
 $$
 \begin{align}
 &\y = \H\x + \noise,
@@ -121,7 +131,11 @@ $$
 $$ {#eq-linear-Gaussian}
 
 admits a Gaussian conditional
-$\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)$. The moments are given by
+$$
+\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)
+$$
+
+with moments given by
 $$
 \begin{align}
 m^\star &= m + K(\yobs - \my) \\
@@ -135,7 +149,6 @@ $$ {#eq-Kalman-gain}
 :::
 
 The matrix $K \in \R^{\dimPar \times \dimObs}$ is known as the **Kalman gain**.
-
 
 # Linear Ensemble Transforms
 There are many approaches to deal with the empirical nature of the prior.
