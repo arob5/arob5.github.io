@@ -1,7 +1,7 @@
 ---
 title: "Andrew G. Roberts"
 listing:
-  contents: posts
+  contents: blog/posts # relative to top-level index
   sort: "date desc"
   type: default
   categories: true
