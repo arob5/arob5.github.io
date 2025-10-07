@@ -54,7 +54,7 @@ approximate inference in probabilistic state space models. The crux of this
 inference task is the requirement of solving a sequence of nonlinear,
 potentially high-dimensional, inverse problems. To approximate the solutions
 to these inverse problems, EnKF algorithms employ Monte Carlo methods
-motivated by the linear Gaussian methodology of the Kalman filter.
+rooted in the linear Gaussian methodology of the Kalman filter.
 In this post, we take a deep dive into this methodology, viewing the
 EnKF approximations from several different perspectives. Our goal is not to
 focus on the algorithmic aspects of state space inference (I cover this in
@@ -66,7 +66,8 @@ understand the approximations driving the EnKF.
 The celebrated "EnKF update equations" describe how to update a model's
 forecast distribution (represented via samples) based on the information
 in newly observed data. This act of "assimilating" the data point is often
-referred to as the *analysis step* of the EnKF.
+referred to as the *analysis step* of the EnKF. From a generic perspective, the
+analysis step requires approximating the solution of an inverse problem.
 
 ::: {.callout-note title="Problem Setup"}
 Consider the joint probability model over an unobserved variable $x \in \R^\dimPar$
@@ -80,12 +81,14 @@ $$
 \end{align}
 $$ {#eq-model}
 
-where $\x$ and $\noise$ are a priori independent.
+where $\x$ and $\noise$ are a priori independent and $\covNoise \in \R^{n \times n}$
+is a known positive definite matrix.
+
 In contrast to standard inverse problem formulations, we assume that the prior
 $\prior$ is only accessible via a finite set of samples $\{x_j\}_{j=1}^{J}$.
 Given a particular data realization $\yobs$, our goal is to produce samples
 $\{\x^\star_j\}_{j=1}^{J}$ that are (approximately) distributed according to
-the posterior distribution $\post \Def \x \given [y = \yobs]$.
+the posterior distribution $\post \Def \mathrm{law}(\x \given \y = \yobs)$.
 :::
 
 We are interested in developing posterior
@@ -96,17 +99,14 @@ In particular, a key challenge here is the lack of access to the prior density.
 Instead, we must make do with the empirical approximation
 $$
 \priorEmp \Def \frac{1}{J} \sum_{j=1}^{J} \delta_{\x_j},
-$$
+$$ {#eq-empirical-prior}
 where $\delta_{\x_j}$ denotes the Dirac delta centered at $\x_j$.
-
-The positive definite noise covariance $\covNoise \in \R^{n \times n}$ is
-assumed known throughout this post.
 
 ::: {.callout-note title="Notation"}
 We utilize the notation $\my \Def \E(\y)$,
 $\Cy \Def \Cov(\y)$, $\Cxy \Def \Cov(\x,\y)$, and $\Cyx \Def \Cxy^\top$
 for the first two moments of $\x$ and $\y$ under the probability distribution
-defined by @eq-model.
+implied by @eq-model.
 :::
 
 # Linear Gaussian Inverse Problems
@@ -114,7 +114,7 @@ defined by @eq-model.
 When the observation operator $\h$ is linear and the prior is Gaussian, the
 inverse problem in @eq-model can be solved analytically. The results from
 this linear Gaussian setting form the foundation for methods that address
-the more challenging problem in @eq-model. See this
+the more challenging general setting. See this
 [post](https://arob5.github.io/blog/posts/linear-Gaussian/linear_Gaussian_inverse_problems.html)
 for a detailed exploration of linear Gaussian inverse problems.
 For our present purposes, the following result will suffice.
@@ -130,12 +130,8 @@ $$
 \end{align}
 $$ {#eq-linear-Gaussian}
 
-admits a Gaussian conditional
-$$
-\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)
-$$
-
-with moments given by
+admits a Gaussian conditional $\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)$.
+The conditional moments are given by
 $$
 \begin{align}
 m^\star &= m + K(\yobs - \my) \\
@@ -146,14 +142,16 @@ where
 $$
 K = \Cxy \Cy^{-1} = C \H^\top (\H C \H^\top + \covNoise)^{-1}.
 $$ {#eq-Kalman-gain}
-:::
 
 The matrix $K \in \R^{\dimPar \times \dimObs}$ is known as the **Kalman gain**.
+:::
 
 # Linear Ensemble Transforms
-There are many approaches to deal with the empirical nature of the prior.
-For example, a kernel density estimate can be employed to smooth the
-empirical prior $\priorEmp$, yielding a continuous prior approximation.
+We now return to the general problem in @eq-model, which is made challenging
+by the nonlinear observation operator and empirical nature of the prior.
+There are many approaches to deal with the latter issue.
+For example, a kernel density estimate can be employed to smooth $\priorEmp$,
+yielding a continuous prior approximation.
 Alternatively, importance sampling techniques work directly with
 $\{x_j\}_{j=1}^{J}$, re-weighting the particles to achieve a sample-based
 approximation of the posterior $\post$. However, both of these methods
@@ -172,8 +170,8 @@ distribution $\priorEmp$ only through its first two moments, the sample mean
 and covariance:
 $$
 \begin{align}
-m &\Def \frac{1}{J} \sum_{j=1}^{J} x_j \\
-C &\Def \frac{1}{J-1} \sum_{j=1}^{J} (x_j - m)(x_j - m)^\top.
+\hat{m} &\Def \frac{1}{J} \sum_{j=1}^{J} x_j \\
+\hat{C} &\Def \frac{1}{J-1} \sum_{j=1}^{J} (x_j - \hat{m})(x_j - \hat{m})^\top.
 \end{align}
 $$ {#eq-moments}
 
@@ -190,13 +188,12 @@ Gaussian prior approximation employed by the EnKF can be phrased as follows.
 Given the setup in @eq-model, the EnKF uses the samples $\{x_j\}_{j=1}^{J}$
 to fit a Gaussian prior approximation
 $$
-\hat{\prior} \Def \proj \priorEmp = \Gaussian(m, C),
+\hat{\prior} \Def \proj \priorEmp = \Gaussian(\hat{m}, \hat{C}),
 $$ {#eq-Gaussian-prior}
-where $m,C$ are the empirical mean and covariance, as defined in @eq-moments.
+where $\hat{m},\hat{C}$ are the empirical mean and covariance, as defined in @eq-moments.
 :::
 
 The parametric approximation has a regularizing effect in high-dimensions, and
-the choice of a Gaussian approximation allows for convenient analytical expressions.
+the choice of a Gaussian distribution allows for convenient analytical expressions.
 This is particularly true when the observation operator $\h$ is linear, in which
-case the linear Gaussian assumptions combine to produce a closed-form
-conditional distribution.
+case the problem reduces to the linear Gaussian setting.
