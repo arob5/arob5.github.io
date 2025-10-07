@@ -3,11 +3,11 @@ project:
   output-dir: _site
 
 # For blog: don't render posts with "draft" in filename/path
-render:
-- index.qmd
-- about.qmd
-- blog/**.qmd
-- "!blog/posts/*draft*/**"
+# render:
+# - index.qmd
+# - about.qmd
+# - blog/**.qmd
+# - "!blog/posts/*draft*/**"
 
 website:
   title: "Andrew G. Roberts"
