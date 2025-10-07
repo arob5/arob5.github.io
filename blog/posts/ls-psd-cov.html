@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-12-03">
+<meta name="description" content="Solving the regularized least squares optimization problem when the prior covariance matrix is not positive definite.">
+
+<title>Regularized Least Squares with Singular Prior – Andrew G. Roberts</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../headshot_photo.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Andrew G. Roberts</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog/index.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+    <a href="https://github.com/arob5/" title="" class="quarto-navigation-tool px-1" aria-label=""><i class="bi bi-github"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Regularized Least Squares with Singular Prior</h1>
+                  <div>
+        <div class="description">
+          Solving the regularized least squares optimization problem when the prior covariance matrix is not positive definite.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Statistics</div>
+                <div class="quarto-category">Data-Assimilation</div>
+                <div class="quarto-category">Optimization</div>
+                <div class="quarto-category">Inverse-Problem</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">December 3, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#generalizing-the-optimization-problem" id="toc-generalizing-the-optimization-problem" class="nav-link" data-scroll-target="#generalizing-the-optimization-problem">Generalizing the Optimization Problem</a>
+  <ul class="collapse">
+  <li><a href="#constrained-formulation" id="toc-constrained-formulation" class="nav-link" data-scroll-target="#constrained-formulation">Constrained Formulation</a></li>
+  <li><a href="#lagrange-multipliers" id="toc-lagrange-multipliers" class="nav-link" data-scroll-target="#lagrange-multipliers">Lagrange Multipliers</a></li>
+  <li><a href="#basis-approach" id="toc-basis-approach" class="nav-link" data-scroll-target="#basis-approach">Basis Approach</a></li>
+  </ul></li>
+  <li><a href="#concluding-notes" id="toc-concluding-notes" class="nav-link" data-scroll-target="#concluding-notes">Concluding Notes</a>
+  <ul class="collapse">
+  <li><a href="#uniqueness" id="toc-uniqueness" class="nav-link" data-scroll-target="#uniqueness">Uniqueness</a></li>
+  <li><a href="#representations-of-the-solution" id="toc-representations-of-the-solution" class="nav-link" data-scroll-target="#representations-of-the-solution">Representations of the solution</a></li>
+  <li><a href="#applications" id="toc-applications" class="nav-link" data-scroll-target="#applications">Applications</a></li>
+  </ul></li>
+  <li><a href="#appendix" id="toc-appendix" class="nav-link" data-scroll-target="#appendix">Appendix</a>
+  <ul class="collapse">
+  <li><a href="#proof-solution-for-lagrange-multiplier-formulation" id="toc-proof-solution-for-lagrange-multiplier-formulation" class="nav-link" data-scroll-target="#proof-solution-for-lagrange-multiplier-formulation">Proof: Solution for Lagrange Multiplier Formulation</a>
+  <ul class="collapse">
+  <li><a href="#deriving-14-and-15" id="toc-deriving-14-and-15" class="nav-link" data-scroll-target="#deriving-14-and-15">Deriving (14) and (15)</a></li>
+  <li><a href="#deriving-16" id="toc-deriving-16" class="nav-link" data-scroll-target="#deriving-16">Deriving (16)</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="setup" class="level1">
+<h1>Setup</h1>
+<p>Recall the <span class="math inline">\(L^2\)</span> regularized least squares problem (i.e., ridge regression),</p>
+<p><span class="math display">\[
+\begin{align}
+u_{\star} &amp;:= \text{argmin}_{u \in \mathbb{R}^d} J(u) \tag{1} \newline
+J(u) &amp;:= \frac{1}{2} \lVert y - Gu\rVert^2_{\Sigma} + \frac{1}{2}\lVert u-m \rVert^2_{C}
+\end{align}
+\]</span></p>
+<p>where <span class="math inline">\(y \in \mathbb{R}^n\)</span> and <span class="math inline">\(m \in \mathbb{R}^d\)</span> are fixed vectors, <span class="math inline">\(G \in \mathbb{R}^{n \times d}\)</span> is the linear forward model, and <span class="math inline">\(\Sigma \in \mathbb{R}^{n \times n}\)</span> and <span class="math inline">\(C \in \mathbb{R}^{d \times d}\)</span> are positive definite matrices. In (1) we have used the following notation for inner products and norms weighted by a positive definite matrix <span class="math inline">\(C\)</span>: <span class="math display">\[
+\begin{align}
+\langle v, v^\prime \rangle_C &amp;:= \langle C^{-1}v, v^\prime\rangle = v^\top C^{-1}v^\prime \newline
+\lVert v \rVert_C^2 &amp;:= \langle v, v\rangle_C.
+\end{align}
+\]</span></p>
+<p>A solution to (1) can be viewed as a maximum a posteriori (MAP) estimate under the Bayesian model <span class="math display">\[
+\begin{align}
+y|u &amp;\sim \mathcal{N}(Gu, \Sigma) \tag{3} \newline
+u &amp;\sim \mathcal{N}(m, C). \tag{4}
+\end{align}
+\]</span></p>
+<p>I discuss this problem in depth in my <a href="https://arob5.github.io/blog/2024/07/03/lin-Gauss/">post</a>, on the linear Gaussian model, where I show that the solution can be written as the following equivalent expressions, <span class="math display">\[
+\begin{align}
+u_{\star} &amp;= \left(G^\top \Sigma^{-1}G + C^{-1}\right)^{-1}\left(G^\top \Sigma^{-1}y + C^{-1}m \right) \tag{5} \newline
+u_{\star} &amp;= m + CG^\top \left(GCG^\top + \Sigma \right)^{-1}(y-Gm). \tag{6}
+\end{align}
+\]</span></p>
+<p>In this post we will consider a generalization of problem (1), where <span class="math inline">\(C\)</span> is only required to be positive semidefinite (not strictly positive definite). In particular, this means that the inverse <span class="math inline">\(C^{-1}\)</span> may not exist. It is interesting to note that, although (5) depends on <span class="math inline">\(C^{-1}\)</span>, the inverse does not appear anywhere in the equivalent expression (6). This leads to the natural question of whether (6) still provides a valid solution to the optimization problem even when <span class="math inline">\(C\)</span> is singular. The first step in investigating this question will be providing a suitable generalization of the objective function in (1), since the expression <span class="math inline">\(\lVert u - m\rVert^2_{C} = \lVert C^{-1/2}(u - m)\rVert^2\)</span> is not well-defined when <span class="math inline">\(C\)</span> is singular.</p>
+</section>
+<section id="generalizing-the-optimization-problem" class="level1">
+<h1>Generalizing the Optimization Problem</h1>
+<p>Our goal is now to extend (1) to the case where <span class="math inline">\(C\)</span> need not be strictly positive definite. We start by generalizing (1) through the definition of a constrained optimization problem on an extended parameter space. We then provide two approaches to formulate this problem in an unconstrained fashion, each of which leads to equivalent closed-from solutions. We will find it convenient to define notation for the “centered” quantities <span class="math display">\[
+\begin{align}
+&amp;u^\prime := u - m, &amp;&amp;y^\prime := y - Gm \tag{7}
+\end{align}
+\]</span> so that <span class="math display">\[
+y - Gu = (y - Gm) - G(u-m) = y^\prime - Gu^\prime. \tag{8}
+\]</span></p>
+<section id="constrained-formulation" class="level2">
+<h2 class="anchored" data-anchor-id="constrained-formulation">Constrained Formulation</h2>
+We start by considering the constrained formulation. This section follows the approach in section 8.1.2 of {% cite InvProbDA %}. To start, note that when <span class="math inline">\(C\)</span> <em>is</em> positive definite, we have <span class="math display">\[
+\lVert u - m\rVert^2_C
+= \lVert u^\prime \rVert^2_C
+= \langle C^{-1}u^\prime, u^\prime\rangle
+= \langle b, u^\prime \rangle, \tag{9}
+\]</span> where <span class="math inline">\(b \in \mathbb{R}^d\)</span> solves <span class="math display">\[
+Cb = u^\prime. \tag{10}
+\]</span> When <span class="math inline">\(C\)</span> is invertible, the unique <span class="math inline">\(b\)</span> solving (10) is simply found by multiplying both sides by <span class="math inline">\(C^{-1}\)</span>. When <span class="math inline">\(C\)</span> is not invertible, then there may be zero or infinitely many such solutions. As long as there is at least one solution to (10) we can give meaning to expression (9) by picking a particular <span class="math inline">\(b\)</span> that solves (10). Now that we have introduced a new variable <span class="math inline">\(b\)</span>, we might consider generalizing (1) by jointly optimizing over <span class="math inline">\((u,b)\)</span> subject to the linear constraint <span class="math inline">\(Cb = u^\prime\)</span>.
+<blockquote class="blockquote">
+<p>
+<strong>Constrained Joint Optimization.</strong> <br> <span class="math display">\[\begin{align}
+  (u_{\star}, b_{\star}) &amp;\in \text{argmin}_{(u,b) \in \mathcal{S}} J(u,b) \tag{11} \newline
+  J(u,b) &amp;:= \frac{1}{2} \lVert y - Gu\rVert^2_{\Sigma} + \frac{1}{2}\langle b, u-m \rangle \newline
+  \mathcal{S} &amp;:= \left\{(u,b) : Cb = u-m \right\}.
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>Note that if <span class="math inline">\(C\)</span> is positive definite, then (11) reduces to (1). If the problem is solved for <span class="math inline">\((u_{\star}, b_{\star})\)</span>, then the desired solution can be obtained by extracting <span class="math inline">\(u_{\star}\)</span> and discarding the nuisance parameter <span class="math inline">\(b_{\star}\)</span>.</p>
+</section>
+<section id="lagrange-multipliers" class="level2">
+<h2 class="anchored" data-anchor-id="lagrange-multipliers">Lagrange Multipliers</h2>
+<p>Observe that (11) can be viewed as optimizing <span class="math inline">\(J(u,b)\)</span> subject to the constraint <span class="math inline">\(g(u,b) = 0\)</span>, where <span class="math inline">\(g(u,b) = Cb - (u-m)\)</span>. This is a typical setup for Lagrange multipliers. We therefore introduce the Lagrange multiplier <span class="math inline">\(\lambda \in \mathbb{R}^d\)</span>, which allows us to cast the constrained optimization over <span class="math inline">\((u,b)\)</span> as an unconstrained optimization over <span class="math inline">\((u,b,\lambda)\)</span>.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Lagrange Multiplier Formulation.</strong> <br> <span class="math display">\[\begin{align}
+  (u_{\star}, b_{\star}, \lambda_{\star}) &amp;\in \text{argmin}_{u,b,\lambda} J(u,b,\lambda) \tag{12} \newline
+  J(u,b,\lambda) &amp;:= \frac{1}{2} \lVert y - Gu\rVert^2_{\Sigma} + \frac{1}{2}\langle b, u-m \rangle + \langle \lambda, Cb - u + m \rangle.
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>We have succeeding in converting the problem to one that can be solved by analytical means; namely, by solving the system of equations <span class="math display">\[
+\nabla_{u} J = \nabla_{b} J = \nabla_{\lambda} J = 0. \tag{13}
+\]</span></p>
+This derivation is provided in the appendix, and the result is summarized below.
+<blockquote class="blockquote">
+<p>
+<strong>Solution of Lagrange Multiplier Formulation.</strong> <br> A solution <span class="math inline">\((u_{\star}, b_{\star}, \lambda_{\star})\)</span> of (12), projected onto the <span class="math inline">\(u\)</span>-component, is given by <span class="math display">\[
+  u_{\star} = m + Cb_{\star}, \tag{14}
+  \]</span> where <span class="math display">\[
+  b_{\star} = \left[(G^\top \Sigma^{-1}G)C + I \right]^{-1}G^\top \Sigma^{-1}(y-Gm). \tag{15}
+  \]</span> It also holds that <span class="math display">\[
+  C\left[(G^\top \Sigma^{-1}G)C + I \right]^{-1}G^\top \Sigma^{-1} = CG^\top \left(GCG^\top + \Sigma \right)^{-1}, \tag{16}
+  \]</span> which implies that (14) agrees with expression (6).
+</p>
+</blockquote>
+</section>
+<section id="basis-approach" class="level2">
+<h2 class="anchored" data-anchor-id="basis-approach">Basis Approach</h2>
+<p>We now consider an alternative approach that avoids the joint optimization over <span class="math inline">\((u,b)\)</span>. Similar exposition can be found in section 8.3 of {% cite DAFundamentals %}. Looking back to (9), instead of choosing to optimize over all <span class="math inline">\(b\)</span> satisfying (10), we will instead simply choose a particular <span class="math inline">\(b\)</span> satisfying this constraint. This only makes sense if the particular choice of <span class="math inline">\(b\)</span> does not matter; i.e., if the value of <span class="math inline">\(\langle b, u^\prime \rangle\)</span> is the same for any <span class="math inline">\(b\)</span> solving (10). The below propostion shows that this is indeed the case.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Proposition.</strong> <br> Let <span class="math inline">\(u \in \mathbb{R}^d\)</span> be a vector such that there is at least one solution <span class="math inline">\(b \in \mathbb{R}^d\)</span> to <span class="math inline">\(Cb = u^\prime\)</span>. Then <span class="math inline">\(\langle b, u^\prime \rangle\)</span> and <span class="math inline">\(J(u,b)\)</span> are constant for any choice of <span class="math inline">\(b\)</span> solving this linear system.
+</p>
+</blockquote>
+<p><strong>Proof.</strong> Let <span class="math inline">\(b, b^\prime \in \mathbb{R}^d\)</span> satisfy <span class="math inline">\(Cb = Cb^\prime = u^\prime\)</span>. It thus follows that <span class="math display">\[
+\langle b, u^\prime\rangle - \langle b^\prime, u^\prime\rangle
+= \langle b - b^\prime, u^\prime\rangle
+= \langle b - b^\prime, Cb\rangle
+= \langle C(b - b^\prime), b\rangle
+= \langle 0, b\rangle
+= 0,
+\]</span> where we have used the linearity of the inner product and the fact that <span class="math inline">\(C\)</span> is symmetric. Since the inner product term in (11) is the only portion with dependence on <span class="math inline">\(b\)</span>, it follows that <span class="math inline">\(J(v,b) = J(v,b^\prime)\)</span>. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+Thus, for each <span class="math inline">\(u\)</span> that yields a consistent system <span class="math inline">\(Cb = u^\prime\)</span>, we can simply pick any solution <span class="math inline">\(b\)</span> to insert into <span class="math inline">\(\langle b, u^\prime\rangle\)</span>. The objective will be well-defined since the above result verifies that the specific choice of <span class="math inline">\(b\)</span> is inconsequential. A natural choice is to select the <span class="math inline">\(b\)</span> of minimal norm; that is, <span class="math display">\[
+b^{\dagger} := \text{argmin}_{Cb=u^\prime} \lVert b \rVert. \tag{17}
+\]</span> This unique minimal norm solution is guaranteed to exist and is conveniently given by the Moore-Penrose pseudoinverse <span class="math display">\[
+b^{\dagger} = C^{\dagger}u^\prime. \tag{18}
+\]</span> Note that when <span class="math inline">\(C\)</span> is positive definite, <span class="math inline">\(C^{\dagger} = C^{-1}\)</span>. We can now eliminate the requirement to optimize over <span class="math inline">\(b\)</span> by considering the following optimization problem.
+<blockquote class="blockquote">
+<p>
+<strong>Pseudoinverse Formulation.</strong> <br> <span class="math display">\[\begin{align}
+  u_{\star} &amp;\in \text{argmin}_{u \in \mathcal{S}} J(u) \tag{19} \newline
+  J(u) &amp;:= \frac{1}{2} \lVert y - Gu\rVert^2_{\Sigma} + \frac{1}{2}\langle C^{\dagger}(u-m), u-m \rangle \newline
+  \mathcal{S} &amp;:= \left\{u \in \mathbb{R}^d: u-m \in \mathcal{R}(C) \right\}
+  \end{align}\]</span>
+</p>
+</blockquote>
+Note that we are now required to reintroduce a constraint set <span class="math inline">\(\mathcal{S}\)</span>. This is due to the fact that the pseudoinverse produces a solution <span class="math inline">\(b\)</span> to <span class="math inline">\(Cb = u^\prime\)</span> when a solution exists, but we must still explicitly restrict the search space to <span class="math inline">\(u\)</span> that admit a consistent system <span class="math inline">\(Cb = u^\prime\)</span>; i.e., <span class="math inline">\(u^\prime \in \mathcal{R}(C)\)</span>. The previous approach dealt with this issue by introducing a Lagrange multiplier <span class="math inline">\(\lambda\)</span>. We now show that (18) can be written as an unconstrained problem without extending the parameter space. This relies on the following important fact.
+<blockquote class="blockquote">
+<p>
+<strong>Subspace Property.</strong> <br> Let <span class="math inline">\(A \in \mathbb{R}^{d \times r}\)</span> be a matrix of rank <span class="math inline">\(r \leq d\)</span> satisfying <span class="math inline">\(C = AA^\top\)</span>. Then a solution to the optimization problem (19) is constrained to the <span class="math inline">\(r\)</span>-dimensional affine subspace <span class="math display">\[
+  m + \mathcal{R}(C) = m + \mathcal{R}(A). \tag{20}
+  \]</span>
+</p>
+</blockquote>
+<p>This is simply a rewriting of the requirement <span class="math inline">\(u^\prime = u-m \in \mathcal{R}(C)\)</span>. The solution is constrained by the rank of the subspace <span class="math inline">\(\mathcal{R}(C)\)</span>. If <span class="math inline">\(r = d\)</span> (i.e., <span class="math inline">\(C\)</span> is full-rank) then we recover the typical unconstrained least squares problem. In general, <span class="math inline">\(r &lt; d\)</span> so the columns of <span class="math inline">\(C\)</span> are linearly dependent. We therefore introduce the matrix <span class="math inline">\(A\)</span> whose columns <span class="math inline">\(a_1, \dots, a_r\)</span> form a basis for the range of <span class="math inline">\(C\)</span>; i.e., the columns of <span class="math inline">\(C\)</span> and <span class="math inline">\(A\)</span> have the same span.</p>
+<p>To implicitly encode the constraint <span class="math inline">\(u^\prime \in \mathcal{R}(C)\)</span>, we can look for solutions in <span class="math inline">\(m + \mathcal{R}(A)\)</span>. Any vector in this space can be written as <span class="math display">\[
+u = m + \sum_{j=1}^{r} w_j a_j = m + Aw, \tag{21}
+\]</span> for some weight vector <span class="math inline">\(w := (w_1, \dots, w_r)^\top \in \mathbb{R}^r\)</span>. We can now substitute <span class="math inline">\(m + Aw\)</span> for <span class="math inline">\(u\)</span> and <span class="math inline">\(AA^\top\)</span> for <span class="math inline">\(C\)</span> in (19) and thus formulate the optimization over the weights <span class="math inline">\(w\)</span>: <span class="math display">\[
+J(w) := \frac{1}{2}\lVert y - G(m+Aw)\rVert^2_{\Sigma} +
+\frac{1}{2}\langle (AA^\top)^{\dagger}Aw, Aw \rangle. \tag{22}
+\]</span> The optimization is now over <span class="math inline">\(w \in \mathbb{R}^r\)</span> so we have succeeded in writing (18) as an unconstrained problem. We can simplify this even further using the following properties of the <a href="https://en.wikipedia.org/wiki/Moore%E2%80%93Penrose_inverse">pseudoinverse</a>:</p>
+<ol type="1">
+<li>By definition, the pseudoinverse satisfies <span class="math inline">\(A = A(A^{\dagger}A)\)</span>.</li>
+<li>The matrix <span class="math inline">\(A^{\dagger}A\)</span> is a projection onto the rowspace of <span class="math inline">\(A\)</span>; in particular it is idempotent (i.e., <span class="math inline">\((A^{\dagger}A)^2 = A^{\dagger}A\)</span>) and symmetric.</li>
+<li>The following identity holds: <span class="math inline">\(A^{\dagger} = A^\top (AA^\top)^{\dagger}\)</span>.</li>
+</ol>
+We can thus simplify the second term in (22) as <span class="math display">\[
+\begin{align}
+\langle (AA^\top)^{\dagger}Aw, Aw\rangle
+= \langle A^\top(AA^\top)^{\dagger}Aw, w\rangle
+= \langle (A^{\dagger}A)w, w\rangle
+&amp;= \langle (A^{\dagger}A)^2w, w\rangle \newline
+&amp;= \langle (A^{\dagger}A)w, (A^{\dagger}A)w\rangle \newline
+&amp;= \lVert (A^{\dagger}A)w \rVert^2, \tag{23}
+\end{align}
+\]</span> where the second equality uses the third pseudinverse property above. The third and fourth equalities follow from the fact that <span class="math inline">\(A^{\dagger}A\)</span> is idempotent and symmetric. We can thus re-parameterize as <span class="math display">\[
+\tilde{w} := (A^{\dagger}A)w, \tag{24}
+\]</span> and note that by the first pseudoinverse property we have <span class="math display">\[
+Aw = A(A^{\dagger}A)w = A\tilde{w}, \tag{25}
+\]</span> which allows us to replace <span class="math inline">\(Aw\)</span> by <span class="math inline">\(A\tilde{w}\)</span> in the first term in (22). We obtain <span class="math display">\[
+J(\tilde{w})
+:= \frac{1}{2} \lVert y - G(m + A\tilde{w})\rVert_{\Sigma}^2 +
+\frac{1}{2} \lVert \tilde{w} \rVert^2 . \tag{26}
+\]</span> We see that (26) is the sum of a model-data fit term plus a simple <span class="math inline">\(L^2\)</span> penalty on the weights. This final formulation is summarized below, where we have re-labelled <span class="math inline">\(\tilde{w}\)</span> as <span class="math inline">\(w\)</span> to lighten notation.
+<blockquote class="blockquote">
+<p>
+<strong>Unconstrained Pseudoinverse Formulation.</strong> <br> The optimization problem in (19) can equivalently be formulated as the unconstrained problem <span class="math display">\[\begin{align}
+  w_{\star} &amp;\in \text{argmin}_{w \in \mathbb{R}^r} J(w) \tag{27} \newline
+  J(w) &amp;:= \frac{1}{2} \lVert y^\prime - GAw\rVert_{\Sigma}^2 + \frac{1}{2}\lVert w \rVert^2
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>One might initially take issue with the claim that (27) is actually unconstrained given that it relies on the re-parameterization (24), which constrains the weights to lie in the range of <span class="math inline">\(A^{\dagger}A\)</span>. However, recalling that <span class="math inline">\(A^{\dagger}A\)</span> is an orthogonal projection, we have the following projection property: <span class="math display">\[
+\lVert \tilde{w} \rVert^2
+= \lVert (A^{\dagger}A)w \rVert^2 \leq \lVert w \rVert^2. \tag{28}
+\]</span> In other words, allowing the weights to be unconstrained can only increase the objective function (since switching <span class="math inline">\(w\)</span> and <span class="math inline">\(\tilde{w}\)</span> has no effect on the first term in (26)), so we are justified in considering the weights to be unconstrained in (27). In fact, we could have jumped right to this conclusion from (23) and avoided needing to define <span class="math inline">\(\tilde{w}\)</span> at all.</p>
+The following result provides the solution to (27), which immediately follows from the observation that (27) is a standard least squares problem.
+<blockquote class="blockquote">
+<p>
+<strong>Solution of Unconstrained Pseudoinverse formulation.</strong> <br> The minimizing weight of the optimization problem in (26) is given by <span class="math display">\[
+  w_{\star} = A^\top G^\top \left(GCG^\top + \Sigma \right)^{-1}y^\prime, \tag{29}
+  \]</span> which implies the optimal parameter <span class="math display">\[\begin{align}
+  u_{\star}
+  &amp;= m + Aw_{\star} \newline
+  &amp;= m + CG^\top \left(GCG^\top + \Sigma \right)^{-1}(y - Gm)
+  \end{align}\]</span> agrees with the typical least squares solution in (6).
+</p>
+</blockquote>
+<p><strong>Proof.</strong> Observe that (27) is of the form (1) with <span class="math inline">\(u := w\)</span>, <span class="math inline">\(y^\prime := y\)</span>, <span class="math inline">\(G := GA\)</span>, and <span class="math inline">\(C := I\)</span>. Thus, we apply (6) to obtain <span class="math display">\[
+\begin{align}
+w_{\star}
+&amp;:= (GA)^\top \left[(GA)(GA)^\top + \Sigma \right]^{-1}y^\prime \newline
+&amp;= A^\top G^\top \left[GCG^\top + \Sigma \right]^{-1}(y-Gm),
+\end{align}
+\]</span> where the second equality uses <span class="math inline">\(C = AA^\top\)</span>. We thus have <span class="math display">\[
+\begin{align}
+u_{\star}
+&amp;= m + Aw_{\star} \newline
+&amp;= m + (AA^\top) G^\top \left[GCG^\top + \Sigma \right]^{-1}(y-Gm) \newline
+&amp;= C G^\top \left[GCG^\top + \Sigma \right]^{-1}(y-Gm),
+\end{align}
+\]</span> which exactly agrees with (6). <span class="math inline">\(\qquad \blacksquare\)</span></p>
+</section>
+</section>
+<section id="concluding-notes" class="level1">
+<h1>Concluding Notes</h1>
+<p>We have successfully shown that the optimum (6) continues to hold for the generalization (11) of the least squares formulation, even when <span class="math inline">\(C\)</span> is singular. We provided two different derivations of the solution, resulting in the expressions (14) and (29), both of which agree with <span class="math inline">\(u_{\star}\)</span> as given in (6). We conclude with a few brief follow-up comments.</p>
+<section id="uniqueness" class="level2">
+<h2 class="anchored" data-anchor-id="uniqueness">Uniqueness</h2>
+Our derivations show that the optimum <span class="math inline">\(u_{\star}\)</span> is unique, even when <span class="math inline">\(C\)</span> is singular. Note that this does <em>not</em> imply that a solution <span class="math inline">\((u_{\star}, b_{\star})\)</span> to (11) is unique, since many choices of <span class="math inline">\(b\)</span> may lead to the same value of the objective. Indeed, <span class="math inline">\(u_{\star} = m + Cb_{\star}\)</span> but it may be that <span class="math inline">\(u_{\star} = m + Cb^\prime\)</span> for some other <span class="math inline">\(b^\prime \in \mathcal{S}\)</span>. n particular, if <span class="math inline">\(u_{\star}\)</span> is optimal, then <span class="math inline">\((u_{\star}, b^\prime)\)</span> minimizes <span class="math inline">\(J(u,b)\)</span> for any <span class="math inline">\(b^\prime\)</span> satisfying <span class="math inline">\(Cb^\prime = u_{\star} - m\)</span>. This follows immediately from the result that the particular <span class="math inline">\(b\)</span> solving this linear system does not change the value of the objective. Given that the particular choice of <span class="math inline">\(b\)</span> is inconsequential, then a particular rule for choosing <span class="math inline">\(b\)</span> will not affect the optimal <span class="math inline">\(u_{\star}\)</span>. The specific approach of choosing the minimal norm <span class="math inline">\(b\)</span> led to the least squares problem (27), which we know has a unique solution. Therefore, if (11) has a solution, then it is unique. We summarize this below.
+<blockquote class="blockquote">
+<p>
+<strong>Uniqueness.</strong> <br> If the solution set <span class="math inline">\(\mathcal{S}\)</span> is non-empty, then there is a unique optimal value <span class="math inline">\(u_{\star}\)</span> solving (11).
+</p>
+</blockquote>
+</section>
+<section id="representations-of-the-solution" class="level2">
+<h2 class="anchored" data-anchor-id="representations-of-the-solution">Representations of the solution</h2>
+<p>Continuing the above discussion, it should also be emphasized that, while the solution is unique, there may be many different ways to represent it. To see this, consider that (14) gives the solution in the form <span class="math inline">\(u_{\star} = m + Cb_{\star}\)</span>, for a weight vector <span class="math inline">\(b_{\star}\)</span>. But in general <span class="math inline">\(C\)</span> has linearly dependent columns, and thus there may be multiple sets of weights that give rise to the same vector. In (29) the solution is instead represented in the form <span class="math inline">\(u_{\star} = m + Aw_{\star}\)</span>. If we assume that the columns of <span class="math inline">\(A\)</span> are linearly independent, thus providing a basis for <span class="math inline">\(\mathcal{R}(C)\)</span>, then this provides the unique representation of the solution with respect to the particular basis <span class="math inline">\(a_1, \dots, a_r\)</span>. Note that the two representations are connected by <span class="math display">\[
+u_{\star} = m + Cb_{\star} = m + AA^\top b_{\star} = m + A(A^\top b_{\star}) \tag{29}.
+\]</span> If the columns of <span class="math inline">\(A\)</span> are independent, then (29) implies <span class="math inline">\(w_{\star} = A^\top b_{\star}\)</span>.</p>
+</section>
+<section id="applications" class="level2">
+<h2 class="anchored" data-anchor-id="applications">Applications</h2>
+<p>Why should we even care about the case when <span class="math inline">\(C\)</span> is singular? The main application that motivated this post comes from the field of data assimilation. In this context, the parameter and data dimensions <span class="math inline">\(d\)</span> and <span class="math inline">\(n\)</span> can be massive, potentially precluding storing the matrices <span class="math inline">\(\Sigma\)</span> or <span class="math inline">\(C\)</span>. A common solution to this problem is to replace the true <span class="math inline">\(C\)</span> with a low-rank approximation of the form <span class="math display">\[
+C = \frac{1}{r-1} \sum_{j=1}^{r} (u^{(j)} - m)(u^{(j)} - m)^\top, \tag{30}
+\]</span> where <span class="math inline">\(r &lt; d\)</span>. This Monte Carlo approximation results in a sample covariance matrix <span class="math inline">\(C\)</span> that has rank at most <span class="math inline">\(r\)</span>. Here, <span class="math inline">\(\{u^{(j)}\}\)</span> is a set of <span class="math inline">\(r\)</span> samples used to compute the sample covariance. If we define <span class="math inline">\(A\)</span> to be the <span class="math inline">\(d \times r\)</span> matrix with <span class="math inline">\(j^{\text{th}}\)</span> row equal to <span class="math inline">\(\frac{1}{\sqrt{r-1}}\left(u^{(j)} - m\right)\)</span>, then we see that <span class="math inline">\(C = AA^\top\)</span>. The matrix <span class="math inline">\(A\)</span> is full rank if the vectors <span class="math inline">\(\{u^{(j)}\}\)</span> are independent.</p>
+</section>
+</section>
+<section id="appendix" class="level1">
+<h1>Appendix</h1>
+<section id="proof-solution-for-lagrange-multiplier-formulation" class="level2">
+<h2 class="anchored" data-anchor-id="proof-solution-for-lagrange-multiplier-formulation">Proof: Solution for Lagrange Multiplier Formulation</h2>
+<p>We derive expressions (14), (15) and (16), the latter showing that the solution agrees with (6).</p>
+<section id="deriving-14-and-15" class="level3">
+<h3 class="anchored" data-anchor-id="deriving-14-and-15">Deriving (14) and (15)</h3>
+<p>We start by computing the gradients with respect to <span class="math inline">\(u\)</span>, <span class="math inline">\(b\)</span>, and <span class="math inline">\(\lambda\)</span>: <span class="math display">\[\begin{align}
+\nabla_{u}J &amp;= -G^\top \Sigma^{-1}(y-Gu) + \frac{1}{2}b - \lambda \tag{31} \newline
+\nabla_{b}J &amp;= \frac{1}{2}u^\prime + C\lambda \newline
+\nabla_{\lambda}J &amp;= Cb - u^\prime.
+\end{align}\]</span> where we recall the definition <span class="math inline">\(u^\prime := u - m\)</span>. We now solve the system of equations <span class="math inline">\(\nabla_{u}J = \nabla_{b}J = \nabla_{\lambda}J = 0\)</span> for the three unknowns. Focusing on the last two equations, if we compute <span class="math inline">\(2\nabla_{b}J + \nabla_{\lambda}J = 0\)</span> we obtain the optimality criterion <span class="math display">\[
+C(b + 2\lambda) = 0, \tag{32}
+\]</span> or equivalently, <span class="math display">\[
+b + 2\lambda \in \mathcal{N}(C), \tag{33}
+\]</span> where <span class="math inline">\(\mathcal{N}(C)\)</span> denotes the null space of <span class="math inline">\(C\)</span>. The null space of <span class="math inline">\(C\)</span> may be nontrivial, which aligns with the above discussion that many values of <span class="math inline">\(b\)</span> may yield the optimal solution. We consider taking the minimal norm solution <span class="math display">\[
+b_{\star} + 2\lambda_{\star} = 0, \tag{34}
+\]</span> which implies <span class="math inline">\(\lambda_{\star} = -\frac{1}{2}b_{\star}\)</span>. Note also that <span class="math display">\[
+y - Gu_{\star} = (y-Gm) - G(u_{\star}-m) =: y^\prime - Gu_{\star}^\prime = y^\prime - GCb_{\star}. \tag{35}
+\]</span> We plug in the expression for <span class="math inline">\(\lambda_{\star}\)</span> to <span class="math inline">\(\nabla_{u}J = 0\)</span>, which yields <span class="math display">\[
+-G^\top \Sigma^{-1}(y^\prime - GCb_{\star}) + b_{\star} = 0. \tag{36}
+\]</span> Solving for <span class="math inline">\(b_{\star}\)</span>, we obtain <span class="math display">\[
+b_{\star} = \left[(G^\top \Sigma^{-1}G)C + I \right]^{-1} G^\top \Sigma^{-1}(y-Gm), \tag{35}
+\]</span> which is equation (15). Recalling the definition <span class="math inline">\(u^\prime_{\star} := u_{\star} - m\)</span>, we obtain equation (14): <span class="math display">\[
+u_{\star} = m + u^\prime_{\star} = m + Cb_{\star}. \tag{36}
+\]</span></p>
+</section>
+<section id="deriving-16" class="level3">
+<h3 class="anchored" data-anchor-id="deriving-16">Deriving (16)</h3>
+<p>We now show that (36) agrees with the standard least squares solution (6). Differentiating the latter with a tilde, we want to show equality between the two expressions <span class="math display">\[
+\begin{align}
+u_{\star} &amp;= m + C\left[(G^\top \Sigma^{-1}G)C + I \right]^{-1} G^\top \Sigma^{-1}(y-Gm) \newline
+\tilde{u}_{\star} &amp;= m + CG^\top \left(GCG^\top + \Sigma \right)^{-1}(y-Gm).
+\end{align}
+\]</span> We therefore see that it suffices to show <span class="math display">\[
+\left[(G^\top \Sigma^{-1}G)C + I \right]^{-1} G^\top \Sigma^{-1} =
+G^\top \left[GCG^\top + \Sigma \right]^{-1}, \tag{37}
+\]</span> which implies (16). To show (37), we multiply both sides by each of the matrices in brackets, which gives <span class="math display">\[
+G^\top \Sigma^{-1}\left[GCG^\top + \Sigma \right]
+= \left[G^\top \Sigma^{-1}GC + I \right] G^\top. \tag{38}
+\]</span> The righthand side of (38) can be factored as <span class="math display">\[
+\left[G^\top \Sigma^{-1}GC + I \right] G^\top =
+G^\top \Sigma^{-1} \left[GCG^\top + \Sigma \right], \tag{39}
+\]</span> completing the proof. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/arob5\.github\.io\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="arob5/arob5.github.io" issue-term="title" theme="body-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2025 Andrew G. Roberts ∙ Made with <a href="https://quarto.org">Quarto</a></p>
+</div>   
+    <div class="nav-footer-center">
+<p><a class="link-dark me-1" href="https://github.com/arob5" title="github" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:github" aria-label="Icon github from fa6-brands Iconify.design set." title="Icon github from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://orcid.org/0009-0002-4274-7914" title="orcid" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:orcid" aria-label="Icon orcid from fa6-brands Iconify.design set." title="Icon orcid from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://scholar.google.com/citations?user=E2erpCwAAAAJ&amp;hl=en" title="Google Scholar" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:google-scholar" aria-label="Icon google-scholar from fa6-brands Iconify.design set." title="Icon google-scholar from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://linkedin.com/in/andrew-roberts5" title="LinkedIn" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:linkedin" aria-label="Icon linkedin from fa6-brands Iconify.design set." title="Icon linkedin from fa6-brands Iconify.design set."></iconify-icon></a></p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
