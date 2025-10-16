@@ -339,7 +339,7 @@ Matheron’s Rule
 <p>We will refer to <span class="math inline">\(\map\)</span> as the <strong>Matheron transport map</strong>.</p>
 </div>
 </div>
-<p>We could alternatively view <span class="math inline">\(\map\)</span> as mapping from <span class="math inline">\(\R^\dimPar\)</span> to <span class="math inline">\(\R^\dimPar\)</span> by interpreting <span class="math inline">\(\y\)</span> as a random parameter of the map. From this perspective, <span class="math inline">\(\map\)</span> constitutes a random map that transports marginal samples of <span class="math inline">\(\x\)</span> to conditional samples.</p>
+<p>We could alternatively view <span class="math inline">\(\map\)</span> as mapping from <span class="math inline">\(\R^\dimPar\)</span> to <span class="math inline">\(\R^\dimPar\)</span> by interpreting <span class="math inline">\(\y\)</span> as a random parameter of the map; i.e., <span class="math inline">\(\map_{y}(x) \Def \map(x,y)\)</span>. From this perspective, <span class="math inline">\(\map\)</span> constitutes a random map that transports marginal samples of <span class="math inline">\(\x\)</span> to conditional samples.</p>
 <p>We conclude this section by recalling a special case of the Gaussian conditioning identity from <a href="#eq-Gaussian-cond-moments" class="quarto-xref">Equation&nbsp;6</a>. When the observation operator <span class="math inline">\(\h\)</span> in <a href="#eq-model" class="quarto-xref">Equation&nbsp;3</a> is linear, we can apply <a href="#eq-Gaussian-cond-moments" class="quarto-xref">Equation&nbsp;6</a> to solve the resulting linear Gaussian inverse problem.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Linear Gaussian Posterior">
 <div class="callout-header d-flex align-content-center">
@@ -384,6 +384,8 @@ x_j^\star \Def \map(x_j), \qquad j = 1, 2, \dots, J.
 <section id="gaussian-prior-approximation" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Gaussian Prior Approximation</h1>
 <p>In this section, we introduce the EnKF in the setting of <a href="#eq-model" class="quarto-xref">Equation&nbsp;3</a> where <span class="math inline">\(\h(\x) = \H\x\)</span> for some matrix <span class="math inline">\(\H \in \R^{\dimObs \times \dimPar}\)</span>. We generalize beyond this linear assumption in future sections.</p>
+<section id="gaussian-projection-of-the-prior" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="gaussian-projection-of-the-prior"><span class="header-section-number">4.1</span> Gaussian Projection of the Prior</h2>
 <p>The classical EnKF that arises in this setting is rooted in the idea of estimating a parametric prior approximation using <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span>. While different distributional families can be used, ensemble Kalman methods employ a Gaussian approximation. Given a square-integrable distribution <span class="math inline">\(\nu\)</span>, let <span class="math inline">\(\proj \nu\)</span> denote the Gaussian “projection” of <span class="math inline">\(\nu\)</span>; that is, the Gaussian distribution that matches the mean and covariance of <span class="math inline">\(\nu\)</span>. Given this definition, the Gaussian prior approximation employed by the EnKF can be phrased as follows.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Gaussian Prior Approximation">
 <div class="callout-header d-flex align-content-center">
@@ -414,7 +416,10 @@ Gaussian Prior Approximation
 \tag{13}\]</span></span> where <span id="eq-empirical-Kalman-gain"><span class="math display">\[
 \hat{K} = \hat{C} \H^\top (\H \hat{C} \H^\top + \covNoise)^{-1}.
 \tag{14}\]</span></span></p>
-<p>At this point, we could take <span class="math inline">\(\Gaussian(\hat{m}^\star, \hat{C}^\star)\)</span> as our posterior approximation. However, in the iterative EnKF context, one seeks a Monte Carlo approximation of the posterior, such that each prior sample <span class="math inline">\(x_j\)</span> is mapped to a posterior sample <span class="math inline">\(x^\star_j\)</span>. Adopting such a transport-based approach ensures correspondence between the prior and posterior samples, which is important in typical EnKF applications where the <span class="math inline">\(j^{\text{th}}\)</span> sample represents a particular model trajectory through time. Our task now becomes to find a suitable transport map. We formalize this goal below.</p>
+</section>
+<section id="approximate-transport" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="approximate-transport"><span class="header-section-number">4.2</span> Approximate Transport</h2>
+<p>At this point, we could take <span class="math inline">\(\Gaussian(\hat{m}^\star, \hat{C}^\star)\)</span> as our posterior approximation. However, in the iterative EnKF context, one seeks a Monte Carlo approximation of the posterior, such that each prior sample <span class="math inline">\(x_j\)</span> is mapped to a posterior sample <span class="math inline">\(x^\star_j\)</span>. Adopting such a transport-based approach ensures correspondence between the prior and posterior samples, which is important in typical EnKF applications where the <span class="math inline">\(j^{\text{th}}\)</span> sample represents a particular model trajectory through time. Our task now becomes to find a suitable transport map; this goal is formalized below.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Moment Matching Transport">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -425,19 +430,20 @@ Moment Matching Transport
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Given the Gaussian prior approximation <span class="math inline">\(\Gaussian(\hat{m},\hat{C})\)</span> in <a href="#eq-Gaussian-prior" class="quarto-xref">Equation&nbsp;11</a>, we seek a transport map <span class="math inline">\(\map\)</span></p>
-<p>Consider the inverse problem <a href="#eq-model" class="quarto-xref">Equation&nbsp;3</a> with a linear observation operator <span class="math inline">\(\h(\x) = \H\x\)</span>. The perturbed observation EnKF updates prior samples <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span> to posterior samples <span class="math inline">\(\{x^\star_j\}_{j=1}^{J}\)</span> as follows:</p>
-<ol type="1">
-<li>Fit a Gaussian prior approximation <span class="math inline">\(\hat{\prior} = \proj \priorEmp = \Gaussian(\hat{m}, \hat{C})\)</span> as in <a href="#eq-Gaussian-prior" class="quarto-xref">Equation&nbsp;11</a>.</li>
-<li>For each <span class="math inline">\(j = 1, \dots, J\)</span> sample <span class="math inline">\(y_j \sim \Gaussian(\yobs, \covNoise)\)</span> and compute <span class="math display">\[
-x_j^\star \Def \hat{\map}_{y_j}(x_j),
-\]</span> where <span class="math display">\[
-\hat{\map}_{y}(x) \Def x + \hat{K}(\yobs - y),
-\]</span> with <span class="math inline">\(\hat{K}\)</span> defined in <a href="#eq-empirical-Kalman-gain" class="quarto-xref">Equation&nbsp;14</a>.</li>
-</ol>
+<p>Given the Gaussian prior approximation <span class="math inline">\(\Gaussian(\hat{m},\hat{C})\)</span> in <a href="#eq-Gaussian-prior" class="quarto-xref">Equation&nbsp;11</a>, we seek a (potentially stochastic) transport map <span class="math inline">\(\map\)</span> that produces samples <span class="math inline">\(x_j^\star = \map(x_j)\)</span> with empirical mean and covariance matching <span class="math inline">\(\hat{m}^\star\)</span> and <span class="math inline">\(\hat{C}^\star\)</span> in <a href="#eq-empirical-Kalman-gain" class="quarto-xref">Equation&nbsp;14</a>; that is, <span id="eq-moment-constraints"><span class="math display">\[
+\begin{align}
+\hat{m}^\star &amp;= \frac{1}{J} \sum_{j=1}^{J} x_j^\star \\
+\hat{C}^\star
+&amp;= \frac{1}{J-1} \sum_{j=1}^{J} (x_j^\star - \hat{m}^\star)(x_j^\star - \hat{m}^\star)^\top.
+\end{align}
+\tag{15}\]</span></span> If the map <span class="math inline">\(\map\)</span> is stochastic, then these equalities are required to hold in expectation.</p>
 </div>
 </div>
-<p>The goal of transporting prior to posterior samples should bring to mind the Matheron transport map defined in <a href="#eq-matheron" class="quarto-xref">Equation&nbsp;7</a>. The direct application of this map yields the classical “perturbed observation” EnKF update.</p>
+<p>By enforcing the constraints in <a href="#eq-moment-constraints" class="quarto-xref">Equation&nbsp;15</a>, we are requiring that the posterior samples should have mean and covariance matching the posterior mean and covariance of the linear Gaussian problem <a href="#eq-linear-Gaussian-approx" class="quarto-xref">Equation&nbsp;12</a>, which itself was the result of a Gaussian prior approximation. If <span class="math inline">\(\map\)</span> is deterministic, then the posterior samples will have sample mean and covariance exactly matching these quantities. If <span class="math inline">\(\map\)</span> is stochastic then the moments will match in expectation (with respect to the noise in <span class="math inline">\(\map\)</span>), but the sample moments of the realized ensemble <span class="math inline">\(\{x_j^\star\}_{j=1}^{J}\)</span> may differ.</p>
+</section>
+<section id="the-perturbed-observation-enkf-update" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="the-perturbed-observation-enkf-update"><span class="header-section-number">4.3</span> The Perturbed Observation EnKF Update</h2>
+<p>The goal of transporting prior to posterior samples should bring to mind the Matheron transport map defined in <a href="#eq-matheron" class="quarto-xref">Equation&nbsp;7</a>. We have already seen that the Matheron map transports marginal to conditional samples under a joint Gaussian model. Even though the prior samples <span class="math inline">\(x_j\)</span> are not necessarily Gaussian distributed, we can still apply this same map in this context to satisfy the moment constraints in <a href="#eq-moment-constraints" class="quarto-xref">Equation&nbsp;15</a> in expectation. This yields the classical “perturbed observation” EnKF update.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Perturbed Observation EnKF Update">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -451,7 +457,7 @@ Perturbed Observation EnKF Update
 <p>Consider the inverse problem <a href="#eq-model" class="quarto-xref">Equation&nbsp;3</a> with a linear observation operator <span class="math inline">\(\h(\x) = \H\x\)</span>. The perturbed observation EnKF updates prior samples <span class="math inline">\(\{x_j\}_{j=1}^{J}\)</span> to posterior samples <span class="math inline">\(\{x^\star_j\}_{j=1}^{J}\)</span> as follows:</p>
 <ol type="1">
 <li>Fit a Gaussian prior approximation <span class="math inline">\(\hat{\prior} = \proj \priorEmp = \Gaussian(\hat{m}, \hat{C})\)</span> as in <a href="#eq-Gaussian-prior" class="quarto-xref">Equation&nbsp;11</a>.</li>
-<li>For each <span class="math inline">\(j = 1, \dots, J\)</span> sample <span class="math inline">\(y_j \sim \Gaussian(\yobs, \covNoise)\)</span> and compute <span class="math display">\[
+<li>For each <span class="math inline">\(j = 1, \dots, J\)</span> sample <span class="math inline">\(y_j \sim \Gaussian(\H x_j, \covNoise)\)</span> and compute <span class="math display">\[
 x_j^\star \Def \hat{\map}_{y_j}(x_j),
 \]</span> where <span class="math display">\[
 \hat{\map}_{y}(x) \Def x + \hat{K}(\yobs - y),
@@ -459,7 +465,42 @@ x_j^\star \Def \hat{\map}_{y_j}(x_j),
 </ol>
 </div>
 </div>
-<p>This</p>
+<p>It is important to recognize that the ensemble <span class="math inline">\(\{x_j^\star\}_{j=1}^{J}\)</span> produced by this update is not necessarily Gaussian. In the special case <span class="math inline">\(\{x_j\}_{j=1}^{J} \sim \Gaussian(m, C)\)</span> then the <span class="math inline">\((x_j, y_j)\)</span> will be jointly Gaussian and hence <span class="math inline">\(x_j^\star = \map_{y_j}(x_j)\)</span> will also be Gaussian. However, even in this case the distribution of <span class="math inline">\(x_j^\star\)</span> will deviate from the exact Gaussian posterior due to the empirical estimate of the Kalman gain.</p>
+<p>In general, the prior samples <span class="math inline">\(x_j\)</span> will be non-Gaussian, implying <span class="math inline">\(x_j^\star\)</span> may also be non-Gaussian. However, the structure of the Matheron map will still transform the mean and covariance of the samples in the same way. For completeness, a derivation is provided below to verify that the constraints in <a href="#eq-moment-constraints" class="quarto-xref">Equation&nbsp;15</a> hold in expectation.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Proof: Perturbed EnKF Satisfies Moment Constraints">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Proof: Perturbed EnKF Satisfies Moment Constraints
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Consider the prior samples <span class="math inline">\(\{x_j\}_{j=1}^{J} \sim \prior\)</span> with empirical mean <span class="math inline">\(\hat{m}\)</span> and covariance <span class="math inline">\(\hat{C}\)</span>. Recall that these sample moments are random and unbiased; i.e., <span class="math inline">\(\E(\hat{m}) = m\)</span> and <span class="math inline">\(\E(\hat{C}) = C\)</span>.</p>
+<p>Let <span class="math inline">\(y_j \sim \Gaussian(\H x_j, \Sigma)\)</span> be sampled independently. Then <span class="math display">\[
+\begin{align}
+\E[\map_{y_j}(x_j)]
+&amp;= \E[x_j] + \hat{K} (\yobs - \E[y_j]) \newline
+&amp;= m + \hat{K} (\yobs - \H m) \newline
+&amp;= \hat{m}^\star
+\end{align}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[\begin{align}
+\Cov[\\map_{y_j}(x_j)]
+&amp;= \Cov[x_j + \hat{K} (\yobs - \E[y_j])] \\
+&amp;= C + \covCross [\covObs]^{-1} \tcovCross -
+  2\covCross [\covObs]^{-1} \tcovCross \\
+&amp;= C - \covCross [\covObs]^{-1} \tcovCross \\
+&amp;= \Cov[\tilde{\u} \given \tilde{\y} = \yobs],
+\end{align}\]</span> $$ where the second equality follows from simplifying the two cross terms that come out of the covariance expression. □</p>
+</div>
+</div>
+</div>
+</section>
 </section>
 <section id="joint-gaussian-approximation" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Joint Gaussian Approximation</h1>

@@ -216,7 +216,8 @@ We will refer to $\map$ as the **Matheron transport map**.
 :::
 
 We could alternatively view $\map$ as mapping from $\R^\dimPar$ to
-$\R^\dimPar$ by interpreting $\y$ as a random parameter of the map.
+$\R^\dimPar$ by interpreting $\y$ as a random parameter of the map;
+i.e., $\map_{y}(x) \Def \map(x,y)$.
 From this perspective, $\map$ constitutes a random map that transports
 marginal samples of $\x$ to conditional samples.
 
@@ -281,6 +282,7 @@ In this section, we introduce the EnKF in the setting of @eq-model where
 $\h(\x) = \H\x$ for some matrix $\H \in \R^{\dimObs \times \dimPar}$. We
 generalize beyond this linear assumption in future sections.
 
+## Gaussian Projection of the Prior
 The classical EnKF that arises in this setting is rooted in the idea of
 estimating a parametric prior approximation using $\{x_j\}_{j=1}^{J}$.
 While different distributional families can be used, ensemble Kalman methods
@@ -325,6 +327,7 @@ $$
 \hat{K} = \hat{C} \H^\top (\H \hat{C} \H^\top + \covNoise)^{-1}.
 $$ {#eq-empirical-Kalman-gain}
 
+## Approximate Transport
 At this point, we could take $\Gaussian(\hat{m}^\star, \hat{C}^\star)$ as our
 posterior approximation. However, in the iterative EnKF context, one seeks
 a Monte Carlo approximation of the posterior, such that each prior sample
@@ -332,36 +335,43 @@ $x_j$ is mapped to a posterior sample $x^\star_j$. Adopting such a transport-bas
 approach ensures correspondence between the prior and posterior samples, which
 is important in typical EnKF applications where the $j^{\text{th}}$ sample
 represents a particular model trajectory through time. Our task now becomes
-to find a suitable transport map. We formalize this goal below.
+to find a suitable transport map; this goal is formalized below.
 
 ::: {.callout-note title="Moment Matching Transport"}
 Given the Gaussian prior approximation $\Gaussian(\hat{m},\hat{C})$ in
-@eq-Gaussian-prior, we seek a transport map $\map$
-
-
-Consider the inverse problem @eq-model with a linear observation
-operator $\h(\x) = \H\x$. The perturbed observation EnKF updates prior samples
-$\{x_j\}_{j=1}^{J}$ to posterior samples $\{x^\star_j\}_{j=1}^{J}$ as follows:
-
-1. Fit a Gaussian prior approximation
-$\hat{\prior} = \proj \priorEmp = \Gaussian(\hat{m}, \hat{C})$
-as in @eq-Gaussian-prior.
-2. For each $j = 1, \dots, J$ sample $y_j \sim \Gaussian(\yobs, \covNoise)$
-and compute
+@eq-Gaussian-prior, we seek a (potentially stochastic) transport map $\map$
+that produces samples $x_j^\star = \map(x_j)$ with empirical mean and
+covariance matching $\hat{m}^\star$ and $\hat{C}^\star$ in
+@eq-empirical-Kalman-gain; that is,
 $$
-x_j^\star \Def \hat{\map}_{y_j}(x_j),
-$$
-where
-$$
-\hat{\map}_{y}(x) \Def x + \hat{K}(\yobs - y),
-$$
-with $\hat{K}$ defined in @eq-empirical-Kalman-gain.
+\begin{align}
+\hat{m}^\star &= \frac{1}{J} \sum_{j=1}^{J} x_j^\star \\
+\hat{C}^\star
+&= \frac{1}{J-1} \sum_{j=1}^{J} (x_j^\star - \hat{m}^\star)(x_j^\star - \hat{m}^\star)^\top.
+\end{align}
+$$ {#eq-moment-constraints}
+If the map $\map$ is stochastic, then these equalities are required to hold
+in expectation.
 :::
 
+By enforcing the constraints in @eq-moment-constraints, we are requiring
+that the posterior samples should have mean and covariance matching the
+posterior mean and covariance of the linear Gaussian problem
+@eq-linear-Gaussian-approx, which itself was the result of a Gaussian
+prior approximation. If $\map$ is deterministic, then the posterior
+samples will have sample mean and covariance exactly matching these
+quantities. If $\map$ is stochastic then the moments will match in
+expectation (with respect to the noise in $\map$), but the sample
+moments of the realized ensemble $\{x_j^\star\}_{j=1}^{J}$ may differ.
 
+## The Perturbed Observation EnKF Update
 The goal of transporting prior to posterior samples should bring to mind
-the Matheron transport map defined in @eq-matheron. The direct application
-of this map yields the classical "perturbed observation" EnKF update.
+the Matheron transport map defined in @eq-matheron. We have already seen
+that the Matheron map transports marginal to conditional samples under
+a joint Gaussian model. Even though the prior samples $x_j$ are not
+necessarily Gaussian distributed, we can still apply this same map in
+this context to satisfy the moment constraints in @eq-moment-constraints
+in expectation. This yields the classical "perturbed observation" EnKF update.
 
 ::: {.callout-note title="Perturbed Observation EnKF Update"}
 Consider the inverse problem @eq-model with a linear observation
@@ -371,7 +381,7 @@ $\{x_j\}_{j=1}^{J}$ to posterior samples $\{x^\star_j\}_{j=1}^{J}$ as follows:
 1. Fit a Gaussian prior approximation
 $\hat{\prior} = \proj \priorEmp = \Gaussian(\hat{m}, \hat{C})$
 as in @eq-Gaussian-prior.
-2. For each $j = 1, \dots, J$ sample $y_j \sim \Gaussian(\yobs, \covNoise)$
+2. For each $j = 1, \dots, J$ sample $y_j \sim \Gaussian(\H x_j, \covNoise)$
 and compute
 $$
 x_j^\star \Def \hat{\map}_{y_j}(x_j),
@@ -383,7 +393,54 @@ $$
 with $\hat{K}$ defined in @eq-empirical-Kalman-gain.
 :::
 
-This
+It is important to recognize that the ensemble $\{x_j^\star\}_{j=1}^{J}$
+produced by this update is not necessarily Gaussian. In the special
+case $\{x_j\}_{j=1}^{J} \sim \Gaussian(m, C)$ then the
+$(x_j, y_j)$ will be jointly Gaussian and hence
+$x_j^\star = \map_{y_j}(x_j)$ will also be Gaussian. However, even in this
+case the distribution of $x_j^\star$ will deviate from the exact Gaussian
+posterior due to the empirical estimate of the Kalman gain.
+
+In general, the prior samples $x_j$ will be non-Gaussian, implying
+$x_j^\star$ may also be non-Gaussian. However, the structure of the Matheron
+map will still transform the mean and covariance of the samples in the same
+way. For completeness, a derivation is provided below to verify that the
+constraints in @eq-moment-constraints hold in expectation.
+
+::: {.callout-note title="Proof: Perturbed EnKF Satisfies Moment Constraints" collapse=true}
+Consider the prior samples $\{x_j\}_{j=1}^{J} \sim \prior$ with
+empirical mean $\hat{m}$ and covariance $\hat{C}$. Recall that these
+sample moments are random and unbiased; i.e.,
+$\E(\hat{m}) = m$ and $\E(\hat{C}) = C$.
+
+Let
+$y_j \sim \Gaussian(\H x_j, \Sigma)$ be sampled independently. Then
+$$
+\begin{align}
+\E[\map_{y_j}(x_j)]
+&= \E[x_j] + \hat{K} (\yobs - \E[y_j]) \newline
+&= m + \hat{K} (\yobs - \H m) \newline
+&= \hat{m}^\star
+\end{align}
+$$
+
+and
+
+\begin{align}
+\Cov[\\map_{y_j}(x_j)]
+&= \Cov[x_j + \hat{K} (\yobs - \E[y_j])] \\
+&= C + \covCross [\covObs]^{-1} \tcovCross -
+  2\covCross [\covObs]^{-1} \tcovCross \\
+&= C - \covCross [\covObs]^{-1} \tcovCross \\
+&= \Cov[\tilde{\u} \given \tilde{\y} = \yobs],
+\end{align}
+$$
+where the second equality follows from simplifying the two
+cross terms that come out of the covariance expression.
+□
+:::
+
+
 
 
 # Joint Gaussian Approximation
