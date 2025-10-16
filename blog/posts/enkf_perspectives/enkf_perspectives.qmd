@@ -1,7 +1,7 @@
 ---
 title: "Several Perspectives on the Ensemble Kalman Filter"
-subtitle: TODO
-description: TODO.
+subtitle: A deep dive into the EnKF analysis update
+description: This post motivates and explores the posterior approximation utilized by a single step of the celebrated EnKF algorithm.
 layout: default
 date: 2025-10-03
 draft: false
@@ -41,7 +41,9 @@ $$
 \newcommand{\my}{m_y}
 \newcommand{\prior}{\pi}
 \newcommand{\priorEmp}{\pi_J}
+\newcommand{\jointEmp}{\joint_J}
 \newcommand{\post}{\pi^\star}
+\newcommand{\joint}{\overline{\prior}}
 \newcommand{\dimObs}{n}
 \newcommand{\dimPar}{d}
 \newcommand{\map}{\mathsf{T}}
@@ -61,17 +63,52 @@ focus on the algorithmic aspects of state space inference (I cover this in
 other posts), but rather to strip away unnecessary details to really
 understand the approximations driving the EnKF.
 
-# The Core Inverse Problem
+# The Core Inverse Problems
 
 The celebrated "EnKF update equations" describe how to update a model's
 forecast distribution (represented via samples) based on the information
 in newly observed data. This act of "assimilating" the data point is often
 referred to as the *analysis step* of the EnKF. From a generic perspective, the
 analysis step requires approximating the solution of an inverse problem.
+Our focus is on this single-step inverse problem; we do not consider
+issues related to the iterative nature of the EnKF.
 
-::: {.callout-note title="Problem Setup"}
-Consider the joint probability model over an unobserved variable $x \in \R^\dimPar$
-and an observable $\y \in \R^\dimObs$ given by
+The EnKF may be derived at varying levels of generality, leading to slight
+variations on the classical update equations. We present two common
+formulations, starting with the most general.
+
+::: {.callout-note title="Inverse Problem 1: The General Case"}
+Consider a joint distribution $(\x,\y) \sim \joint$ over an unobserved
+variable $x \in \R^\dimPar$ and an observable $\y \in \R^\dimObs$.
+Given samples
+$$
+\begin{align}
+&(x_i, y_i) \sim \joint, &&i = 1, 2, \dots, J
+\end{align}
+$$ {#eq-model-general}
+and a data realization $\yobs \in \R^\dimObs$,
+the task is to approximate the posterior distribution
+$$
+\post \Def \mathrm{law}(\x \given \y = \yobs).
+$$ {#eq-posterior}
+:::
+
+Note that $\post$ depends on $\yobs$, but we suppress this in the notation.
+This is an instance of simulation-based inference; unlike in traditional
+inverse problem setups, we neither have access to the likelihood nor
+the prior density. The posterior must be approximated by leveraging information
+in the samples $(\x_i, \y_i)$.
+
+It is common to also consider the special case where the prior distribution
+on $\x$ is only accessible via samples, but the conditional $\y \given \x$
+has a known parametric form. In particular, in physical applications one
+commonly assumes the conditional $\Gaussian(\y \given \h(\x), \covNoise)$, where
+$\h: \R^\dimPar \to \R^\dimObs$ is a known, deterministic map. This
+yields the following inverse problem.
+
+::: {.callout-note title="Inverse Problem 2: Additive Gaussian Noise"}
+Suppose that the joint distribution $(\x, \y) \sim \joint$ is defined by
+the probability model
 
 $$
 \begin{align}
@@ -84,42 +121,111 @@ $$ {#eq-model}
 where $\x$ and $\noise$ are a priori independent and $\covNoise \in \R^{n \times n}$
 is a known positive definite matrix.
 
-In contrast to standard inverse problem formulations, we assume that the prior
-$\prior$ is only accessible via a finite set of samples $\{x_j\}_{j=1}^{J}$.
-Given a particular data realization $\yobs$, our goal is to produce samples
-$\{\x^\star_j\}_{j=1}^{J}$ that are (approximately) distributed according to
-the posterior distribution $\post \Def \mathrm{law}(\x \given \y = \yobs)$.
+In this setting, we assume that the prior $\prior$ is only accessible via a
+finite set of samples $\{x_j\}_{j=1}^{J}$. The goal is once again to
+approximate the posterior $\post = \mathrm{law}(\x \given \y = \yobs)$ for
+a particular data realization $\yobs$.
 :::
 
-We are interested in developing posterior
+In certain settings, it is also common to further simplify the model by
+assuming that the map $\h$ is linear. We will explore this special case
+in addition to the more general settings.
+
+In either case, we are interested in developing posterior
 inference methods that are fast and scalable to settings where the parameter
 dimension $\dimPar$ may be quite large. Standard inference algorithms like
 Markov chain Monte Carlo (MCMC) are not well-suited to these constraints.
-In particular, a key challenge here is the lack of access to the prior density.
-Instead, we must make do with the empirical approximation
+In particular, a key challenge here is the lack of access to either the
+prior density or, potentially, the likelihood.
+Instead, we must make do with the empirical approximations
 $$
-\priorEmp \Def \frac{1}{J} \sum_{j=1}^{J} \delta_{\x_j},
-$$ {#eq-empirical-prior}
-where $\delta_{\x_j}$ denotes the Dirac delta centered at $\x_j$.
+\begin{align}
+&\priorEmp \Def \frac{1}{J} \sum_{j=1}^{J} \delta_{\x_j},
+&&\jointEmp \Def \frac{1}{J} \sum_{j=1}^{J} \delta_{\x_j, \y_j}
+\end{align}
+$$ {#eq-empirical-dists}
+where $\delta_{u}$ denotes the Dirac measure centered at $u$.
 
 ::: {.callout-note title="Notation"}
 We utilize the notation $\my \Def \E(\y)$,
 $\Cy \Def \Cov(\y)$, $\Cxy \Def \Cov(\x,\y)$, and $\Cyx \Def \Cxy^\top$
-for the first two moments of $\x$ and $\y$ under the probability distribution
-implied by @eq-model.
+for the first two moments of $\x$ and $\y$ under the joint distribution
+$\joint$.
 :::
 
-# Linear Gaussian Inverse Problems
+# Background: Linear Gaussian Inverse Problems
 
-When the observation operator $\h$ is linear and the prior is Gaussian, the
-inverse problem in @eq-model can be solved analytically. The results from
-this linear Gaussian setting form the foundation for methods that address
-the more challenging general setting. See this
-[post](https://arob5.github.io/blog/posts/linear-Gaussian/linear_Gaussian_inverse_problems.html)
-for a detailed exploration of linear Gaussian inverse problems.
-For our present purposes, the following result will suffice.
+Classical linear Gaussian methodology forms the foundation for the EnKF
+update. We review a few key results from this methodology that will be
+relevant throughout this post. For more background on linear Gaussian
+inverse problems, see [this](https://arob5.github.io/blog/posts/linear-Gaussian/linear_Gaussian_inverse_problems.html)
+post.
 
-::: {.callout-note title="Linear Gaussian Conditional"}
+We begin by stating the well-known form of a Gaussian conditional distribution.
+
+::: {.callout-note title="Gaussian Conditioning Identity"}
+Let $\x \in \R^\dimPar$ and $\y \in \R^\dimObs$ be random vectors with
+joint distribution
+
+$$
+\begin{align}
+\begin{bmatrix} \x \\ \y \end{bmatrix}
+&\sim
+\Gaussian\left(
+\begin{bmatrix} m_x \\ \my \end{bmatrix},
+\begin{bmatrix} C_x & \Cxy \\ \Cyx & \Cy \end{bmatrix}
+\right),
+\end{align}
+$$ {#eq-joint-Gaussian}
+
+where the matrix $\Cy$ is assumed positive definite. Then for a fixed vector
+$\yobs \in \R^\dimObs$, the conditional distribution of $\x$ given $\y = \yobs$ is
+$$
+\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star),
+$$
+where
+$$
+\begin{align}
+m^\star &= m_x + K(\yobs - \my) \\
+C^\star &= C_x - K\Cyx \\
+K &= \Cxy \Cy^{-1}.
+\end{align}
+$$ {#eq-Gaussian-cond-moments}
+The matrix $K \in \R^{\dimPar \times \dimObs}$ is often called the **Kalman gain**.
+:::
+
+To draw samples from the conditional distribution
+$\text{law}(\x \given \y = \yobs)$, one could compute the moments
+$m^\star$ and $C^\star$ using the above equations, and then sample
+$\Gaussian(m^\star, C^\star)$ using standard methods. Alternatively, one
+could draw prior samples from the joint Gaussian and then apply a suitable
+transformation to yield posterior samples. The function that achieves
+this transformation is referred to as **Matheron's rule**.
+
+::: {.callout-note title="Matheron's Rule"}
+Let $(x,y)$ have the joint Gaussian distribution given in @eq-joint-Gaussian
+and let $K, m^\star, C^\star$ be defined as in @eq-Gaussian-cond-moments.
+
+It then follows that $\map(\x, \y) \sim \Gaussian(m^\star, C^\star)$,
+where $\map: \R^\dimPar \times \R^\dimObs \to \R^\dimPar$ is given by
+$$
+\map(\x, \y) \Def x + K(\yobs - \y).
+$$ {#eq-matheron}
+
+We will refer to $\map$ as the **Matheron transport map**.
+:::
+
+We could alternatively view $\map$ as mapping from $\R^\dimPar$ to
+$\R^\dimPar$ by interpreting $\y$ as a random parameter of the map.
+From this perspective, $\map$ constitutes a random map that transports
+marginal samples of $\x$ to conditional samples.
+
+We conclude this section by recalling a special case of the Gaussian
+conditioning identity from @eq-Gaussian-cond-moments.
+When the observation operator $\h$ in @eq-model is linear, we can apply
+@eq-Gaussian-cond-moments to solve the resulting linear Gaussian inverse problem.
+
+::: {.callout-note title="Linear Gaussian Posterior"}
 The linear Gaussian inverse problem
 
 $$
@@ -130,26 +236,21 @@ $$
 \end{align}
 $$ {#eq-linear-Gaussian}
 
-admits a Gaussian conditional $\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)$.
-The conditional moments are given by
+has posterior distribution $\x \given [\y = \yobs] \sim \Gaussian(m^\star, C^\star)$,
+with moments given by
 $$
 \begin{align}
-m^\star &= m + K(\yobs - \my) \\
-C^\star &= C - K \Cyx,
+m^\star &= m + K(\yobs - \H m) \\
+C^\star &= C - K \H C \\
+K &= C \H^\top (\H C \H^\top + \covNoise)^{-1}
 \end{align}
-$$ {#eq-conditional-moments}
-where
-$$
-K = \Cxy \Cy^{-1} = C \H^\top (\H C \H^\top + \covNoise)^{-1}.
-$$ {#eq-Kalman-gain}
-
-The matrix $K \in \R^{\dimPar \times \dimObs}$ is known as the **Kalman gain**.
+$$ {#eq-lin-Gauss-post-moments}
 :::
 
 # Linear Ensemble Transforms
-We now return to the general problem in @eq-model, which is made challenging
-by the nonlinear observation operator and empirical nature of the prior.
-There are many approaches to deal with the latter issue.
+We now return to the general problems in @eq-model-general and @eq-model.
+Both setups face the challenge posed by the empirical nature of the prior.
+There are many approaches to deal with this issue.
 For example, a kernel density estimate can be employed to smooth $\priorEmp$,
 yielding a continuous prior approximation.
 Alternatively, importance sampling techniques work directly with
@@ -176,13 +277,17 @@ $$
 $$ {#eq-moments}
 
 # Gaussian Prior Approximation
-We first explore a perspective on the EnKF rooted in the idea of estimating
-a parametric prior approximation using $\{x_j\}_{j=1}^{J}$. While different
-distributional families can be used, Ensemble Kalman methods employ a Gaussian
-approximation. Given a square-integrable distribution $\nu$, let $\proj \nu$
-denote the Gaussian "projection" of $\nu$; that is, the Gaussian distribution
-that matches the mean and covariance of $\nu$. Given this definition, the
-Gaussian prior approximation employed by the EnKF can be phrased as follows.
+In this section, we introduce the EnKF in the setting of @eq-model where
+$\h(\x) = \H\x$ for some matrix $\H \in \R^{\dimObs \times \dimPar}$. We
+generalize beyond this linear assumption in future sections.
+
+The classical EnKF that arises in this setting is rooted in the idea of
+estimating a parametric prior approximation using $\{x_j\}_{j=1}^{J}$.
+While different distributional families can be used, ensemble Kalman methods
+employ a Gaussian approximation. Given a square-integrable distribution $\nu$,
+let $\proj \nu$ denote the Gaussian "projection" of $\nu$; that is, the Gaussian
+distribution that matches the mean and covariance of $\nu$. Given this definition,
+the Gaussian prior approximation employed by the EnKF can be phrased as follows.
 
 ::: {.callout-note title="Gaussian Prior Approximation"}
 Given the setup in @eq-model, the EnKF uses the samples $\{x_j\}_{j=1}^{J}$
@@ -196,4 +301,89 @@ where $\hat{m},\hat{C}$ are the empirical mean and covariance, as defined in @eq
 The parametric approximation has a regularizing effect in high-dimensions, and
 the choice of a Gaussian distribution allows for convenient analytical expressions.
 This is particularly true when the observation operator $\h$ is linear, in which
-case the problem reduces to the linear Gaussian setting.
+case the problem reduces to the linear Gaussian setting. Indeed, by treating
+$\Gaussian(\hat{m}, \hat{C})$ as if it were the true prior, we obtain the
+modified inverse problem
+$$
+\begin{align}
+&\y = \H\x + \noise,
+&&\noise \sim \Gaussian(0, \covNoise) \\
+&\x \sim \Gaussian(\hat{m},\hat{C}),
+\end{align}
+$$ {#eq-linear-Gaussian-approx}
+which is of the linear Gaussian variety (see @eq-linear-Gaussian).
+Following @eq-lin-Gauss-post-moments, we find that the posterior under this
+model is Gaussian, with moments
+$$
+\begin{align}
+\hat{m}^\star &= \hat{m} + \hat{K}(\yobs - \H \hat{m}) \\
+\hat{C}^\star &= \hat{C} - \hat{K} \H \hat{C},
+\end{align}
+$$ {#eq-conditional-moments-approx}
+where
+$$
+\hat{K} = \hat{C} \H^\top (\H \hat{C} \H^\top + \covNoise)^{-1}.
+$$ {#eq-empirical-Kalman-gain}
+
+At this point, we could take $\Gaussian(\hat{m}^\star, \hat{C}^\star)$ as our
+posterior approximation. However, in the iterative EnKF context, one seeks
+a Monte Carlo approximation of the posterior, such that each prior sample
+$x_j$ is mapped to a posterior sample $x^\star_j$. Adopting such a transport-based
+approach ensures correspondence between the prior and posterior samples, which
+is important in typical EnKF applications where the $j^{\text{th}}$ sample
+represents a particular model trajectory through time. Our task now becomes
+to find a suitable transport map. We formalize this goal below.
+
+::: {.callout-note title="Moment Matching Transport"}
+Given the Gaussian prior approximation $\Gaussian(\hat{m},\hat{C})$ in
+@eq-Gaussian-prior, we seek a transport map $\map$
+
+
+Consider the inverse problem @eq-model with a linear observation
+operator $\h(\x) = \H\x$. The perturbed observation EnKF updates prior samples
+$\{x_j\}_{j=1}^{J}$ to posterior samples $\{x^\star_j\}_{j=1}^{J}$ as follows:
+
+1. Fit a Gaussian prior approximation
+$\hat{\prior} = \proj \priorEmp = \Gaussian(\hat{m}, \hat{C})$
+as in @eq-Gaussian-prior.
+2. For each $j = 1, \dots, J$ sample $y_j \sim \Gaussian(\yobs, \covNoise)$
+and compute
+$$
+x_j^\star \Def \hat{\map}_{y_j}(x_j),
+$$
+where
+$$
+\hat{\map}_{y}(x) \Def x + \hat{K}(\yobs - y),
+$$
+with $\hat{K}$ defined in @eq-empirical-Kalman-gain.
+:::
+
+
+The goal of transporting prior to posterior samples should bring to mind
+the Matheron transport map defined in @eq-matheron. The direct application
+of this map yields the classical "perturbed observation" EnKF update.
+
+::: {.callout-note title="Perturbed Observation EnKF Update"}
+Consider the inverse problem @eq-model with a linear observation
+operator $\h(\x) = \H\x$. The perturbed observation EnKF updates prior samples
+$\{x_j\}_{j=1}^{J}$ to posterior samples $\{x^\star_j\}_{j=1}^{J}$ as follows:
+
+1. Fit a Gaussian prior approximation
+$\hat{\prior} = \proj \priorEmp = \Gaussian(\hat{m}, \hat{C})$
+as in @eq-Gaussian-prior.
+2. For each $j = 1, \dots, J$ sample $y_j \sim \Gaussian(\yobs, \covNoise)$
+and compute
+$$
+x_j^\star \Def \hat{\map}_{y_j}(x_j),
+$$
+where
+$$
+\hat{\map}_{y}(x) \Def x + \hat{K}(\yobs - y),
+$$
+with $\hat{K}$ defined in @eq-empirical-Kalman-gain.
+:::
+
+This
+
+
+# Joint Gaussian Approximation
