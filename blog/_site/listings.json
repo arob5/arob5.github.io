@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/construct-cov/construct_cov.html",
       "/posts/enkf_perspectives/enkf_perspectives.html",
       "/posts/involutive-mcmc/MH_Tierney.html",
       "/posts/annealed-IS/annealed-IS.html",

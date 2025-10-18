@@ -73,5 +73,8 @@
   },
   "posts/draft-function-space-mcmc/function-space-mcmc.qmd": {
     "function-space-mcmc.html": "daae7aae"
+  },
+  "posts/construct-cov/construct_cov.qmd": {
+    "construct_cov.html": "240a0f5e"
   }
 }

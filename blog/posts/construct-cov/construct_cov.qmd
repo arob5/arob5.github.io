@@ -1,0 +1,61 @@
+---
+title: "Constructing a Covariance Matrix with Specified Structure"
+description: A short note on constructing covariances using matrix decomposition.
+layout: default
+date: 2025-10-18
+categories: [linear-algebra, probability]
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+In this brief note, we consider the problem of constructing a covariance
+matrix $\Sigma \in \mathbb{R}^{n \times n}$ that is constrained to have
+certain variances or covariances in directions not necessarily aligned with
+the standard basis vectors. For example, we may want $\Sigma$ to have
+variance $c_i$ in the direction of a certain vector $u_i$, or for the covariance
+between two directions $u_i$ and $u_j$ to be some value $c_{ij}$.
+
+To formalize this problem, let $u_1, \dots, u_n \in \mathbb{R}^n$ be a set
+of orthonormal vectors representing the directions of interest and stack them
+into the columns of a matrix $U \in \mathbb{R}^{n \times n}$.
+When we talk of variance in direction $u_i$, we mean the variance of
+a random variable projected onto $u_i$. Concretely, let $x$ be a random
+vector with covariance $\Sigma$. Then $u_i^\top x$ is a random variable
+representing the scalar projection of $x$ onto $u_i$. Our goal is thus to construct
+$\Sigma$ such that
+$$
+\text{Cov}(u_i^\top x, u_j^\top x) = c_{ij}, \qquad 1 \leq i,j, \leq n
+$$
+for some specified values $c_{ij}$. For the values $c_{ij}$ to be valid
+covariances, the matrix $C = (c_{ij}) \in \mathbb{R}^{n \times n}$ must
+be symmetric positive definite.
+
+I claim that setting
+$$
+\Sigma = UCU^\top
+$$
+does the trick. Let $c_i$ denote the $i^{\text{th}}$ column of $C$ and
+$e_i$ be the $i^{\text{th}}$ standard basis vector. It follows that
+$$
+\Sigma u_i = UCU^\top u_i = UC e_i = Uc_i,
+$$
+using the fact that $U$ is orthogonal (i.e., $U^\top U = I$).
+Thus,
+$$
+\text{Cov}(u_i^\top x, u_j^\top x)
+= u_i^\top \Sigma u_j
+= u_j^\top U c_i
+= e_j^\top c_i
+= c_{ij},
+$$
+verifying the claim. Note that in the special case where
+$C = \text{diag}(c_{11}, \dots, c_{nn})$ it follows that
+$\Sigma u_i = Uc_i = c_{ii} u_i$, meaning $u_i$ is an eigenvector of $\Sigma$.
+In this case, the pairwise projections along distinct directions $u_i$ and
+$u_j$ will be uncorrelated.
