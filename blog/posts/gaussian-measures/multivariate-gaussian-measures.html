@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-05-19">
+<meta name="keywords" content="GP, Prob-Theory">
+
+<title>Gaussian Measures, Part 2 - The Multivariate Case – Andrew G. Roberts</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../headshot_photo.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Andrew G. Roberts</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../blog/index.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+    <a href="https://github.com/arob5/" title="" class="quarto-navigation-tool px-1" aria-label=""><i class="bi bi-github"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Gaussian Measures, Part 2 - The Multivariate Case</h1>
+            <p class="subtitle lead">Gaussian measures in finite dimensions; i.e., multivariate Gaussians/Gaussian vectors.</p>
+                      </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">May 19, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+
+  <div>
+    <div class="keywords">
+      <div class="block-title">Keywords</div>
+      <p>GP, Prob-Theory</p>
+    </div>
+  </div>
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#preliminaries" id="toc-preliminaries" class="nav-link active" data-scroll-target="#preliminaries">Preliminaries</a></li>
+  <li><a href="#sigma-algebra" id="toc-sigma-algebra" class="nav-link" data-scroll-target="#sigma-algebra">Sigma Algebra</a>
+  <ul class="collapse">
+  <li><a href="#option-1-leverage-the-standard-topology-on-mathbbrn" id="toc-option-1-leverage-the-standard-topology-on-mathbbrn" class="nav-link" data-scroll-target="#option-1-leverage-the-standard-topology-on-mathbbrn">Option 1: Leverage the Standard Topology on <span class="math inline">\(\mathbb{R}^n\)</span></a></li>
+  <li><a href="#option-2-product-of-one-dimensional-borel-sets" id="toc-option-2-product-of-one-dimensional-borel-sets" class="nav-link" data-scroll-target="#option-2-product-of-one-dimensional-borel-sets">Option 2: Product of One-Dimensional Borel Sets</a></li>
+  </ul></li>
+  <li><a href="#definition-one-dimensional-projections" id="toc-definition-one-dimensional-projections" class="nav-link" data-scroll-target="#definition-one-dimensional-projections">Definition: One-Dimensional Projections</a></li>
+  <li><a href="#fourier-transform" id="toc-fourier-transform" class="nav-link" data-scroll-target="#fourier-transform">Fourier Transform</a></li>
+  <li><a href="#density-function" id="toc-density-function" class="nav-link" data-scroll-target="#density-function">Density Function</a></li>
+  <li><a href="#transformation-of-standard-gaussian-random-variables" id="toc-transformation-of-standard-gaussian-random-variables" class="nav-link" data-scroll-target="#transformation-of-standard-gaussian-random-variables">Transformation of Standard Gaussian Random Variables</a></li>
+  <li><a href="#conditional-distributions" id="toc-conditional-distributions" class="nav-link" data-scroll-target="#conditional-distributions">Conditional Distributions</a>
+  <ul class="collapse">
+  <li><a href="#conditional-expectation" id="toc-conditional-expectation" class="nav-link" data-scroll-target="#conditional-expectation">Conditional Expectation</a></li>
+  <li><a href="#conditional-distribution" id="toc-conditional-distribution" class="nav-link" data-scroll-target="#conditional-distribution">Conditional Distribution</a></li>
+  </ul></li>
+  <li><a href="#covariance-operator" id="toc-covariance-operator" class="nav-link" data-scroll-target="#covariance-operator">Covariance Operator</a>
+  <ul class="collapse">
+  <li><a href="#inner-products" id="toc-inner-products" class="nav-link" data-scroll-target="#inner-products">Inner Products</a></li>
+  <li><a href="#a-closely-related-operator" id="toc-a-closely-related-operator" class="nav-link" data-scroll-target="#a-closely-related-operator">A Closely Related Operator</a></li>
+  <li><a href="#alternative-definition" id="toc-alternative-definition" class="nav-link" data-scroll-target="#alternative-definition">Alternative Definition</a></li>
+  <li><a href="#dual-space-interpretation" id="toc-dual-space-interpretation" class="nav-link" data-scroll-target="#dual-space-interpretation">Dual Space Interpretation</a></li>
+  </ul></li>
+  <li><a href="#appendix" id="toc-appendix" class="nav-link" data-scroll-target="#appendix">Appendix</a>
+  <ul class="collapse">
+  <li><a href="#proof-of-4-fourier-transform-characterization" id="toc-proof-of-4-fourier-transform-characterization" class="nav-link" data-scroll-target="#proof-of-4-fourier-transform-characterization">Proof of (4): Fourier Transform Characterization</a></li>
+  <li><a href="#proof-of-6-density-function" id="toc-proof-of-6-density-function" class="nav-link" data-scroll-target="#proof-of-6-density-function">Proof of (6): Density Function</a></li>
+  <li><a href="#proof-of-7-transformation-of-standard-gaussian" id="toc-proof-of-7-transformation-of-standard-gaussian" class="nav-link" data-scroll-target="#proof-of-7-transformation-of-standard-gaussian">Proof of (7): Transformation of Standard Gaussian</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  <li><a href="#todos" id="toc-todos" class="nav-link" data-scroll-target="#todos">TODOs</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="preliminaries" class="level2">
+<h2 class="anchored" data-anchor-id="preliminaries">Preliminaries</h2>
+<p>{% katexmm %} Let <span class="math inline">\(x, y \in \mathbb{R}^n\)</span>. Throughout this post, we write <span class="math inline">\(\langle x, y \rangle = x^\top y\)</span> for the standard inner product on <span class="math inline">\(\mathbb{R}^n\)</span>, and <span class="math inline">\(\lVert x \rVert_2 = \sqrt{\langle x, x \rangle}\)</span> the norm induced by this inner product. We write <span class="math inline">\(L(\mathcal{X}, \mathcal{Y})\)</span> to denote the set of linear maps from <span class="math inline">\(\mathcal{X}\)</span> to <span class="math inline">\(\mathcal{Y}\)</span>. We will frequently consider linear functions of the form <span class="math inline">\(\ell: \mathbb{R}^n \to \mathbb{R}\)</span>, and denote the set of all such functions as <span class="math inline">\((\mathbb{R}^n)^* := L(\mathbb{R}^n, \mathbb{R})\)</span>. Every <span class="math inline">\(\ell \in (\mathbb{R}^n)^*\)</span> can be uniquely represented as an inner product with some vector <span class="math inline">\(y \in \mathbb{R}^n\)</span>. When we wish to make this identification explicit, we will write <span class="math inline">\(\ell_y\)</span> to denote the linear map given by <span class="math inline">\(\ell_y(x) = \langle x, y \rangle\)</span>. Likewise, if we are working with a generic linear map <span class="math inline">\(\ell \in (\mathbb{R}^n)^*\)</span>, then we will write <span class="math inline">\(y_{\ell} \in \mathbb{R}^n\)</span> to denote the unique vector satisfying <span class="math inline">\(\ell(x) = \langle x, y_{\ell} \rangle\)</span>. We will also loosely refer to <span class="math inline">\(\ell_y(x)\)</span> as a <em>projection</em> onto <span class="math inline">\(y\)</span>. Note that if <span class="math inline">\(y\)</span> has unit norm, then this is precisely the magnitude of the orthogonal projection of <span class="math inline">\(x\)</span> onto <span class="math inline">\(y\)</span>. {% endkatexmm %}</p>
+</section>
+<section id="sigma-algebra" class="level2">
+<h2 class="anchored" data-anchor-id="sigma-algebra">Sigma Algebra</h2>
+<p>{% katexmm %} We recall from the previous post that a univariate Gaussian measure is defined on the Borel <span class="math inline">\(\sigma\)</span>-algebra <span class="math inline">\(\mathcal{B}(\mathbb{R})\)</span>. Analogously, we will define an <span class="math inline">\(n\)</span>-dimensional Gaussian measure on the Borel sets <span class="math inline">\(\mathcal{B}(\mathbb{R}^n)\)</span>. There are two reasonable approaches to define <span class="math inline">\(\mathcal{B}(\mathbb{R}^n)\)</span>, and I want to take a moment to highlight them since the same two options will present themselves when we consider defining the Borel sets over infinite-dimensional spaces.</p>
+<section id="option-1-leverage-the-standard-topology-on-mathbbrn" class="level3">
+<h3 class="anchored" data-anchor-id="option-1-leverage-the-standard-topology-on-mathbbrn">Option 1: Leverage the Standard Topology on <span class="math inline">\(\mathbb{R}^n\)</span></h3>
+<p>A Borel <span class="math inline">\(\sigma\)</span>-algebra can be defined for any space that comes equipped with a topology; i.e., a collection of open sets. The Borel <span class="math inline">\(\sigma\)</span>-algebra is then defined as the smallest <span class="math inline">\(\sigma\)</span>-algebra that contains all of these open sets. In the present setting, this means <span class="math display">\[
+\mathcal{B}(\mathbb{R}^n)
+:= \sigma\left\{\mathcal{O} \subseteq \mathbb{R}^n : \mathcal{O} \text{ is open} \right\}, \tag{1}
+\]</span> where <span class="math inline">\(\sigma(\mathcal{S})\)</span> denotes the <span class="math inline">\(\sigma\)</span>-algebra generated by a collection of sets <span class="math inline">\(\mathcal{S}\)</span>. A nice perspective on <span class="math inline">\(\mathcal{B}(\mathbb{R}^n)\)</span> is that it is the smallest <span class="math inline">\(\sigma\)</span>-algebra that ensures all continuous functions <span class="math inline">\(f: \mathbb{R}^n \to \mathbb{R}\)</span> are measurable. We note that this is <em>not</em> a property of Borel <span class="math inline">\(\sigma\)</span>-algebras more generally, but one that does hold in the special case of <span class="math inline">\(\mathbb{R}^n\)</span>; see <a href="https://math.stackexchange.com/questions/3952771/borel-sigma-algebra-and-measurability-of-continuous-functions?rq=1">this</a> StackExchange post for some details.</p>
+</section>
+<section id="option-2-product-of-one-dimensional-borel-sets" class="level3">
+<h3 class="anchored" data-anchor-id="option-2-product-of-one-dimensional-borel-sets">Option 2: Product of One-Dimensional Borel Sets</h3>
+<p>A second reasonable approach is to try extending what we have already defined in one dimension, which means simply taking Cartesian products of one-dimensional Borel sets: <span class="math display">\[
+\mathcal{B}(\mathbb{R}^n)
+:= \sigma\left\{B_1 \times \cdots \times B_n: B_i \in \mathcal{B}(\mathbb{R}), \ i = 1, \dots, n \right\}. \tag{2}
+\]</span> It turns out that the resulting <span class="math inline">\(\sigma\)</span>-algebra agrees with that defined in option 1, so there is no ambiguity in the notation. {% endkatexmm %}</p>
+</section>
+</section>
+<section id="definition-one-dimensional-projections" class="level2">
+<h2 class="anchored" data-anchor-id="definition-one-dimensional-projections">Definition: One-Dimensional Projections</h2>
+{% katexmm %} With the <span class="math inline">\(\sigma\)</span>-algebra defined, we now consider how to define a Gaussian measure <span class="math inline">\(\mu\)</span> on the measurable space <span class="math inline">\((\mathbb{R}^n, \mathcal{B}(\mathbb{R}^n))\)</span>. We will explore a few different equivalent definitions, starting with this: a measure is Gaussian if all of its one-dimensional projections are (univariate) Gaussians.
+<blockquote class="blockquote">
+<p>
+<strong>Definition.</strong> A probability measure <span class="math inline">\(\mu\)</span> defined on the Borel measurable space <span class="math inline">\((\mathbb{R}^n, \mathcal{B}(\mathbb{R}^n))\)</span> is called <strong>Gaussian</strong> if, for all linear maps <span class="math inline">\(\ell \in (\mathbb{R}^n)^*\)</span>, the pushforward measure <span class="math inline">\(\mu \circ \ell^{-1}\)</span> is Gaussian on <span class="math inline">\((\mathbb{R}, \mathcal{B}(\mathbb{R}))\)</span>.
+</p>
+</blockquote>
+As in the univariate setting, we define a random variable <span class="math inline">\(X\)</span> as Gaussian if its law <span class="math inline">\(X\)</span> is a Gaussian measure. Recall that each linear map <span class="math inline">\(\ell\)</span> can be identified with a unique <span class="math inline">\(y \in \mathbb{R}^n\)</span> such that <span class="math inline">\(\ell(x) = \langle x, y \rangle\)</span>, which we indicate by writing <span class="math inline">\(\ell_y = \ell\)</span>. We thus see that <span class="math inline">\(\mu \circ \ell_{y}^{-1}\)</span> is the distribution of the random variable <span class="math inline">\(\langle X, y \rangle\)</span>. The previous definition can therefore be re-stated in the language of random variables as follows: an <span class="math inline">\(n\)</span>-dimensional random variable is Gaussian if every linear combination of the entries of <span class="math inline">\(X\)</span> is univariate Gaussian. More precisely:
+<blockquote class="blockquote">
+<p>
+<strong>Definition.</strong> Let <span class="math inline">\((\Omega, \mathcal{A}, \mathbb{P})\)</span> be a a probability space and <span class="math inline">\(X: \Omega \to \mathbb{R}^n\)</span> a random vector. Then <span class="math inline">\(X\)</span> is called <strong>Gaussian</strong> if <span class="math inline">\(\langle X, y \rangle\)</span> is a univariate Gaussian random variable for all <span class="math inline">\(y \in \mathbb{R}^n\)</span>.
+</p>
+</blockquote>
+<p>Notice that by choosing <span class="math inline">\(y := e_j\)</span> (the vector with a <span class="math inline">\(1\)</span> in its <span class="math inline">\(j^{\text{th}}\)</span> entry and zeros everywhere else), then this definition immediately tells us that a Gaussian random vector has univariate Gaussian marginal distributions. That is, if <span class="math inline">\(X = (X_1, \dots, X_n)^\top\)</span> then <span class="math inline">\(X_i\)</span> is univariate Gaussian for all <span class="math inline">\(i = 1, \dots, n\)</span>. {% endkatexmm %}</p>
+</section>
+<section id="fourier-transform" class="level2">
+<h2 class="anchored" data-anchor-id="fourier-transform">Fourier Transform</h2>
+{% katexmm %} Just as in the univariate case, the Fourier transform <span class="math inline">\(\hat{\mu}\)</span> provides an alternate, equivalent, characterization of Gaussian measures. First, we recall how such a Fourier transform is defined in the multiple variable setting.
+<blockquote class="blockquote">
+<p>
+<strong>Definition.</strong> Let <span class="math inline">\(\mu\)</span> be a measure on <span class="math inline">\((\mathbb{R}^n, \mathcal{B}(\mathbb{R}^n))\)</span>. Then the Fourier transform of <span class="math inline">\(\mu\)</span> is defined as <span class="math display">\[
+  \hat{\mu}(y) := \int_{\mathbb{R}^n} e^{i\langle x, y\rangle} \mu(dx),
+  \qquad y \in \mathbb{R}^n \tag{3}
+  \]</span>
+</p>
+</blockquote>
+<p>We can alternatively view <span class="math inline">\(\hat{\mu}\)</span> as a function of <span class="math inline">\(\ell_y \in (\mathbb{R}^n)^*\)</span>; that is, <span class="math display">\[
+\ell_y \mapsto \int_{\mathbb{R}^n} e^{i \ell_y(x)} \mu(dx).
+\]</span> Note that this is similar in spirit to the definition of the <span class="math inline">\(n\)</span>-dimensional Gaussian measure, in the sense that the extension from one to multiple dimensions is acheived by considering one-dimensional linear projections. This idea will also provide the basis for an extension to infinite dimensions.</p>
+With this background established, we can state the following, which gives an alternate definition of Gaussian measures.
+<blockquote class="blockquote">
+<p>
+<strong>Theorem.</strong> A probability measure <span class="math inline">\(\mu\)</span> defined on the Borel measurable space <span class="math inline">\((\mathbb{R}^n, \mathcal{B}(\mathbb{R}^n))\)</span> is Gaussian if and only if its Fourier transform is of the form <span class="math display">\[
+  \hat{\mu}(y) = \exp\left\{i\langle m, y\rangle - \frac{1}{2}\langle Cy, y\rangle \right\}, \tag{4}
+  \]</span> for some fixed vector <span class="math inline">\(m \in \mathbb{R}^{n}\)</span> and symmetric, positive semi-definite matrix <span class="math inline">\(C \in \mathbb{R}^{n \times n}\)</span>.
+</p>
+</blockquote>
+The proof, which is given in the appendix, also provides the expressions for the mean and covariance of <span class="math inline">\(\mu\)</span> as a byproduct.
+<blockquote class="blockquote">
+<p>
+<strong>Corollary.</strong> Let <span class="math inline">\(\mu\)</span> be a Gaussian measure with Fourier transform <span class="math inline">\(\hat{\mu}(y) = \exp\left\{\langle y, m\rangle - \frac{1}{2}\langle Cy, y\rangle\right\}\)</span>. Then the mean vector and covariance matrix of <span class="math inline">\(\mu\)</span> are given by <span class="math display">\[\begin{align}
+  m &amp;= \int x \mu(dx) \tag{5} \newline
+  C &amp;= \int (x-m)(x-m)^\top \mu(dx).
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>{% endkatexmm %}</p>
+</section>
+<section id="density-function" class="level2">
+<h2 class="anchored" data-anchor-id="density-function">Density Function</h2>
+The one-dimensional projections and Fourier transform provide equivalent definitions of multivariate Gaussian measures. The more familiar notion of the Gaussian density provides a third characterization, with the caveat that it only pertains to the case that the covariance matrix <span class="math inline">\(C\)</span> is positive definite.
+<blockquote class="blockquote">
+<p>
+<strong>Proposition.</strong> Let <span class="math inline">\(\mu\)</span> be a Gaussian measure with mean vector <span class="math inline">\(m\)</span> and covariance matrix <span class="math inline">\(C\)</span>, as in (5). Then <span class="math inline">\(\mu\)</span> admits a Lebesgue density if and only if <span class="math inline">\(C\)</span> is positive definite, in which case <span class="math display">\[
+  \frac{d\mu}{d\lambda}(x)
+  = \text{det}(2\pi C)^{-1/2}\exp\left\{-\frac{1}{2} \langle C^{-1}(x-m), x-m\rangle\right\}. \tag{6}
+  \]</span>
+</p>
+</blockquote>
+</section>
+<section id="transformation-of-standard-gaussian-random-variables" class="level2">
+<h2 class="anchored" data-anchor-id="transformation-of-standard-gaussian-random-variables">Transformation of Standard Gaussian Random Variables</h2>
+In this section we provide yet another characterization of Gaussian measures. We consider a <em>generative</em> perspective, whereby a Gaussian random vector <span class="math inline">\(X \in \mathbb{R}^n\)</span> arises via a linear transformation of <span class="math inline">\(n\)</span> iid <span class="math inline">\(\mathcal{N}(0,1)\)</span> random variables.<br>
+
+<blockquote class="blockquote">
+<p>
+</p><p><strong>Proposition.</strong> Let <span class="math inline">\(Z_1, \dots, Z_n\)</span> be iid <span class="math inline">\(\mathcal{N}(0, 1)\)</span> random variables stacked into the column vector <span class="math inline">\(Z \in \mathbb{R}^n\)</span>. Then, for any fixed vector <span class="math inline">\(m \in \mathbb{R}^n\)</span> and matrix <span class="math inline">\(A \in \mathbb{R}^{n \times n}\)</span>, the random variable given by <span class="math display">\[
+  X := m + AZ \tag{7}
+  \]</span> has a Gaussian distribution <span class="math inline">\(\mathcal{N}(m, AA^\top)\)</span>.</p>
+Conversely, let <span class="math inline">\(X \in \mathbb{R}^n\)</span> be a Gaussian random variable. Then there exists a vector <span class="math inline">\(m \in \mathbb{R}^n\)</span> and matrix <span class="math inline">\(A \in \mathbb{R}^{n \times n}\)</span> such that <span class="math inline">\(X = m + AZ\)</span>.
+<p></p>
+</blockquote>
+<p>{% katexmm %} Another way to think about this is that we have defined a <em>transport map</em> <span class="math inline">\(T: \mathbb{R}^n \to \mathbb{R}^n\)</span> such that <span class="math display">\[\begin{align}
+T(Z) &amp;= X, &amp;&amp;\text{where } T(z) = m + Az.
+\end{align}\]</span> That is, we feed in vectors with iid standard Gaussian components, and get out vectors with distribution <span class="math inline">\(\mathcal{N}(m, AA^\top)\)</span>. This is a very practical way to look at multivariate Gaussians, immediately providing the basis for a sampling algorithm. Indeed, suppose we want to draw iid samples from the distribution <span class="math inline">\(\mathcal{N}(m, C)\)</span>. Then the above proposition gives us a way to do so, provided that we can (1) draw univariate <span class="math inline">\(\mathcal{N}(0,1)\)</span> samples; and (2) factorize the matrix <span class="math inline">\(C\)</span> as <span class="math inline">\(C = AA^\top\)</span> for some <span class="math inline">\(A\)</span>. This procedure is summarized in the below corollary.</p>
+<blockquote class="blockquote">
+<p>
+</p><p><strong>Corollary.</strong> The following algorithm produces a sample from the distribution <span class="math inline">\(\mathcal{N}(m, C)\)</span>. <br></p>
+<ol type="1">
+<li>Draw <span class="math inline">\(n\)</span> iid samples <span class="math inline">\(Z_i \sim \mathcal{N}(0,1)\)</span> and stack them in a column vector <span class="math inline">\(Z\)</span>. <br></li>
+<li>Compute a factorization <span class="math inline">\(C = AA^\top\)</span>. <br></li>
+<li>Return <span class="math inline">\(m + AZ\)</span>. <br></li>
+</ol>
+Repeating steps 1 and 3 will produce independent samples from <span class="math inline">\(\mathcal{N}(m, C)\)</span> (the matrix factorization need not be re-computed each time).<br>
+
+<p></p>
+</blockquote>
+<p>As for the factorization, the <a href="https://en.wikipedia.org/wiki/Cholesky_decomposition">Cholesky decomposition</a> is a standard choice when <span class="math inline">\(C\)</span> is positive definite. When <span class="math inline">\(C\)</span> is merely positive semidefinite, the eigendecomposition provides another option, since <span class="math display">\[
+C = UDU^\top = UD^{1/2} D^{1/2} U^\top = (UD^{1/2})(UD^{1/2})^\top
+\]</span> so setting <span class="math inline">\(A := UD^{1/2}\)</span> does the trick. Note that <span class="math inline">\(C\)</span> is positive semidefinite so <span class="math inline">\(D\)</span> is just a diagonal matrix with nonnegative values on the diagonal.</p>
+<p>Finally, note that we can expand (7) as<br>
+<span class="math display">\[\begin{equation}
+X = m + \sum_{i=1}^{n} Z_i A_i,
+\end{equation}\]</span> where the <span class="math inline">\(A_i\)</span> are the columns of <span class="math inline">\(A\)</span>. This shows that we are representing the random vector <span class="math inline">\(X\)</span> as “randomized summation”; that is, a linear combination of nonrandom vectors <span class="math inline">\(A_i\)</span> where the coefficients <span class="math inline">\(Z_i\)</span> are random. In the case of the eigendecomposition, this summation assumes the form <span class="math display">\[\begin{equation}
+X = m + \sum_{i=1}^{n} \sqrt{\lambda}_i Z_i U_i, \tag{8}
+\end{equation}\]</span> where the <span class="math inline">\(\lambda_i\)</span> are the diagonal values of <span class="math inline">\(D\)</span>. This expression can be viewed as a special case of the Karhunen-Loeve expansion {% cite alexanderianKLExpansion %}.</p>
+<p>{% endkatexmm %}</p>
+</section>
+<section id="conditional-distributions" class="level2">
+<h2 class="anchored" data-anchor-id="conditional-distributions">Conditional Distributions</h2>
+<p>{% katexmm %} Throughout this section, let <span class="math inline">\((X,Y)\)</span> denote a Gaussian vector in <span class="math inline">\(\R^{d+n}\)</span>, such that <span class="math inline">\(X \in \R^d\)</span> and <span class="math inline">\(Y \in \R^n\)</span>. We are interested in the conditional distribution of <span class="math inline">\(X\)</span> given <span class="math inline">\(Y\)</span>.</p>
+<section id="conditional-expectation" class="level3">
+<h3 class="anchored" data-anchor-id="conditional-expectation">Conditional Expectation</h3>
+We start by characterizing the distribution of the conditional expectation <span class="math inline">\(\mathbb{E}(X|Y)\)</span>, which we recall is a <span class="math inline">\(Y\)</span>-measurable random vector in <span class="math inline">\(\R^d\)</span>. The first part of the below result, which does not require any of the covariances involved to be positive definite, is theorem 1.2.8 in {% cite BogachevGaussian %}.
+<blockquote class="blockquote">
+<p>
+<strong>Theorem.</strong> The conditional expectation <span class="math inline">\(\mathbb{E}(X|Y)\)</span> is a Gaussian vector, and can be written as <span class="math display">\[
+  \mathbb{E}(X|Y) = \mathbb{E}X + K(Y - \mathbb{E}Y), \tag{9}
+  \]</span> for a nonrandom linear operator <span class="math inline">\(K: \R^n \to \R^d\)</span>. If <span class="math inline">\(\text{Cov}[Y]\)</span> is positive definite, then <span class="math display">\[
+  K = \text{Cov}[X,Y]\text{Cov}[Y]^{-1}. \tag{10}
+  \]</span>
+</p>
+</blockquote>
+<p><strong>Proof.</strong> We consider the zero mean case <span class="math inline">\(\mathbb{E}X = \mathbb{E}Y = 0\)</span>, since we can simply subtract off the means in the non-centered case. Since Gaussian random variables are square integrable, then the conditional expectation can be characterized as an <span class="math inline">\(L^2\)</span> projection <span class="math display">\[
+\mathbb{E}(X|Y) = \text{argmin}_{g} \mathbb{E}\lVert X - g(Y) \rVert^2, \tag{11}
+\]</span> where the minimum is considered over all <span class="math inline">\(Y\)</span>-measurable functions <span class="math inline">\(g: \R^n \to \R^d\)</span>. The Hilbert projection theorem provides the orthogonality condition <span class="math inline">\(\langle X - \mathbb{E}(X|Y), g(Y) \rangle_{L^2} = 0\)</span> for the optimum. We thus seek to show that an operator <span class="math inline">\(K\)</span> can be constructed satisfying <span class="math inline">\(\langle X - KY, g(Y) \rangle_{L^2} = 0\)</span> for all measurable functions <span class="math inline">\(g\)</span>. However, note that <span class="math inline">\((X-KY,Y)\)</span> are jointly Gaussian, as this vector results from a linear map applied to <span class="math inline">\((X,Y)\)</span>. Consequently, the condition <span class="math inline">\(\text{Cov}[X-KY,Y]=0\)</span> implies the independence of <span class="math inline">\(X-KY\)</span> and <span class="math inline">\(Y\)</span>, which in turn implies the <span class="math inline">\(L^2\)</span> orthogonality condition holds for all <span class="math inline">\(g\)</span>. Thus, we must show that <span class="math inline">\(K\)</span> can be defined to satisfy <span class="math display">\[
+\text{Cov}[X-KY,Y]=0, \tag{12}
+\]</span> or equivalently <span class="math display">\[
+\text{Cov}[X,Y] = K\text{Cov}[Y].
+\]</span> If <span class="math inline">\(\text{Cov}[Y]\)</span> is positive definite, then it is invertible so <span class="math inline">\(K = \text{Cov}[X,Y]\text{Cov}[Y]^{-1}\)</span>. We now deal with the positive semidefinite case. Consider the eigendecomposition <span class="math inline">\(\text{Cov}[Y] = U \Lambda U^\top + V \Gamma V^\top\)</span>, partitioned so that <span class="math inline">\(\Lambda\)</span> contains the nonzero eigenvalues, while <span class="math inline">\(\Gamma\)</span> is the zero matrix (and hence the second term vanishes). Plugging in this expression we now have the condition <span class="math inline">\(\text{Cov}[X,Y] = KU\Lambda U^\top\)</span>. Right multiplying both sides by <span class="math inline">\(U\)</span> yields <span class="math display">\[
+\text{Cov}[X,Y] U = KU\Lambda.
+\]</span> Treating this condition column-by-column, we require <span class="math inline">\(\text{Cov}[X,Y] u_j = \lambda_j Ku_j\)</span>. We can thus define <span class="math inline">\(K\)</span> on the range of <span class="math inline">\(U\)</span> by <span class="math display">\[
+Ku_j := \frac{1}{\lambda_j}\text{Cov}[X,Y]u_j,
+\]</span> which we note is valid since <span class="math inline">\(\lambda_j &gt; 0\)</span>. To extend the definition to all of <span class="math inline">\(\R^n\)</span>, note that any <span class="math inline">\(y \in \R^n\)</span> can be written as <span class="math inline">\(y = \tilde{y} + y^\perp\)</span>, where <span class="math inline">\(\tilde{y}\)</span> is in the range of <span class="math inline">\(U\)</span> and <span class="math inline">\(y^\perp\)</span> in the orthogonal complement, given by the range of <span class="math inline">\(V\)</span>. We then define <span class="math display">\[
+Ky := K\tilde{y} + Ky^\perp = K\tilde{y}.
+\]</span> Note that the above derivations show that <span class="math inline">\(\text{Cov}[X-KY,Y]\)</span> is not a function of <span class="math inline">\(Y^\perp\)</span>. We have thus defined a linear operator <span class="math inline">\(K: \R^n \to \R^d\)</span> that satisfies <span class="math inline">\(\text{Cov}[X-KY,Y]=0\)</span>. Since <span class="math inline">\(\mathbb{E}[X|Y] = KY\)</span> is a linear function of the Gaussian vector <span class="math inline">\(Y\)</span>, then <span class="math inline">\(\mathbb{E}[X|Y]\)</span> is itself Gaussian. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+<p>Notice that the above result implies that the conditional expectation satisfies <span class="math display">\[
+\mathbb{E}[X|Y] \sim \mathcal{N}\left(\mathbb{E}[X], K\text{Cov}[Y]K^\top \right). \tag{13}
+\]</span> The fact that the expectation is <span class="math inline">\(\mathbb{E}[X]\)</span> can be seen from direct calculation or as a consequence of the law of iterated expectation. A very useful perspective is to view <span class="math inline">\(X\)</span> as a sum of <span class="math inline">\(\mathbb{E}[X|Y]\)</span> and some residual term <span class="math inline">\(\epsilon\)</span>.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Corollary.</strong> The random vector <span class="math inline">\(X\)</span> can be decomposed as <span class="math display">\[\begin{align}
+  &amp;X = \mathbb{E}[X|Y] + \epsilon, &amp;&amp;\epsilon := X - \mathbb{E}[X|Y], \tag{14}
+  \end{align}\]</span> where <span class="math inline">\(\mathbb{E}[X|Y]\)</span> and <span class="math inline">\(\epsilon\)</span> are independent.
+</p>
+</blockquote>
+<p><strong>Proof.</strong> Observe that <span class="math inline">\((\mathbb{E}[X|Y], \epsilon)\)</span> are jointly Gaussian, as this vector results from a linear map applied to <span class="math inline">\((X,Y)\)</span>. Moreover, we know that <span class="math inline">\(\epsilon\)</span> is uncorrelated with any measurable function of <span class="math inline">\(Y\)</span> due to the orthogonality condition of conditional expectation. <span class="math inline">\(\mathbb{E}[X|Y]\)</span> is one such measurable function and thus <span class="math inline">\(\epsilon\)</span> and <span class="math inline">\(\mathbb{E}[X|Y]\)</span> are uncorrelated. However, they are jointly Gaussian and hence also independent. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+</section>
+<section id="conditional-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="conditional-distribution">Conditional Distribution</h3>
+<p>In practice, we are typically interested in conditioning on a single realization <span class="math inline">\(y\)</span> of the random vector <span class="math inline">\(Y\)</span>. The concept that captures this notion is <a href="https://en.wikipedia.org/wiki/Regular_conditional_probability">regular conditional probabilty</a>. A full discussion of this would take us too far afield for this post, but just note that when we talk of the distribution of <span class="math inline">\(X|Y=y\)</span>, we technically are referring to the regular conditional probability kernel. In the case that the Gaussian distribution of <span class="math inline">\((X,Y)\)</span> is nonsingular, then this concept reverts to the typical notion of conditional densities.</p>
+<p>We now leverage our characterization of <span class="math inline">\(\mathbb{E}[X|Y]\)</span> to derive the conditional distribution <span class="math inline">\(X|Y=y\)</span>. To do so, we utilize a basic fact about regular conditional probability; a proof can be found in Lemma 2 of {% cite pathwiseGP %}. The result states that if the decomposition <span class="math display">\[
+X \overset{d}{=} g(Y) + \epsilon \tag{15}
+\]</span> holds, and <span class="math inline">\(Y\)</span> is independent of <span class="math inline">\(\epsilon\)</span>, then <span class="math display">\[
+(X|Y=y) \overset{d}{=} g(y) + \epsilon. \tag{16}
+\]</span></p>
+The Gaussian conditional can thus be characterized by combining this fact with (14).
+<blockquote class="blockquote">
+<p>
+<strong>Corollary.</strong> The conditional distribution <span class="math inline">\(X|Y=y\)</span> is Gaussian, with mean and covariance given by <span class="math display">\[\begin{align}
+  \mathbb{E}[X|Y=y] &amp;= \mathbb{E}[X] + K(y-\mathbb{E}[Y]) \tag{17} \newline
+  \text{Cov}[X|Y=y] &amp;= \text{Cov}[X] - K\text{Cov}[Y]K^\top - \text{Cov}[X,Y]K^\top - K\text{Cov}[X,Y] \tag{18}
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p><strong>Proof.</strong> The expression <span class="math inline">\(X = \mathbb{E}[X|Y] + \epsilon\)</span> given in (14) is of the form (15) since <span class="math inline">\(Y\)</span> and <span class="math inline">\(\epsilon\)</span> are independent. Thus, (16) gives <span class="math display">\[
+(X|Y=y) \overset{d}{=} \mathbb{E}[X|y] + \epsilon, \tag{19}
+\]</span> where <span class="math display">\[\begin{align}
+\mathbb{E}[X|y] &amp;= \mathbb{E}[X] + K(y-\mathbb{E}[Y]) \newline
+\epsilon &amp;= X - \mathbb{E}[X|Y] = X - \mathbb{E}[X] - K(Y-\mathbb{E}[Y]).
+\end{align}\]</span> The righthand side of (19) results from the application of a linear function to <span class="math inline">\((X,Y)\)</span> and thus is Gaussian, verifying that <span class="math inline">\(X|Y=y\)</span> is Gaussian. The conditional mean (17) follows immediately upon noting that <span class="math inline">\(\mathbb{E}[\epsilon] = 0\)</span>. For the covariance, we have <span class="math display">\[\begin{align}
+\text{Cov}[\mathbb{E}[X|y] + \epsilon] &amp;= \text{Cov}[\epsilon] \newline
+&amp;= \text{Cov}[X - KY] \newline
+&amp;= \text{Cov}[X] - K\text{Cov}[Y]K^\top -
+\text{Cov}[X,Y]K^\top - K\text{Cov}[X,Y]. \qquad \blacksquare
+\end{align}\]</span></p>
+<p>In the case that <span class="math inline">\(\text{Cov}[Y]\)</span> is positive definite, then we substitute expression (10) for <span class="math inline">\(K\)</span> to yield the beloved “Gaussian conditioning identities”.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Corollary.</strong> If <span class="math inline">\(\text{Cov}[Y]\)</span> is positive definite, then (17) and (18) are given by <span class="math display">\[\begin{align}
+  \mathbb{E}[X|Y=y] &amp;= \mathbb{E}[X] + \text{Cov}[X,Y]\text{Cov}[Y]^{-1}(y-\mathbb{E}[Y]) \tag{20} \newline
+  \text{Cov}[X|Y=y] &amp;= \text{Cov}[X] - \text{Cov}[X,Y]\text{Cov}[Y]^{-1}\text{Cov}[Y,X] \tag{21}
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>{% endkatexmm %}</p>
+</section>
+</section>
+<section id="covariance-operator" class="level2">
+<h2 class="anchored" data-anchor-id="covariance-operator">Covariance Operator</h2>
+{% katexmm %} As shown in (5) (and derived in the appendix), the covariance matrix associated with a Gaussian measure <span class="math inline">\(\mu\)</span> satisfies <span class="math display">\[\begin{align}
+C &amp;= \int (x - m)(x - m)^\top \mu(dx),
+\end{align}\]</span> where <span class="math inline">\(m\)</span> and <span class="math inline">\(C\)</span> are the quantities given in the Fourier transform (4). We take a step further in this section by viewing the covariance as an operator rather than a matrix. Definitions of the covariance operator differ slightly across various textbooks and literature; we will try to touch on the different conventions here and explain their connections. As a starting point, we consider the following definition.
+<blockquote class="blockquote">
+<p>
+<strong>Definition.</strong> Let <span class="math inline">\(\mu\)</span> be a Gaussian measure with Fourier transform given by (4). Then the <strong>covariance operator</strong> of <span class="math inline">\(\mu\)</span> is defined as the function <span class="math inline">\(\mathcal{C}: \mathbb{R}^n \times \mathbb{R}^n \to \mathbb{R}\)</span> given by <span class="math display">\[
+  \mathcal{C}\left(y, y^\prime \right) = \langle Cy, y^\prime\rangle. \tag{9}
+  \]</span>
+</p>
+</blockquote>
+<p>We immediately have a variety of equivalent expressions for this operator: <span class="math display">\[\begin{align}
+\mathcal{C}\left(y, y^\prime \right)
+&amp;= \langle Cy, y^\prime\rangle \newline
+&amp;= y^\top \left[\int (x - m)(x - m)^\top \mu(dx)\right] y^\prime \newline
+&amp;= \int \langle y, x - m\rangle \langle y^\prime, x - m \rangle \mu(dx). \tag{10}
+\end{align}\]</span> In terms of the random variable <span class="math inline">\(X \sim \mu\)</span>, we can also write this as <span class="math display">\[\begin{align}
+\mathcal{C}\left(y, y^\prime \right)
+&amp;= \int \langle y, x - m\rangle \langle y^\prime, x - m \rangle \mu(dx) \newline
+&amp;= \int \left(\langle y, x\rangle - \langle y, \mathbb{E}[X]\rangle\right)
+\left(\langle y^\prime, x\rangle - \langle y^\prime, \mathbb{E}[X]\rangle\right) \mu(dx) \newline
+&amp;= \mathbb{E}\left[\left(\langle y, x\rangle - \mathbb{E} \langle y,X\rangle\right)
+\left(\langle y^\prime, x\rangle - \mathbb{E} \langle y^\prime,X\rangle\right)\right] \newline
+&amp;= \text{Cov}\left[\langle y,X\rangle, \langle y^\prime,X\rangle \right].
+\end{align}\]</span> In words, the covariance operator <span class="math inline">\(\mathcal{C}\left(y, y^\prime \right)\)</span> outputs the covariance between the one dimensional projections of <span class="math inline">\(X\)</span> along the directions <span class="math inline">\(y\)</span> and <span class="math inline">\(y^\prime\)</span>. Given that the multivariate Gaussian measure is defined in terms of its one-dimensional projections, this should feel fairly natural. In fact, we see that the Fourier transform of <span class="math inline">\(\mu\)</span> can be written as <span class="math display">\[
+\hat{\mu}(y) = \exp\left\{i\langle y, m\rangle - \frac{1}{2}\mathcal{C}(y,y) \right\}.
+\]</span> When the same argument is fed into both slots of the covariance operator (as is the case in the Fourier transform expression above), the result is seen to correspond to the variance of the one-dimensional projection: <span class="math display">\[
+\mathcal{C}(y,y) = \text{Var}\left[\langle y, X\rangle \right].
+\]</span></p>
+<section id="inner-products" class="level3">
+<h3 class="anchored" data-anchor-id="inner-products">Inner Products</h3>
+One feature that makes the covariance operator a convenient mathematical object to study is the inner product structure it provides. Indeed, the following result states that the covariance operator is <em>almost</em> an inner product, and is a true inner product when the covariance matrix <span class="math inline">\(C\)</span> is positive definite.
+<blockquote class="blockquote">
+<p>
+<strong>Proposition.</strong> Let <span class="math inline">\(\mu\)</span> be a Gaussian measure with Fourier transform given by (4). Then the covariance operator (9) is symmetric, bilinear, and positive semidefinite. If <span class="math inline">\(C\)</span>, the covariance matrix of <span class="math inline">\(\mu\)</span>, is positive definite, then the covariance operator is also positive definite and thus defines an inner product.<br>
+
+</p>
+</blockquote>
+<p><strong>Proof.</strong> Bilinearity follows immediately from definition (9). Symmetry similarly follows, and is more immediately obvious in expression (10). Since <span class="math inline">\(C\)</span> is positive semidefinite, then <span class="math display">\[
+\mathcal{C}(y,y) = \langle Cy, y\rangle \geq 0,
+\]</span> so <span class="math inline">\(\mathcal{C}\)</span> is also positive semidefinite. The inequality is strict when <span class="math inline">\(C\)</span> is positive definite and <span class="math inline">\(y \neq 0\)</span>, in which case <span class="math inline">\(\mathcal{C}(\cdot, \cdot)\)</span> is an inner product. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+<p>We can therefore think of <span class="math inline">\(\mathcal{C}\)</span> as defining a new inner product by weighting the Euclidean inner product by a positive definite matrix <span class="math inline">\(C\)</span>.</p>
+</section>
+<section id="a-closely-related-operator" class="level3">
+<h3 class="anchored" data-anchor-id="a-closely-related-operator">A Closely Related Operator</h3>
+<p>Our definition for the covariance operator <span class="math inline">\(\mathcal{C}\)</span> arises form a looking at the quadratic form <span class="math inline">\(\langle Cy, y\rangle\)</span> (the expression that appears in the Fourier transform) in a new way. In particular, we viewed this as a function of two arguments, such that the above quadratic form is the value the function takes when both arguments happen to be <span class="math inline">\(y\)</span>. We could look at this from yet another perspective by considering the quadratic form as a function of only one of its arguments, say, the left one. This gives another useful operator that is closely related to <span class="math inline">\(\mathcal{C}\)</span>.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Definition.</strong> Let <span class="math inline">\(\mu\)</span> be a Gaussian measure with mean <span class="math inline">\(m\)</span> and covariance matrix <span class="math inline">\(C\)</span>. We define the operator <span class="math inline">\(\mathcal{C}^\prime: \mathbb{R}^n \to \mathbb{R}^n\)</span> by <span class="math display">\[
+  \mathcal{C}^\prime(y) := Cy. \tag{12}
+  \]</span>
+</p>
+</blockquote>
+By plugging in the definition of the covariance matrix, we see that this is equivalent to <span class="math display">\[
+\mathcal{C}^\prime(y) = Cy
+= \left(\int (x-m)(x-m)^\top \mu(dx)\right)y
+= \int (x-m) \langle x-m, y\rangle \mu(dx). \tag{13}
+\]</span> We thus have the connection between <span class="math inline">\(C\)</span>, <span class="math inline">\(\mathcal{C}\)</span>, and <span class="math inline">\(\mathcal{C}^\prime\)</span>: <span class="math display">\[
+\langle Cy, y^\prime \rangle = \mathcal{C}(y, y^\prime) = \langle \mathcal{C}^\prime(y), y^\prime\rangle.
+\]</span> While some sources also refer to <span class="math inline">\(\mathcal{C}^\prime\)</span> as the covariance operator, we will reserve this term for <span class="math inline">\(\mathcal{C}\)</span>. The following result is immediate, since <span class="math inline">\(\mathcal{C}^\prime\)</span> inherits the claimed properties from <span class="math inline">\(C\)</span>.
+<blockquote class="blockquote">
+<p>
+<strong>Proposition.</strong> The linear operator <span class="math inline">\(\mathcal{C}^\prime\)</span> is self-adjoint and positive semidefinite.
+</p>
+</blockquote>
+<p>At this point, the definition of <span class="math inline">\(\mathcal{C}^\prime\)</span> seems rather unnecessary given its similarity to <span class="math inline">\(C\)</span>. These are, after all, essentially the same objects aside from the fact that we view <span class="math inline">\(C\)</span> as an element of <span class="math inline">\(\mathbb{R}^{n \times n}\)</span> and <span class="math inline">\(\mathcal{C}^\prime\)</span> as an element of <span class="math inline">\(L(\mathbb{R}^n, \mathbb{R}^n)\)</span>, the set of linear maps from <span class="math inline">\(\mathbb{R}^n\)</span> to <span class="math inline">\(\mathbb{R}^n\)</span>. These distinctions will become more consequential when we start considering Gaussian measures in more abstract settings.</p>
+</section>
+<section id="alternative-definition" class="level3">
+<h3 class="anchored" data-anchor-id="alternative-definition">Alternative Definition</h3>
+<p>As mentioned above, definitions of the covariance operator vary slightly in the literature. One basic modification commonly seen is to assume that <span class="math inline">\(\mu\)</span> is centered (zero mean) and thus define the covariance operator as <span class="math display">\[
+\mathcal{C}(y, y^\prime) := \int \langle y, x\rangle \langle y^\prime, x\rangle \mu(dx). \tag{14}
+\]</span> This is done primarily for convenience, as one can always center a Gaussian measure and then add back the mean when needed. Indeed, assume we are working with a Gaussian measure with mean <span class="math inline">\(m\)</span>. To apply (14), we center the measure, which formally means considering the pushforward <span class="math inline">\(\nu := \mu \circ T^{-1}\)</span> where <span class="math inline">\(T(x) := x - m\)</span>. Using subscripts to indicate the measure associated with each operator, we apply the change-of-variables theorem to obtain <span class="math display">\[\begin{align}
+\mathcal{C}_{\nu}(y, y^\prime)
+&amp;= \int \langle y, x\rangle \langle y^\prime, x\rangle (\mu \circ T^{-1})(dx) \newline
+&amp;= \int \langle y, T(x)\rangle \langle y^\prime, T(x)\rangle \mu(dx) \newline
+&amp;= \int \langle y, x-m \rangle \langle y^\prime, x-m \rangle \mu(dx),
+\end{align}\]</span> which we see agrees with (10), our (uncentered) definition of <span class="math inline">\(\mathcal{C}\)</span>. Thus, our original definition (10) can be thought of as first centering the measure and then applying (14). We could similarly have defined <span class="math inline">\(\mathcal{C}^\prime\)</span> in this way, via <span class="math display">\[
+\mathcal{C}^\prime(y) := \int x \langle y,x\rangle \mu(dx).
+\]</span> This is simply (13) with <span class="math inline">\(m=0\)</span>.</p>
+</section>
+<section id="dual-space-interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="dual-space-interpretation">Dual Space Interpretation</h3>
+<p>As we have done repeatedly throughout this post, we can identify <span class="math inline">\(\mathbb{R}^n\)</span> with its dual <span class="math inline">\((\mathbb{R}^n)^*\)</span>. This may seem needlessly pedantic in the present context, but becomes necessary when defining Gaussian measures on infinite-dimensional spaces. The expression (10) provides the natural jumping off point for reinterpreting the covariance operator as acting on linear functionals. To this end, we can consider re-defining the covariance operator as <span class="math inline">\(\mathcal{C}: (\mathbb{R}^n)^* \times (\mathbb{R}^n)^* \to \mathbb{R}\)</span>, where <span class="math display">\[
+\mathcal{C}(\ell, \ell^\prime)
+:= \int \ell(x-m) \ell^\prime(x-m) \mu(dx). \tag{15}
+\]</span> By identifying each <span class="math inline">\(y \in \mathbb{R}^n\)</span> with its dual vector <span class="math inline">\(\ell_y \in (\mathbb{R}^n)^*\)</span>, this definition is seen to agree with (9). Note that <span class="math inline">\(\ell\)</span> and <span class="math inline">\(\ell^\prime\)</span> are linear, so we could have equivalently defined <span class="math inline">\(\mathcal{C}\)</span> as <span class="math display">\[
+\mathcal{C}(\ell, \ell^\prime)
+:= \int (\ell(x)-\ell(m)) (\ell^\prime(x)-\ell(m)) \mu(dx).
+\]</span></p>
+<p>We can similarly apply the dual space interpretation to <span class="math inline">\(\mathcal{C}^\prime\)</span>. There are a view different ways we can think about this. Let’s start by identifying the codomain of <span class="math inline">\(\mathcal{C}^\prime\)</span> with its dual and hence re-define this operator as <span class="math inline">\(\mathcal{C}^\prime: \mathbb{R}^n \to (\mathbb{R}^n)^*\)</span>, where <span class="math display">\[
+\mathcal{C}^\prime(y)(\cdot) := \mathcal{C}(y, \cdot)
+= \langle Cy, \cdot\rangle = \ell_{Cy}(\cdot) \tag{16}
+\]</span> Under this definition, <span class="math inline">\(\mathcal{C}\)</span> maps an input <span class="math inline">\(y \in \mathbb{R}^n\)</span> to a <em>linear functional</em> <span class="math inline">\(\ell_{Cy} \in (\mathbb{R}^n)^*\)</span>. Alternatively, we could identify the domain with its dual, and instead consider the operator <span class="math inline">\(\mathcal{C}^\prime: (\mathbb{R}^n)^* \to \mathbb{R}^n\)</span>, where <span class="math display">\[
+\mathcal{C}^\prime(\ell) := \int (x-m) \ell(x-m) \mu(dx). \tag{17}
+\]</span> We can of course combine these two ideas and consider the map <span class="math inline">\(\mathcal{C}^\prime: (\mathbb{R}^n)^* \to (\mathbb{R}^n)^*\)</span>. However, thinking ahead to more abstract settings, it is actually a bit more interesting to consider <span class="math inline">\(\mathcal{C}^\prime: (\mathbb{R}^n)^* \to (\mathbb{R}^n)^{**}\)</span> by identifying <span class="math inline">\(\mathbb{R}^n\)</span> with its <em>double dual</em>. From this perspective, the operator is defined by <span class="math display">\[
+\mathcal{C}^\prime(\ell)(\ell^\prime)
+:= \mathcal{C}(\ell, \ell^\prime)
+= \int \ell(x-m) \ell^\prime(x-m) \mu(dx). \tag{18}
+\]</span> Notice that in this case <span class="math inline">\(\mathcal{C}^\prime\)</span> maps a dual vector <span class="math inline">\(\ell\)</span> to a <em>double</em> dual vector <span class="math inline">\(\ell^\prime \mapsto \mathcal{C}(\ell, \ell^\prime)\)</span> (i.e., the output is itself a function that accepts a linear functional as input). Since, <span class="math inline">\(\mathbb{R}^n\)</span>, <span class="math inline">\((\mathbb{R}^n)^*\)</span>, and <span class="math inline">\((\mathbb{R}^n)^{**}\)</span> are all isomorphic, in the present setting these various perspectives are interesting but perhaps a bit overkill. When we consider the infinite-dimensional setting in the subsequent post, not all of these perspectives will generalize. The key will be identifying the perspective that does actually generalize to infinite dimensional settings. {% endkatexmm %}</p>
+</section>
+</section>
+<section id="appendix" class="level2">
+<h2 class="anchored" data-anchor-id="appendix">Appendix</h2>
+<section id="proof-of-4-fourier-transform-characterization" class="level3">
+<h3 class="anchored" data-anchor-id="proof-of-4-fourier-transform-characterization">Proof of (4): Fourier Transform Characterization</h3>
+<p>{% katexmm %} Assume that the probability measure <span class="math inline">\(\mu\)</span> has a Fourier transform given by <span class="math display">\[
+\hat{\mu}(y) = \exp\left\{i \langle m, y\rangle - \frac{1}{2}\langle Cy, y\rangle \right\},
+\]</span> for some nonrandom vector <span class="math inline">\(m \in \mathbb{R}^n\)</span> and symmetric positive semidefinite matrix <span class="math inline">\(C \in \mathbb{R}^{n \times n}\)</span>. We must show that the pushforward <span class="math inline">\(\mu \circ \ell_y^{-1}\)</span> is Gaussian for an arbitrary <span class="math inline">\(\ell_y \in \left(\mathbb{R}^n\right)^*\)</span>. We will do so by invoking the known form of the Fourier transform for univariate Gaussians. To this end, let <span class="math inline">\(t \in \mathbb{R}\)</span> and consider <span class="math display">\[\begin{align}
+\mathcal{F}\left(\mu \circ \ell_y^{-1}\right)(t)
+&amp;= \int e^{its} \left(\mu \circ \ell_y^{-1} \right)(ds) \newline
+&amp;= \int e^{it \ell_y(x)} \mu(dx) \newline
+&amp;= \int e^{i \langle ty, x\rangle} \mu(dx) \newline
+&amp;= \hat{\mu}(ty) \newline
+&amp;= \exp\left(i \langle m, ty\rangle - \frac{1}{2}\langle C(ty), ty\rangle \right) \newline
+&amp;= \exp\left(it \langle m, y\rangle - \frac{1}{2}t^2\langle Cy, y\rangle \right),
+\end{align}\]</span> where the second equality uses the change-of-variables formula, and the final uses the assumed form of <span class="math inline">\(\hat{\mu}\)</span>. Also recall the alternate notation for the Fourier transform: <span class="math inline">\(\hat{\mu}(y) = \mathcal{F}(\mu)(y)\)</span>. We recognize the final expression above as the Fourier transform of a univariate Gaussian measure with mean <span class="math inline">\(\langle y, m\rangle\)</span> and variance <span class="math inline">\(\langle Cy, y\rangle\)</span>, evaluated at frequency <span class="math inline">\(t\)</span>. This implies that <span class="math inline">\(\mu \circ \ell_y^{-1}\)</span> is Gaussian. Since <span class="math inline">\(\ell_y \in \left(\mathbb{R}^n \right)^*\)</span> was arbitrary, it follows by definition that <span class="math inline">\(\mu\)</span> is Gaussian.</p>
+<p>Conversely, assume that <span class="math inline">\(\mu\)</span> is Gaussian. Then, <span class="math inline">\(\mu \circ \ell_y^{-1}\)</span> is univariate Gaussian for all <span class="math inline">\(\ell_y \in \left(\mathbb{R}^n \right)^*\)</span>. We must show that <span class="math inline">\(\hat{\mu}\)</span> assumes the claimed form. Letting <span class="math inline">\(y \in \mathbb{R}^n\)</span>, we have <span class="math display">\[\begin{align}
+\hat{\mu}(y)
+&amp;= \int e^{i \langle y, x\rangle} \mu(dx) \newline
+&amp;= \int e^{is} \left(\mu \circ \ell_y^{-1}\right)(ds) \newline
+&amp;= \mathcal{F}\left(\mu \circ \ell_y^{-1}\right)(1) \newline
+&amp;= \exp\left(i m(y) - \frac{1}{2}\sigma^2(y) \right),
+\end{align}\]</span> where <span class="math inline">\(m(y)\)</span> and <span class="math inline">\(\sigma^2(y)\)</span> are the mean and variance of <span class="math inline">\(\mu \circ \ell_y^{-1}\)</span>, respectively. The first equality again uses the change-of-variables formula, while the last expression follows from the assumption that <span class="math inline">\(\mu \circ \ell_y^{-1}\)</span> is Gaussian, and hence must have a Fourier transform of this form. It remains to verify that <span class="math inline">\(m(y) = \langle y, m\rangle\)</span> and <span class="math inline">\(\sigma^2(y) = \langle Cy, y\rangle\)</span> to complete the proof. By definition, the<br>
+mean of <span class="math inline">\(\mu \circ \ell_y^{-1}\)</span> is given by <span class="math display">\[\begin{align}
+m(y) &amp;= \int \ell_y(x) \mu(dx) \newline
+&amp;= \int \langle y, x\rangle \mu(dx) \newline
+&amp;= \left\langle y, \int x \mu(dx) \right\rangle \newline
+&amp;=: \langle y, m \rangle,
+\end{align}\]</span> where we have used the linearity of integration and defined the nonrandom vector <span class="math inline">\(m := \int x \mu(dx)\)</span>. Now, for the variance we have <span class="math display">\[\begin{align}
+\sigma^2(y)
+&amp;= \int \left[\ell_y(x) - m(y) \right]^2 \mu(dx) \newline
+&amp;= \int \left[\langle y, x\rangle - \langle y, m \rangle \right]^2 \mu(dx) \newline
+&amp;= \int \langle y, x-m\rangle^2 \mu(dx) \newline
+&amp;= y^\top \left[\int (x-m)(x-m)^\top \mu(dx) \right] y \newline
+&amp;=: y^\top C y \newline
+&amp;= \langle Cy, y \rangle.
+\end{align}\]</span> Note that <span class="math inline">\(\sigma^2(y)\)</span> is the expectation of a nonnegative quantity, so <span class="math inline">\(\langle Cy, y \rangle \geq 0\)</span> for all <span class="math inline">\(y \in \mathbb{R}^n\)</span>; i.e.,<br>
+<span class="math inline">\(C\)</span> is positive semidefinite. We have thus shown that <span class="math display">\[\begin{align}
+\hat{\mu}(y) &amp;= \exp\left(\langle y, m\rangle - \frac{1}{2}\langle Cy,y\rangle \right),
+\end{align}\]</span> with <span class="math inline">\(C\)</span> a positive semidefinite matrix, as required. <span class="math inline">\(\qquad \blacksquare\)</span> {% endkatexmm %}</p>
+</section>
+<section id="proof-of-6-density-function" class="level3">
+<h3 class="anchored" data-anchor-id="proof-of-6-density-function">Proof of (6): Density Function</h3>
+<p>{% katexmm %} Let’s start by assuming <span class="math inline">\(\mu\)</span> is a Gaussian measure with mean <span class="math inline">\(m\)</span> and positive definite covariance matrix <span class="math inline">\(C\)</span>. Then <span class="math inline">\(C\)</span> admits an eigendecomposition <span class="math inline">\(C = UDU^\top\)</span> where the columns <span class="math inline">\(u_1, \dots, u_n\)</span> of <span class="math inline">\(U\)</span> are orthonormal and <span class="math inline">\(D = \text{diag}\left(\lambda_1, \dots, \lambda_n\right)\)</span> with <span class="math inline">\(\lambda_1 \geq \lambda_2 \geq \cdots \lambda_n &gt; 0\)</span>. Then by definition of a Gaussian measure, the one-dimensional projections <span class="math inline">\(\mu \circ \ell^{-1}_{u_i}\)</span> are Gaussian, with respective means <span class="math inline">\(\langle m, u_i\rangle\)</span> and variances <span class="math inline">\(\langle Cu_i, u_i\rangle = \langle \lambda_i u_i, u_i\rangle = \lambda_i &gt; 0\)</span> (see the above proof for the derivation of the mean and variance). Note that the positive definite assumption ensures that the variances are all strictly positive. Since the variances are positive, each of these univariate Gaussians admits a density <span class="math display">\[
+\frac{d\left(\mu \circ \ell^{-1}_{u_i}\right)}{d\lambda}(t)
+= \exp\left\{-\frac{1}{2\lambda_i}\left(t - \langle m, u_i\rangle \right)^2\right\},
+\]</span> for <span class="math inline">\(i = 1, \dots, n\)</span>. We will now show that <span class="math inline">\(\mu\)</span> can be written as the product of <span class="math inline">\(n\)</span> independent univariate Gaussian measures. We will leverage the Fourier transform to establish this fact. Letting <span class="math inline">\(y \in \mathbb{R}^n\)</span>, we will lighten notation by writing <span class="math inline">\(\alpha_i := \langle y, u_i\rangle\)</span> and <span class="math inline">\(\beta_i := \langle m, u_i \rangle\)</span>; <span class="math inline">\(y\)</span> and <span class="math inline">\(m\)</span> can thus be represented with respect to the eigenbasis as <span class="math display">\[\begin{align}
+&amp;y = \sum_{i=1}^{n} \alpha_i u_i, &amp;m = \sum_{i=1}^{n} \beta_i u_i.
+\end{align}\]</span> Taking the Fourier transform of <span class="math inline">\(\mu\)</span>, we have <span class="math display">\[\begin{align}
+\hat{\mu}(y)
+&amp;= \exp\left(i\langle y,m\rangle - \frac{1}{2}\langle Cy,y\rangle \right) \newline
+&amp;= \exp\left(i\left\langle \sum_{i=1}^{n} \alpha_i u_i, \sum_{i=1}^{n} \beta_i u_i  \right\rangle - \frac{1}{2}\left\langle \sum_{i=1}^{n} \alpha_i Cu_i, \sum_{i=1}^{n} \alpha_i u_i \right\rangle \right) \newline
+&amp;= \exp\left(i\sum_{i=1}^{n} \alpha_i \beta_i - \frac{1}{2}\sum_{i=1}^{n}\lambda_i \alpha_i^2 \right) \newline
+&amp;= \prod_{i=1}^{n} \exp\left(i\alpha_i \beta_i - \frac{1}{2}\lambda_i \alpha_i^2 \right) \newline
+&amp;= \prod_{i=1}^{n} \mathcal{F}\left(\mathcal{N}(\beta_i, \lambda_i) \right)(\alpha_i).
+\end{align}\]</span></p>
+</section>
+<section id="proof-of-7-transformation-of-standard-gaussian" class="level3">
+<h3 class="anchored" data-anchor-id="proof-of-7-transformation-of-standard-gaussian">Proof of (7): Transformation of Standard Gaussian</h3>
+<p>For completeness, we start by proving the following basic fact.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Lemma.</strong> Let <span class="math inline">\(Z_i \overset{iid}{\sim} \mathcal{N}(0, 1)\)</span> and define the random vector <span class="math inline">\(Z := \begin{bmatrix} Z_1, \dots, Z_n \end{bmatrix}^\top\)</span>. Then the law of <span class="math inline">\(Z\)</span> is multivariate Gaussian, in particular <span class="math inline">\(\mathcal{N}(0, I)\)</span>.
+</p>
+</blockquote>
+<p><strong>Proof.</strong> Let <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> denote the law of <span class="math inline">\(Z\)</span> and <span class="math inline">\(Z_i\)</span>, respectively. Observe that <span class="math inline">\(\mu\)</span> is the product measure constructed from <span class="math inline">\(n\)</span> copies of <span class="math inline">\(\nu\)</span>; that is, <span class="math inline">\(\mu = \nu \otimes \cdots \otimes \nu\)</span>. We will establish the Gaussianity of <span class="math inline">\(\mu\)</span> by appealing to the Fourier transform. Let <span class="math inline">\(y \in \mathbb{R}^n\)</span> and consider <span class="math display">\[\begin{align}
+\hat{\mu}(y)
+&amp;= \int e^{i \langle y, x\rangle} \mu(dx) \newline
+&amp;= \int \prod_{i=1}^{n} \exp\left(i y_i x_i\right) (\nu \otimes \cdots \otimes \nu)(dx_1, \dots, dx_n) \newline
+&amp;= \prod_{i=1}^{n} \int \exp\left(iy_i x_i \right) \nu(dx_i) \newline
+&amp;= \prod_{i=1}^{n} \hat{\nu}(y_i) \newline
+&amp;= \prod_{i=1}^{n} \exp\left(-\frac{1}{2}y_i^2\right) \newline
+&amp;= \exp\left(-\frac{1}{2} \sum_{i=1}^{n} y_i^2 \right) \newline
+&amp;= \exp\left(-\frac{1}{2} \langle Iy, y \rangle \right),
+\end{align}\]</span> where we have used the Fourier transform of the univariate Gaussian measure <span class="math inline">\(\nu\)</span>. We recognize the final expression to be the Fourier transform of a Gaussian measure with mean vector <span class="math inline">\(0\)</span> and covariance matrix <span class="math inline">\(I\)</span>. <span class="math inline">\(\qquad \blacksquare\)</span></p>
+<p><strong>Proof of (7).</strong> Proceeding with the main result, we first show that the random variable <span class="math inline">\(X := m + AZ\)</span> has law <span class="math inline">\(\mathcal{N}(m, AA^\top)\)</span>. This follows immediately from the above lemma and basic facts about Fourier transforms. In particular, recall the following properties of Fourier transforms. Recall that we write <span class="math inline">\(\mathcal{L}(Y)\)</span> to denote the law of a random variable <span class="math inline">\(Y\)</span>, and thus <span class="math inline">\(\hat{\mathcal{L}}(Y)\)</span> is the Fourier transform of this law. We are interested in the Fourier transform <span class="math display">\[
+\hat{\mathcal{L}}(X)
+= \hat{\mathcal{L}}(m + AZ),
+\]</span> which is easily derived if one recalls the effect of affine transformations on Fourier transforms. To be self-contained, we derive the required results here; let <span class="math inline">\(Y\)</span> be an arbitrary <span class="math inline">\(n\)</span>-dimensional random vector, and <span class="math inline">\(m\)</span>, <span class="math inline">\(A\)</span> be non-random as above. Then,<br>
+<span class="math display">\[\begin{align}
+\hat{\mathcal{L}}(AY)(x)
+&amp;= \mathbb{E}\left[\exp\left(i\langle x, AY\rangle \right) \right]
+= \mathbb{E}\left[\exp\left(i\langle A^\top x, Y\rangle \right) \right]  
+= \hat{\mathcal{L}}(Y)(A^\top x)
+\end{align}\]</span> and <span class="math display">\[\begin{align}
+\hat{\mathcal{L}}(m + Y)(x)
+&amp;= \mathbb{E}\left[\exp\left(i\langle x, m+Y\rangle \right) \right]  
+= \exp\left(i\langle x, m\rangle \right)\mathbb{E}\left[\exp\left(i\langle x, Y\rangle \right) \right]
+= \exp\left(i\langle x, m\rangle \right) \hat{\mathcal{L}}(Y)(x).
+\end{align}\]</span> We combine these two results to the present problem, obtaining <span class="math display">\[\begin{align}
+\hat{\mathcal{L}}(X)(x)
+&amp;= \hat{\mathcal{L}}(m + AZ)(x) \newline
+&amp;= \exp\left(i\langle x, m\rangle \right) \hat{\mathcal{L}}(Z)(A^\top x) \newline
+&amp;= \exp\left(i\langle x, m\rangle \right)\exp\left(-\frac{1}{2}\langle A^\top x, A^\top x\rangle \right) \newline
+&amp;= \exp\left(i\langle x, m\rangle \right)\exp\left(-\frac{1}{2}\langle AA^\top x, x\rangle \right) \newline
+&amp;= \exp\left(i\langle x, m\rangle - \frac{1}{2}\langle AA^\top x, x\rangle \right),
+\end{align}\]</span> where we have used the fact</p>
+<p>{% endkatexmm %}</p>
+</section>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<ol type="1">
+<li>Gaussian Measures (Vladimir Bogachev)</li>
+<li>An Introduction to Stochastic PDEs (Martin Hairer)</li>
+<li>S. Janson, Gaussian Hilbert spaces,</li>
+<li>M.A.&nbsp;Lifshits, Gaussian random functions</li>
+<li>R. Durrett, Probability: theory and examples</li>
+<li>CONDITIONAL MEANS AND COVARIANCES OF NORMAL VARIABLES WITH SINGULAR COVARIANGE MATRIX (George Marsaglia)</li>
+</ol>
+</section>
+<section id="todos" class="level2">
+<h2 class="anchored" data-anchor-id="todos">TODOs</h2>
+<ul>
+<li>Proof that zeros in covariance matrix imply independence.</li>
+<li>Proof that zeros in precision matrix imply conditional independence.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/arob5\.github\.io\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="arob5/arob5.github.io" issue-term="title" theme="body-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2025 Andrew G. Roberts ∙ Made with <a href="https://quarto.org">Quarto</a></p>
+</div>   
+    <div class="nav-footer-center">
+<p><a class="link-dark me-1" href="https://github.com/arob5" title="github" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:github" aria-label="Icon github from fa6-brands Iconify.design set." title="Icon github from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://orcid.org/0009-0002-4274-7914" title="orcid" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:orcid" aria-label="Icon orcid from fa6-brands Iconify.design set." title="Icon orcid from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://scholar.google.com/citations?user=E2erpCwAAAAJ&amp;hl=en" title="Google Scholar" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:google-scholar" aria-label="Icon google-scholar from fa6-brands Iconify.design set." title="Icon google-scholar from fa6-brands Iconify.design set."></iconify-icon></a> <a class="link-dark me-1" href="https://linkedin.com/in/andrew-roberts5" title="LinkedIn" target="_blank" rel="noopener"><iconify-icon role="img" inline="" icon="fa6-brands:linkedin" aria-label="Icon linkedin from fa6-brands Iconify.design set." title="Icon linkedin from fa6-brands Iconify.design set."></iconify-icon></a></p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

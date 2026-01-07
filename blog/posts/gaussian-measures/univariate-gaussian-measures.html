@@ -6,10 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-11-26">
-<meta name="description" content="Gauss-Newton, Levenberg-Marquardt">
+<meta name="dcterms.date" content="2024-05-16">
 
-<title>Nonlinear Least Squares – Andrew G. Roberts</title>
+<title>Gaussian Measures, Part 1 - The Univariate Case – Andrew G. Roberts</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -25,23 +24,23 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
-<script src="../../site_libs/quarto-html/quarto.js"></script>
-<script src="../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
-<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-6bd9cfa162949bde0a231f530c97869d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -100,6 +99,7 @@ window.Quarto = {
 };
 </script>
 
+<link rel="stylesheet" href="../../../styles.css">
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
@@ -110,10 +110,10 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../../headshot_photo.png" alt="" class="navbar-logo">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../headshot_photo.png" alt="" class="navbar-logo">
     </a>
-    <a class="navbar-brand" href="../../index.html">
+    <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Andrew G. Roberts</span>
     </a>
   </div>
@@ -124,7 +124,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../blog/index.html"> 
+    <a class="nav-link" href="../../../blog/index.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
 </ul>
@@ -139,16 +139,11 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Nonlinear Least Squares</h1>
-                  <div>
-        <div class="description">
-          Gauss-Newton, Levenberg-Marquardt
-        </div>
-      </div>
-                          <div class="quarto-categories">
-                <div class="quarto-category">Statistics</div>
-                <div class="quarto-category">Optimization</div>
-                <div class="quarto-category">Inverse-Problem</div>
+      <h1 class="title">Gaussian Measures, Part 1 - The Univariate Case</h1>
+            <p class="subtitle lead">A brief introduction to Gaussian measures in one dimension.</p>
+                                <div class="quarto-categories">
+                <div class="quarto-category">GP</div>
+                <div class="quarto-category">Prob-Theory</div>
               </div>
                   </div>
   </div>
@@ -160,7 +155,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">November 26, 2024</p>
+        <p class="date">May 16, 2024</p>
       </div>
     </div>
     
@@ -176,22 +171,10 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#notation" id="toc-notation" class="nav-link active" data-scroll-target="#notation">Notation</a></li>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a>
-  <ul class="collapse">
-  <li><a href="#statistical-perspective" id="toc-statistical-perspective" class="nav-link" data-scroll-target="#statistical-perspective">Statistical Perspective</a></li>
-  <li><a href="#gradient-and-hessian" id="toc-gradient-and-hessian" class="nav-link" data-scroll-target="#gradient-and-hessian">Gradient and Hessian</a></li>
-  </ul></li>
-  <li><a href="#numerical-optimization" id="toc-numerical-optimization" class="nav-link" data-scroll-target="#numerical-optimization">Numerical Optimization</a>
-  <ul class="collapse">
-  <li><a href="#newtons-method" id="toc-newtons-method" class="nav-link" data-scroll-target="#newtons-method">Newton’s Method</a></li>
-  <li><a href="#gauss-newton" id="toc-gauss-newton" class="nav-link" data-scroll-target="#gauss-newton">Gauss-Newton</a>
-  <ul class="collapse">
-  <li><a href="#approximate-hessian" id="toc-approximate-hessian" class="nav-link" data-scroll-target="#approximate-hessian">Approximate Hessian</a></li>
-  <li><a href="#local-least-squares-perspective" id="toc-local-least-squares-perspective" class="nav-link" data-scroll-target="#local-least-squares-perspective">Local Least Squares Perspective</a></li>
-  </ul></li>
-  <li><a href="#levenberg-marquardt" id="toc-levenberg-marquardt" class="nav-link" data-scroll-target="#levenberg-marquardt">Levenberg-Marquardt</a></li>
-  </ul></li>
+  <li><a href="#density-function" id="toc-density-function" class="nav-link active" data-scroll-target="#density-function"><span class="header-section-number">1</span> Density Function</a></li>
+  <li><a href="#fourier-transform" id="toc-fourier-transform" class="nav-link" data-scroll-target="#fourier-transform"><span class="header-section-number">2</span> Fourier Transform</a></li>
+  <li><a href="#random-variables" id="toc-random-variables" class="nav-link" data-scroll-target="#random-variables"><span class="header-section-number">3</span> Random Variables</a></li>
+  <li><a href="#the-central-limit-theorem" id="toc-the-central-limit-theorem" class="nav-link" data-scroll-target="#the-central-limit-theorem"><span class="header-section-number">4</span> The Central Limit Theorem</a></li>
   </ul>
 </nav>
     </div>
@@ -202,138 +185,92 @@ window.Quarto = {
 
 
 
-<p>This post provides an introduction to nonlinear least squares (NLS), which generalizes the familiar least squares problem by allowing for a nonlinear forward map. Unlike least squares, the NLS problem does not admit closed-form solutions, but a great deal of work has been devoted to numerical schemes tailored to this specific problem. We introduce two of the most popular algorithms: Gauss-Newton and Levenberg-Marquardt.</p>
-<section id="notation" class="level1">
-<h1>Notation</h1>
-<p>For a positive definite matrix <span class="math inline">\(A\)</span>, we use the following notation for the norm and inner product, weighted by <span class="math inline">\(A\)</span>:</p>
-<p><span class="math display">\[
-\langle u, v \rangle_A := \langle A^{-1}u, v\rangle = u^\top A^{-1}v \newline
-\]</span> <span class="math display">\[
-\lVert u \rVert^2_{A} := \langle u, u\rangle_{A} = u^\top A^{-1}u,
+<p>I intend for this to be part one of a (at least) three part series on Gaussian measures, with the ultimate goal being to understand Gaussian processes as random elements in some suitable infinite-dimensional space. Defining a rigorous infinite-dimensional analog of the familiar Gaussian distribution is no small task, and texts on this subject can be quite intimidating. I’ve found that, personally, the key to make these references more approachable was to first develop a deep understanding of Gaussian measures in finite dimensions. Indeed, many of the concepts in the infinite-dimensional case are directly motivated by their finite-dimensional analogs. In particular, I found the parallels between the transitions from one-to-multiple and multiple-to-infinite dimensions to be quite enlightening. Therefore, we start here with the simplest case: Gaussian measures in one dimension. This basic case is likely worth exploring even for those well-acquainted with the Gaussian distribution, as it requires a shift in thinking about densities to thinking more abstractly in terms of measures. While this may seem unnecessarily pedantic in one dimension, we will find that the measure-theoretic approach becomes a necessity in generalizing to infinite dimensions. This post also serves to establish notation, and introduce some key concepts that will be used throughout this series, including Fourier transforms (characteristic functions), Radon-Nikodym derivatives, and the change-of-variables formula.</p>
+<section id="density-function" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="density-function"><span class="header-section-number">1</span> Density Function</h2>
+<p>We start by recalling that the univariate Gaussian density takes the form <span class="math display">\[
+\mathcal{N}(x \mid m, \sigma^2) := \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left\{-\frac{1}{2\sigma^2}(x - m)^2 \right\}. \tag{1}
+\]</span> We’re typically used to defining the Gaussian as a random variable with density equal to <span class="math inline">\(\mathcal{N}(x \mid m, \sigma^2)\)</span>. Since we’re interested in measures here, we can simply define the corresponding measure by integrating this density.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Definition.</strong> A probability measure <span class="math inline">\(\mu\)</span> defined on the Borel measurable space <span class="math inline">\((\mathbb{R}, \mathcal{B}(\mathbb{R}))\)</span> is called <strong>Gaussian</strong> provided that, for any Borel set <span class="math inline">\(B \in \mathcal{B}(\mathbb{R})\)</span>, either <span class="math display">\[\begin{align}
+  \mu(B) = \int_{B} \mathcal{N}(x|m, \sigma^2) dx
+  \end{align}\]</span> for some fixed <span class="math inline">\(m \in \mathbb{R}\)</span> and <span class="math inline">\(\sigma^2 &gt; 0\)</span>, or <span class="math display">\[\begin{align}
+  \mu(B) = \delta_m(B).
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>Note that a Gaussian measure is a <em>Borel measure</em>; that is, we define it on the Borel sets <span class="math inline">\(\mathcal{B}(\mathbb{R})\)</span>. This will remain true as we extend to multiple, and even infinite, dimensions. The first case in the above definition is the familiar one, seeing as we’re simply integrating over the Gaussian density. The notation <span class="math inline">\(dx\)</span> in the integral formally means that the integration is with respect to the Lebesgue measure <span class="math inline">\(\lambda\)</span> on <span class="math inline">\((\mathbb{R}, \mathcal{B}(\mathbb{R}))\)</span>. Another way we could phrase this is to say that a probability measure <span class="math inline">\(\mu\)</span> is Gaussian provided that its Radon-Nikodym derivative with respect to <span class="math inline">\(\lambda\)</span> is <span class="math inline">\(\mathcal{N}(x \mid m, \sigma^2)\)</span>; i.e., <span class="math display">\[\begin{align}
+\frac{d\mu}{d\lambda}(x) = \mathcal{N}(x \mid m, \sigma^2).
+\end{align}\]</span> The density, of course, is only defined if <span class="math inline">\(\sigma^2 &gt; 0\)</span>. It turns out to be nice to also allow for the <span class="math inline">\(\sigma^2 = 0\)</span> case. While <span class="math inline">\(\mathcal{N}(x \mid m, 0)\)</span> is not defined, we can formalize this notion as a Dirac measure <span class="math inline">\(\delta_m\)</span>, which is defined by <span class="math display">\[
+\delta_m(B) := 1[m \in B].
+\]</span> In this case the Gaussian measure is simply a point mass—all of the probability is concentrated at the mean <span class="math inline">\(m\)</span>. We call such a Gaussian measure <em>degenerate</em>, while Gaussian measures that admit densities are <em>non-degenerate</em>. We write <span class="math inline">\(\mu = \mathcal{N}(m, \sigma^2)\)</span> to signify that <span class="math inline">\(\mu\)</span> is a Gaussian measure with density <span class="math inline">\(\mathcal{N}(x \mid m, \sigma^2)\)</span> if <span class="math inline">\(\sigma^2 &gt; 0\)</span>, or <span class="math inline">\(\mu = \delta_m\)</span> if <span class="math inline">\(\sigma^2 = 0\)</span>. When <span class="math inline">\(m = 0\)</span> we call <span class="math inline">\(\mu\)</span> <em>centered</em> or <em>symmetric</em>. Note that the measure <span class="math inline">\(\mu\)</span> is symmetric in the sense that <span class="math inline">\(\mu(B) = \mu(-B)\)</span> for any Borel set <span class="math inline">\(B\)</span>. If, moreover, <span class="math inline">\(\sigma^2 = 1\)</span> then we call <span class="math inline">\(\mu = \mathcal{N}(0, 1)\)</span> the <em>standard Gaussian</em>.</p>
+<p>Up to now, we have been treating <span class="math inline">\(m\)</span> and <span class="math inline">\(\sigma^2\)</span> as generic numbers, but one can show that they correspond to the mean and variance of <span class="math inline">\(\mu\)</span>, respectively.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Proposition.</strong> Let <span class="math inline">\(\mu = \mathcal{N}(m, \sigma^2)\)</span> be a Gaussian measure. Then, <span class="math display">\[\begin{align}
+  m &amp;= \int x \mu(dx), &amp;&amp; \sigma^2 = \int [x - m]^2 \mu(dx).
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>The proof in the <span class="math inline">\(\mathcal{N}(m, 0)\)</span> case is trivial given the fact that integrating a measurable function with respect to <span class="math inline">\(\delta_m\)</span> is equivalent to evaluating that function at <span class="math inline">\(m\)</span>. Thus, <span class="math display">\[\begin{align}
+&amp;\int x \delta_m(dx) = m, &amp;&amp;\int [x - m]^2 \delta_m(dx) = [m - m]^2 = 0.
+\end{align}\]</span> The derivations of the non-degenerate case are quite standard results, so we won’t take the time to prove them here.</p>
+</section>
+<section id="fourier-transform" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="fourier-transform"><span class="header-section-number">2</span> Fourier Transform</h2>
+<p>A Gaussian measure can alternatively be defined via its Fourier transform <span class="math display">\[\begin{align}
+\hat{\mu}(t) := (\mathcal{F}(\mu))(t) := \int e^{its} \mu(ds).
+\end{align}\]</span> The notation <span class="math inline">\(\mathcal{F}(\mu)\)</span> makes it clear that the Fourier transform is an operator that acts on the measure <span class="math inline">\(\mu\)</span>, though we will typically stick with the more succinct notation <span class="math inline">\(\hat{\mu}\)</span>. Note that this is a generalization of the standard Fourier transform, which acts on functions, to an operator that acts on measures. Probability theorists draw a distinction between the two by referring to <span class="math inline">\(\hat{\mu}\)</span> as the <em>characteristic function</em> of <span class="math inline">\(\mu\)</span>. A classical result is that the Fourier transform of a Gaussian density is itself a Gaussian density (up to scaling). The following result captures this case, as well as the degenerate one.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Proposition.</strong> Let <span class="math inline">\(\mu = \mathcal{N}(m, \sigma^2)\)</span> be a Gaussian measure. Then its Fourier transform is given by <span class="math display">\[\begin{align}
+  \hat{\mu}(t) &amp;= \exp\left(itm - \frac{1}{2}t^2 \sigma^2 \right). \tag{2}
+  \end{align}\]</span>
+</p>
+</blockquote>
+<p>The Fourier transform completely characterizes <span class="math inline">\(\mu\)</span> and hence we could have taken (2) as an alternative definition of a Gaussian measure. Indeed, it is this definition that ends up proving much more useful, in that it can be easily generalized to Gaussian measures in multiple, and infinite, dimensions. We also note that <span class="math inline">\(\hat{\mu}\)</span> conveniently captures both the degenerate and non-degenerate cases in one expression. In the degenerate case, we have <span class="math display">\[
+\hat{\delta}_m(t) = \int e^{its} \delta_m(ds) = e^{itm},
+\]</span> which indeed agrees with (2) with <span class="math inline">\(\sigma^2 = 0\)</span>. The complete result can be derived in many different ways; a quick Google search should satisfy the curious reader.</p>
+</section>
+<section id="random-variables" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="random-variables"><span class="header-section-number">3</span> Random Variables</h2>
+<p>We have so far focused our discussion on measures <span class="math inline">\(\mu\)</span> defined on the measurable space <span class="math inline">\((\mathbb{R}, \mathcal{B}(\mathbb{R}))\)</span>. We now extend our discussion to include Gaussian <em>random variables</em>. In short, a random variable <span class="math inline">\(X\)</span> is Gaussian if its distribution (i.e., law) is Gaussian. Let’s be a bit more precise though.</p>
+<blockquote class="blockquote">
+<p>
+<strong>Definition.</strong> Let <span class="math inline">\((\Omega, \mathcal{A}, \mathbb{P})\)</span> be a probability space, and <span class="math inline">\(X: \Omega \to (\mathbb{R}, \mathcal{B}(\mathbb{R}))\)</span> a random variable. The <strong>distribution</strong> (or <strong>law</strong>) of <span class="math inline">\(X\)</span> is defined to be the probability measure <span class="math inline">\(\mathbb{P} \circ X^{-1}\)</span> on <span class="math inline">\((\mathbb{R}, \mathcal{B}(\mathbb{R}))\)</span>. We write <span class="math inline">\(\mathcal{L}(X) = \mu\)</span> (<span class="math inline">\(\mathcal{L}\)</span> for “law”) or <span class="math inline">\(X \sim \mu\)</span> to mean that the random variable <span class="math inline">\(X\)</span> has distribution <span class="math inline">\(\mu\)</span>.
+</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>
+<strong>Definition.</strong> We say that <span class="math inline">\(X\)</span> is a <strong>Gaussian random variable</strong> if <span class="math inline">\(\mathcal{L}(X) = \mathbb{P} \circ X^{-1}\)</span> is a Gaussian measure.
+</p>
+</blockquote>
+<p>The quantity <span class="math inline">\(\mathbb{P} \circ X^{-1}\)</span> is the <em>pushforward</em> of the measure <span class="math inline">\(\mathbb{P}\)</span> under the map <span class="math inline">\(X\)</span>, given by <span class="math display">\[\begin{align}
+&amp;(\mathbb{P} \circ X^{-1})(B) := \mathbb{P}(X^{-1}(B)), &amp;&amp;B \in \mathcal{B}(\mathbb{R}).
+\end{align}\]</span> Here, <span class="math inline">\(X^{-1}(B) := \{\omega \in \Omega : X(\omega) \in B\}\)</span> denotes the <em>inverse image</em> (i.e., <em>pre-image</em>) of <span class="math inline">\(B\)</span> under <span class="math inline">\(X\)</span>.</p>
+<p>The introduction of random variables provides a new language to express the concepts introduced above. For example, suppose that <span class="math inline">\(X \sim \mu\)</span>. Then we can write the expectation of <span class="math inline">\(X\)</span> in a few different ways: <span class="math display">\[
+\mathbb{E}_{\mu}[X] := \int_{\mathbb{R}} x \ \mu(dx)
+= \int_{\mathbb{R}} x \ (\mathbb{P} \circ X^{-1})(dx)
+= \int_{\Omega} X(\omega) \ \mathbb{P}(d\omega).
+\]</span> The final equality is courtesy of the <em>change-of-variables formula</em>, a result that we will be using repeatedly throughout these notes. Following the above notation, we can also write the Fourier transform <span class="math inline">\(\hat{\mu}\)</span> in terms of the random variable <span class="math inline">\(X\)</span> as <span class="math display">\[
+\hat{\mu}(t) = \mathbb{E}_{\mu}\left[e^{itX} \right].
 \]</span></p>
-<p>where <span class="math inline">\(\langle \cdot, \cdot \rangle\)</span> and <span class="math inline">\(\lVert \cdot \rVert\)</span> denote the standard Euclidean inner product and norm, respectively. For a function <span class="math inline">\(\mathcal{G}: \mathbb{R}^d \to \mathbb{R}^n\)</span> we write <span class="math inline">\(D\mathcal{G}(u)\)</span> to denote the <span class="math inline">\(n \times d\)</span> Jacobian matrix evaluated at <span class="math inline">\(u\)</span>, with <span class="math inline">\(\nabla \mathcal{G}(u) := D\mathcal{G}(u)^\top\)</span> its transpose. When <span class="math inline">\(n=1\)</span> then <span class="math inline">\(\nabla \mathcal{G}(u)\)</span> is the gradient vector, but note that we extend the notation beyond this typical case. Let <span class="math inline">\(D_j\mathcal{G}(u)\)</span> denote the <span class="math inline">\(1 \times n\)</span> matrix storing the derivative of <span class="math inline">\(\mathcal{G}(u)\)</span> with respect to <span class="math inline">\(u_j\)</span>, and <span class="math inline">\(\nabla_j \mathcal{G}(u) := D_j\mathcal{G}(u)^\top\)</span>. Similarly, let <span class="math inline">\(D\mathcal{G}_i(u)\)</span> denote the <span class="math inline">\(1 \times d\)</span> matrix storing the derivative of <span class="math inline">\(\mathcal{G}(u)\)</span> with respect to the <span class="math inline">\(i^{\text{th}}\)</span> output <span class="math inline">\(\mathcal{G}_i(u)\)</span>, and <span class="math inline">\(\nabla \mathcal{G}_i(u) := D\mathcal{G}_i(u)^\top\)</span> Finally, we denote the <span class="math inline">\(d \times d\)</span> Hessian matrix for a scalar-valued function <span class="math inline">\(g: \mathbb{R}^d \to \mathbb{R}\)</span> by <span class="math inline">\(\nabla^2 g(u) := D\nabla g(u)\)</span>. Similarly, <span class="math inline">\(\nabla^2_i \mathcal{G}(u)\)</span> is the <span class="math inline">\(d \times d\)</span> Hessian of the map <span class="math inline">\(u \mapsto \mathcal{G}_i(u)\)</span>.</p>
 </section>
-<section id="introduction" class="level1">
-<h1>Introduction</h1>
-<p>In this post we investigate optimization problems of the form</p>
-<p><span class="math display">\[
-\begin{align}
-u_{\star} &amp;\in \text{argmin}_{u \in \mathbb{R}^d} J(u) \newline
-J(u) &amp;:= \frac{1}{2}\lVert y - \mathcal{G}(u)\rVert^2_{\Sigma} + \frac{1}{2}\lVert u - m\rVert_C^2, \tag{1}
-\end{align}
-\]</span></p>
-<p>where <span class="math inline">\(u,m \in \mathbb{R}^d\)</span> and <span class="math inline">\(y \in \mathbb{R}^n\)</span>, and <span class="math inline">\(\Sigma\)</span> and <span class="math inline">\(C\)</span> are positive definite matrices. Notice that if <span class="math inline">\(\mathcal{G}\)</span> is linear, then (1) is simply a regularized least squares objective. I discuss this special case in <a href="https://arob5.github.io/blog/2024/07/03/lin-Gauss/">this</a> post. Allowing <span class="math inline">\(\mathcal{G}\)</span> to be nonlinear generalizes linear least squares, and is therefore referred to as nonlinear least squares (NLS). Unlike the linear case, (1) no longer admits a closed-form solution in general, so we will consider various numerical algorithms that seek to minimize <span class="math inline">\(J(u)\)</span>. While the usual suspects (gradient descent, Newton’s method) can be applied, the quadratic structure of (1) is conducive to some bespoke algorithms that tend to work well in this setting. We will discuss the most well-known, the Gauss-Newton algorithm, in addition to the closely related Levenberg-Marquardt method.</p>
-<p>Note that other treatments of this topic will often leave out the regularization term <span class="math inline">\(\frac{1}{2}\lVert u - m\rVert_C^2\)</span>, and assume <span class="math inline">\(\Sigma\)</span> to be the identity matrix. Alternatively, sometimes the more generic perspective <span class="math inline">\(J(u) = \lVert r(u) \rVert^2\)</span> is taken. Setting <span class="math inline">\(r(u) := \Sigma^{-1/2}(y - \mathcal{G}(u))\)</span> recovers the first term in our present formulation in (1).</p>
-<section id="statistical-perspective" class="level2">
-<h2 class="anchored" data-anchor-id="statistical-perspective">Statistical Perspective</h2>
-<p>The solution <span class="math inline">\(u_{\star}\)</span> to the optimization problem in (1) can be viewed as the maximum a posterior (MAP) estimate of the Bayesian model <span class="math display">\[
-\begin{align}
-y|u &amp;\sim \mathcal{N}(\mathcal{G}(u), \Sigma) \tag{2} \newline
-u &amp;\sim \mathcal{N}(m, C).
-\end{align}
-\]</span> In particular, the posterior density of (2) satisfies <span class="math display">\[
-p(u|y) \propto \exp\left[-J(u)\right], \tag{3}
-\]</span> where <span class="math inline">\(J(u)\)</span> is the nonlinear least squares objective (1).</p>
-</section>
-<section id="gradient-and-hessian" class="level2">
-<h2 class="anchored" data-anchor-id="gradient-and-hessian">Gradient and Hessian</h2>
-The gradient and Hessian of <span class="math inline">\(J(u)\)</span> play a prominent role in numerical algorithms that seek to solve (1). We provide the expressions for these quantities below, with derivations given in the appendix.
+<section id="the-central-limit-theorem" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="the-central-limit-theorem"><span class="header-section-number">4</span> The Central Limit Theorem</h2>
+<p>While it is not the focus of these notes, a post on Gaussian measures seems incomplete without mentioning the central limit theorem (CLT). We just state the basic result here.</p>
 <blockquote class="blockquote">
 <p>
-<strong>Gradient and Hessian.</strong> <br> The gradient <span class="math inline">\(\nabla J(u)\)</span> and Hessian <span class="math inline">\(\nabla^2 J(u)\)</span> of the cost function defined in (1) are given by <span class="math display">\[\begin{align}
-  \nabla J(u) &amp;= -\nabla \mathcal{G}(u)\Sigma^{-1}(y-\mathcal{G}(u)) + C^{-1}(u-m) \tag{4} \newline
-  \nabla^2 J(u) &amp;= [\nabla \mathcal{G}(u)]\Sigma^{-1}[\nabla \mathcal{G}(u)]^\top  +
-  \sum_{i=1}^{n} \epsilon_i(u) \nabla^2 \mathcal{G}_i(u) + C^{-1} \tag{5},
-  \end{align}\]</span> where <span class="math inline">\(\epsilon_i(u)\)</span> is the <span class="math inline">\(i^{\text{th}}\)</span> entry of the vector <span class="math inline">\(\epsilon(u) := \Sigma^{-1}(\mathcal{G}(u) - y)\)</span>.
+<strong>Theorem.</strong> Let <span class="math inline">\(X_1, X_2, \dots\)</span> be independent and identically distributed random variables with mean <span class="math inline">\(m\)</span> and variance <span class="math inline">\(\sigma^2 &lt; \infty\)</span>. Let <span class="math inline">\(S_n := X_1 + \dots + X_n\)</span> and <span class="math inline">\(Z \sim \mathcal{N}(0,1)\)</span>. Then the following convergence result holds, which can be stated equivalently in terms of weak convergence of measures or distributional convergence of random variables: <span class="math display">\[\begin{align}
+  &amp;\mathcal{L}\left(\frac{S_n - m}{\sigma\sqrt{n}}\right) \overset{w}{\to} \mathcal{L}(Z),
+  &amp;&amp;\frac{S_n - m}{\sigma\sqrt{n}} \overset{d}{\to} Z,
+  \end{align}\]</span> as <span class="math inline">\(n \to \infty\)</span>.
 </p>
 </blockquote>
-<p>In contrast to least squares, the Hessian <span class="math inline">\(\nabla^2 J(u)\)</span> depends on <span class="math inline">\(u\)</span> in general.</p>
-</section>
-</section>
-<section id="numerical-optimization" class="level1">
-<h1>Numerical Optimization</h1>
-<p>We now discuss numerical schemes that construct a sequence of iterates <span class="math inline">\(u_1, u_2, \dots\)</span> with the goal of converging to an optimum of <span class="math inline">\(J(u)\)</span>.</p>
-<section id="newtons-method" class="level2">
-<h2 class="anchored" data-anchor-id="newtons-method">Newton’s Method</h2>
-<p>Given a current iterate <span class="math inline">\(u_k\)</span>, Newton’s method constructs a quadratic approximation of <span class="math inline">\(J(u)\)</span> centered at the point <span class="math inline">\(u_k\)</span>, then minimizes this quadratic function to select the next iterate <span class="math inline">\(u_{k+1}\)</span>. The specific quadratic approximation considered is the second order Taylor expansion <span class="math display">\[
-J_k(u) := J(u_k) + DJ(u_k)[u-u_k] + \frac{1}{2}(u-u_k)^\top [\nabla^2 J(u_k)] (u-u_k). \tag{6}
-\]</span> The next iterate <span class="math inline">\(u_{k+1}\)</span> is thus chosen by solving <span class="math display">\[
-\nabla J_k(u_{k+1}) = 0, \tag{7}
-\]</span> which yields <span class="math display">\[
-\nabla J_k(u_k) = \nabla J(u_k) + [\nabla^2 J(u_k)] (u_{k+1}-u_k) = 0. \tag{8}
-\]</span> At this point, note that it is possible <span class="math inline">\(J_k\)</span> doesn’t even have a minimum, which can happen when <span class="math inline">\(\nabla^2 J(u_k)\)</span> is not positive definite (and hence not invertible). We will not get into this issue here, and instead simply assume that <span class="math inline">\(\nabla^2 J(u_k)\)</span> is invertible. Then we can solve for <span class="math inline">\(u_{k+1}\)</span> in (7) as <span class="math display">\[
-u_{k+1} = u_k - [\nabla^2 J(u_k)]^{-1} \nabla J(u_k). \tag{9}
-\]</span> Working with the Hessian here can be difficult in certain settings; note in (5) that computing the Hessian of <span class="math inline">\(J\)</span> requires computing the Hessian of <span class="math inline">\(\mathcal{G}\)</span> for each output dimension. Since <span class="math inline">\(\mathcal{G}\)</span> can be a very complicated and computationally-expensive function, this presents challenges. The below methods maintain the spirit of the Newton update (9), but replace the Hessian with something that is easier to compute.</p>
-</section>
-<section id="gauss-newton" class="level2">
-<h2 class="anchored" data-anchor-id="gauss-newton">Gauss-Newton</h2>
-<p>We introduce the Gauss-Newton update from two different perspectives. The first simply approximates the Hessian by ignoring the “difficult” terms, while the second views the update as solving a local least squares problem.</p>
-<section id="approximate-hessian" class="level3">
-<h3 class="anchored" data-anchor-id="approximate-hessian">Approximate Hessian</h3>
-<p>The Gauss-Newton procedure performs the Newton update (9) with an approximate Hessian constructed by simply dropping the higher-order terms in (5). Doing so yields the Hessian approximation <span class="math display">\[
-\hat{H}_k := G_k^\top \Sigma^{-1}G_k + C^{-1}, \tag{10}
-\]</span> where we have introduced the shorthand for the Jacobian of <span class="math inline">\(\mathcal{G}\)</span> evaluated at <span class="math inline">\(u_k\)</span>, <span class="math display">\[
-G_k := D\mathcal{G}(u_k). \tag{11}
-\]</span> Notice that (10) no longer requires extracting second order derivative information from <span class="math inline">\(\mathcal{G}\)</span>. The resulting Gauss-Newton update takes the form <span class="math display">\[
-u_{k+1} = u_k - \hat{H}_k^{-1} \nabla J(u_k). \tag{12}
-\]</span> Plugging in the expressions for <span class="math inline">\(\hat{H}_k\)</span> and <span class="math inline">\(\nabla J(u_k)\)</span> yields the explicit update</p>
-<blockquote class="blockquote">
-<p>
-<strong>Gauss Newton Update: Parameter Space</strong> <span class="math display">\[
-  u_{k+1}
-  = u_k - \left(G_k^\top \Sigma^{-1}G_k + C^{-1} \right)^{-1} \left[C^{-1}(u_k-m) - G_k^\top \Sigma^{-1}(y-\mathcal{G}(u_k)) \right]. \tag{13}
-  \]</span>
-</p>
-</blockquote>
-<p>A nice consequence of using <span class="math inline">\(\hat{H}_k\)</span> is that, unlike the Hessian, it is guaranteed to be positive definite. This follows from the fact that <span class="math inline">\(G^\top_k \Sigma^{-1}G_k\)</span> is positive semidefinite, <span class="math inline">\(C^{-1}\)</span> is positive definite, and the sum of a positive semidefinite and positive definite matrix is positive definite. The invertibility of <span class="math inline">\(\hat{H}_k\)</span> is thus guaranteed, and the local quadratic function that Gauss-Newton is implicitly minimizing is guaranteed to have a minimum.</p>
-<p>We refer to (13) as the parameter space version of the Gauss-Newton update, as it requires a <span class="math inline">\(d\)</span>-dimensional linear solve <span class="math inline">\(\hat{H}_k^{-1} \nabla J(u_k)\)</span>. By applying the Woodbury matrix inversion identity, we obtain an alternative, but equivalent, update that instead requires a linear solve in <span class="math inline">\(n\)</span>-dimensional data space.</p>
-<blockquote class="blockquote">
-<p>
-<strong>Gauss Newton Update: Data Space</strong> <span class="math display">\[
-  u_{k+1}
-  = m + CG_k^\top \left(G_k CG_k^\top + \Sigma \right)^{-1}\left[y-\left\{\mathcal{G}(u_k) + G_k(u_k-m)\right\}\right]. \tag{14}
-  \]</span>
-</p>
-</blockquote>
-<p>Notice that the expression in curly brackets is the linearization <span class="math display">\[
-\begin{align}
-\mathcal{G}(u_k) + G_k(u_k-m)
-&amp;= \mathcal{G}(u_k) - G_k(m-u_k) \newline
-&amp;\approx \mathcal{G}(u_k) - \left[\mathcal{G}(m) - \mathcal{G}(u_k) \right] \newline
-&amp;= \mathcal{G}(m), \tag{15}
-\end{align}
-\]</span> and can thus be interpreted as the approximation to <span class="math inline">\(\mathcal{G}(m)\)</span> induced by the first order Taylor expansion around <span class="math inline">\(\mathcal{G}(u_k)\)</span>. With this in mind, the update (14) looks exactly like a regularized least squares estimator. We explore this perspective below.</p>
-</section>
-<section id="local-least-squares-perspective" class="level3">
-<h3 class="anchored" data-anchor-id="local-least-squares-perspective">Local Least Squares Perspective</h3>
-<p>The Gauss-Newton update can alternatively be viewed as minimizing the following linear least squares cost function: <span class="math display">\[
-J_k(u) := \frac{1}{2}\lVert y - [\mathcal{G}(u_k)+G_k(u-u_k)] \rVert^2_{\Sigma} + \frac{1}{2}\lVert u - m\rVert_C^2. \tag{16}
-\]</span> In other words, the NLS objective <span class="math inline">\(J(u)\)</span> is approximated by replacing the true forward model <span class="math inline">\(\mathcal{G}(u)\)</span> with its linearization, centered at the current iterate <span class="math inline">\(u_k\)</span>. It should be emphasized that we are linearizing <span class="math inline">\(\mathcal{G}\)</span>, and then simply plugging the linearization into <span class="math inline">\(J(u)\)</span>. This is not the same as directly linearizing <span class="math inline">\(J(u)\)</span>, which is the approach taken in gradient descent.</p>
-<p>This approach of linearizing <span class="math inline">\(\mathcal{G}\)</span> is quite convenient, since (16) is simply a linear least squares objective function, which we know how to optimize in closed-form. Thus, the Gauss-Newton algorithm can be viewed as iteratively solving a sequence of linear least squares problems. We now try to gain some intuition on the structure of these local least squares problems.</p>
-<p><span class="math display">\[
-\begin{align}
-y_k|u &amp;\sim \mathcal{N}(G_k u, \Sigma) \tag{17} \newline
-u &amp;\sim \mathcal{N}(m, C),
-\end{align}
-\]</span> where <span class="math inline">\(y_k := y - \mathcal{G}(u_k) + G_k u_k\)</span>.</p>
-</section>
-</section>
-<section id="levenberg-marquardt" class="level2">
-<h2 class="anchored" data-anchor-id="levenberg-marquardt">Levenberg-Marquardt</h2>
-<p>To be continued</p>
-<!--
-# TODO
-- Show alternative form of Gauss-Newton update by applying Woodbury (should show connection to EnKF).
-- View G-N as line search method
-
-# References
-- Nonlinear Least Squares (neos Guide)
-- A multispectrum nonlinear least-squares fitting technique
-- What to Do When Your Hessian Is Not Invertible (Gill and King)
- -->
 
 
-</section>
+
 </section>
 
 </main> <!-- /main -->
