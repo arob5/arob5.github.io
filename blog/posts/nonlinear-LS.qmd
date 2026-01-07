@@ -239,7 +239,9 @@ $$
 where $y_k := y - \mathcal{G}(u_k) + G_k u_k$.
 
 ## Levenberg-Marquardt
+To be continued
 
+<!--
 # TODO
 - Show alternative form of Gauss-Newton update by applying Woodbury (should show connection to EnKF).
 - View G-N as line search method
@@ -248,3 +250,4 @@ where $y_k := y - \mathcal{G}(u_k) + G_k u_k$.
 - Nonlinear Least Squares (neos Guide)
 - A multispectrum nonlinear least-squares fitting technique
 - What to Do When Your Hessian Is Not Invertible (Gill and King)
+ -->

@@ -1,5 +1,6 @@
 ---
 title: "Annealed Importance Sampling"
+description: An introduction to annealed importance sampling.
 layout: default
 date: 2025-07-14
 categories: [MCMC, Sampling, Computational Statistics]

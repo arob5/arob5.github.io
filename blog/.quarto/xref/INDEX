@@ -76,5 +76,14 @@
   },
   "posts/construct-cov/construct_cov.qmd": {
     "construct_cov.html": "240a0f5e"
+  },
+  "posts/gaussian-measures/univariate-gaussian-measures.qmd": {
+    "univariate-gaussian-measures.html": "161bc06d"
+  },
+  "posts/gaussian-measures/multivariate-gaussian-measures.qmd": {
+    "multivariate-gaussian-measures.html": "b536d2bd"
+  },
+  "posts/annealed-IS/adapt-mh/adapt-mh.qmd": {
+    "adapt-mh.html": "7cba7446"
   }
 }

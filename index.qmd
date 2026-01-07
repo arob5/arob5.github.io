@@ -34,12 +34,11 @@ format:
 
 ## About Me
 
-I am a fourth year PhD candidate in Computing and Data Sciences at Boston University (BU), working with
+I am a PhD candidate in Computing and Data Sciences at Boston University (BU), working with
 [Jonathan Huggins](http://jhhuggins.org/) and [Michael Dietze](https://www.bu.edu/earth/profiles/michael-dietze/).
-I am broadly interested in uncertainty quantification, Bayesian inverse problems, data assimilation, and
-spatiotemporal statistics, with the goal of developing new methodologies for environmental and ecological applications.
-My current work involves developing Bayesian methods for calibrating expensive mechanistic models of the terrestrial carbon
-cycle.
+I am broadly interested in uncertainty quantification, probabilistic machine learning, and spatiotemporal
+modeling, with the goal of developing new methodologies for scientific applications.
+My current work is motivated by the problem of calibrating large-scale mechanistic models of the terrestrial carbon cycle.
 
 Beyond my research, I am a trainee in [BU URBAN](https://sites.bu.edu/urban/),
 a graduate program in urban biogeoscience and environmental health. I am also

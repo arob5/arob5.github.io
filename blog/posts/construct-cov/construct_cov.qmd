@@ -1,5 +1,5 @@
 ---
-title: "Constructing a Covariance Matrix with Specified Structure"
+title: "Constructing a Covariance Matrix in a Non-Standard Basis"
 description: A short note on constructing covariances using matrix decomposition.
 layout: default
 date: 2025-10-18

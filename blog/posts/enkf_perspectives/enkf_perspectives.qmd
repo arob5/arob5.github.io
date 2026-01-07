@@ -351,7 +351,7 @@ $$
 \end{align}
 $$ {#eq-moment-constraints}
 If the map $\map$ is stochastic, then these equalities are required to hold
-in expectation.
+in expectation with respect to the noise in $\map$.
 :::
 
 By enforcing the constraints in @eq-moment-constraints, we are requiring
@@ -444,3 +444,4 @@ cross terms that come out of the covariance expression.
 
 
 # Joint Gaussian Approximation
+To be continued

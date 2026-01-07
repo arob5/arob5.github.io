@@ -436,7 +436,7 @@ Moment Matching Transport
 \hat{C}^\star
 &amp;= \frac{1}{J-1} \sum_{j=1}^{J} (x_j^\star - \hat{m}^\star)(x_j^\star - \hat{m}^\star)^\top.
 \end{align}
-\tag{15}\]</span></span> If the map <span class="math inline">\(\map\)</span> is stochastic, then these equalities are required to hold in expectation.</p>
+\tag{15}\]</span></span> If the map <span class="math inline">\(\map\)</span> is stochastic, then these equalities are required to hold in expectation with respect to the noise in <span class="math inline">\(\map\)</span>.</p>
 </div>
 </div>
 <p>By enforcing the constraints in <a href="#eq-moment-constraints" class="quarto-xref">Equation&nbsp;15</a>, we are requiring that the posterior samples should have mean and covariance matching the posterior mean and covariance of the linear Gaussian problem <a href="#eq-linear-Gaussian-approx" class="quarto-xref">Equation&nbsp;12</a>, which itself was the result of a Gaussian prior approximation. If <span class="math inline">\(\map\)</span> is deterministic, then the posterior samples will have sample mean and covariance exactly matching these quantities. If <span class="math inline">\(\map\)</span> is stochastic then the moments will match in expectation (with respect to the noise in <span class="math inline">\(\map\)</span>), but the sample moments of the realized ensemble <span class="math inline">\(\{x_j^\star\}_{j=1}^{J}\)</span> may differ.</p>
@@ -504,6 +504,7 @@ Proof: Perturbed EnKF Satisfies Moment Constraints
 </section>
 <section id="joint-gaussian-approximation" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Joint Gaussian Approximation</h1>
+<p>To be continued</p>
 
 
 

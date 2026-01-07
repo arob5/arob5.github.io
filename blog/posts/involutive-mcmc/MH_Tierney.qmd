@@ -1,6 +1,6 @@
 ---
 title: "Metropolis-Hastings Kernels for General State Spaces"
-subtitle: An introduction to Tierney's general formulation of Metropolis-Hastings algorithms.
+description: An introduction to Tierney's general formulation of Metropolis-Hastings algorithms.
 layout: default
 date: 2025-07-31
 categories: [MCMC, Sampling, Computational Statistics]
