@@ -20,7 +20,26 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -33,7 +52,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
@@ -72,7 +90,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -108,46 +126,99 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+  <ul>
+  <li><a href="#about-me" id="toc-about-me" class="nav-link active" data-scroll-target="#about-me">About Me</a></li>
+  <li><a href="#publications-and-preprints" id="toc-publications-and-preprints" class="nav-link" data-scroll-target="#publications-and-preprints">Publications and Preprints</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
-
-
-
+<div class="quarto-about-trestles">
+  <div class="about-entity">
+    <img src="headshot_photo.png" class="about-image
+  rounded " style="width: 20em;">
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Andrew G. Roberts</h1>
+</div>
+<div class="quarto-title-meta">
+  </div>
+</header>
+    <div class="about-links">
+  <a href="https://github.com/arob5" class="about-link" rel="" target="">
+    <i class="bi bi-github"></i>
+     <span class="about-link-text">GitHub</span>
+  </a>
+  <a href="https://scholar.google.com/citations?user=E2erpCwAAAAJ&amp;hl=en" class="about-link" rel="" target="">
+    <i class="bi bi-mortarboard-fill"></i>
+     <span class="about-link-text">Google Scholar</span>
+  </a>
+  <a href="https://www.linkedin.com/in/andrew-roberts5" class="about-link" rel="" target="">
+    <i class="bi bi-linkedin"></i>
+     <span class="about-link-text">LinkedIn</span>
+  </a>
+</div>
+  </div>
+  <div class="about-contents"><main class="content" id="quarto-document-content">
 
 <style>
-.img-circle {
-  border-radius: 50%;
-  width: 150px;
-  height: 150px;
-  display: block;
-  margin: 0 auto;
+/* Keeping your nice publication styling */
+#refs {
+  margin-top: 40px;
+  text-align: left;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
-.icon-links {
-  text-align: center;
-  margin-top: 10px;
+#refs b, #refs strong {
+  color: #2c3e50;
 }
-.icon-links a {
-  margin: 0 10px;
-  font-size: 1.5em;
+.pub-links {
+  font-size: 0.85em;
+  margin-top: 5px;
+}
+.pub-links a {
+  text-decoration: none;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #495057;
+  transition: all 0.2s ease;
+}
+.pub-links a:hover {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
 }
 </style>
-<div style="text-align: center;">
-<p><img src="headshot_photo.png" alt="Andrew G. Roberts" class="img-circle"></p>
-<h1>
-Andrew G. Roberts
-</h1>
-</div>
 <section id="about-me" class="level2">
-<h2 class="anchored" data-anchor-id="about-me">About Me</h2>
+<h2 data-anchor-id="about-me">About Me</h2>
 <p>I am a PhD candidate in Computing and Data Sciences at Boston University (BU), working with <a href="http://jhhuggins.org/">Jonathan Huggins</a> and <a href="https://www.bu.edu/earth/profiles/michael-dietze/">Michael Dietze</a>. I am broadly interested in uncertainty quantification, probabilistic machine learning, and spatiotemporal modeling, with the goal of developing new methodologies for scientific applications. My current work is motivated by the problem of calibrating large-scale mechanistic models of the terrestrial carbon cycle.</p>
-<p>Beyond my research, I am a trainee in <a href="https://sites.bu.edu/urban/">BU URBAN</a>, a graduate program in urban biogeoscience and environmental health. I am also an officer in the <a href="https://www.bu.edu/math/bu-student-chapter-of-the-asa/">BU chapter</a> of the American Statistical Association, and previously co-organized the Environment and Climate <a href="https://www.md4sg.com/workinggroups/environment.html">working group</a> within the <a href="https://www.md4sg.com/index.html">Mechanism Design for Social Good (MD4SG)</a> research intitiative.</p>
+<p>Beyond my research, I am a trainee in <a href="https://sites.bu.edu/urban/">BU URBAN</a>, a graduate program in urban biogeoscience and environmental health. I am also an officer in the <a href="https://www.bu.edu/math/bu-student-chapter-of-the-asa/">BU chapter</a> of the American Statistical Association, and previously co-organized the Environment and Climate <a href="https://www.md4sg.com/workinggroups/environment.html">working group</a> within the <a href="https://www.md4sg.com/index.html">Mechanism Design for Social Good (MD4SG)</a> research intitiative. In the summer of 2025, I had the pleasure of interning with the Jet Propulsion Laboratory’s <a href="https://dus.jpl.nasa.gov/">Uncertainty Quantification and Statistical Analysis</a> group.</p>
 <p>Prior to BU, I worked as a research assistant at the Federal Reserve Bank of Boston. I received my B.S. in Quantitative Economics from Tufts University in 2018.</p>
+<p><strong>Contact:</strong> arober [at] bu [dot] edu</p>
+<hr>
+</section>
+<section id="publications-and-preprints" class="level2">
+<h2 data-anchor-id="publications-and-preprints">Publications and Preprints</h2>
+<div id="refs" role="list">
+<p>
+<strong>Propagating Surrogate Uncertainty in Bayesian Inverse Problems</strong><br> <strong>Andrew Gerard Roberts</strong>, Michael Dietze, and Jonathan Huggins<br> <em>arXiv preprint</em>, 2026<br> <span class="pub-links"> <a href="https://arxiv.org/abs/2601.03532" target="_blank">ArXiv</a> <a href="https://github.com/arob5/Bayesian-inference-with-surrogates" target="_blank">Code</a> </span>
+</p>
+<p>
+<strong>Parameter estimation in land surface models: Challenges and opportunities with data assimilation and machine learning</strong><br> Raoult, N., Douglas, N., MacBean, N., Kolassa, J., Quaife, T., <strong>Roberts, A. G.</strong>, et al.<br> <em>Journal of Advances in Modeling Earth Systems</em>, 2025<br> <span class="pub-links"> <a href="https://doi.org/10.1029/2024MS004733" target="_blank">Journal</a> </span>
+</p>
+</div>
 
 
 </section>
-
-</main> <!-- /main -->
+</main></div>
+</div>
+ <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -168,13 +239,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
-  const icon = "";
-  const anchorJS = new window.AnchorJS();
-  anchorJS.options = {
-    placement: 'right',
-    icon: icon
-  };
-  anchorJS.add('.anchored');
   const isCodeAnnotation = (el) => {
     for (const clz of el.classList) {
       if (clz.startsWith('code-annotation-')) {                     
