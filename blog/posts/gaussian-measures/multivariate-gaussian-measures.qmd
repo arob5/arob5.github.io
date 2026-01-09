@@ -1,6 +1,6 @@
 ---
 title: Gaussian Measures, Part 2 - The Multivariate Case
-subtitle: Gaussian measures in finite dimensions; i.e., multivariate Gaussians/Gaussian vectors.
+description: Gaussian measures in finite dimensions; i.e., multivariate Gaussians/Gaussian vectors.
 layout: default
 date: 2024-05-19
 keywords: GP, Prob-Theory

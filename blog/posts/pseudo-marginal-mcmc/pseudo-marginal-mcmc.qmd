@@ -314,6 +314,8 @@ $$
 $$
 for $i = 1, \dots, n$.
 
+
+<!--
 ## Being a bit more rigorous
 In this section,
 we discuss the pseudo-marginal algorithm from a more generic perspective, and
@@ -375,6 +377,7 @@ $$
 \overline{Q}(u,w; U,W) := \int_{U} P(\tilde{u},W)Q(u,d\tilde{u}), \tag{15}
 $$
 for $U \in \mathcal{B}(\mathcal{U})$ and $W \in \mathcal{B}(\mathcal{W})$.
+-->
 
 # References
 1. The pseudo-marginal approach for efficient Monte Carlo computations (Andrieu and Roberts, 2009)

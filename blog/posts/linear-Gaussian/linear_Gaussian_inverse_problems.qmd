@@ -1,6 +1,6 @@
 ---
 title: "Linear Gaussian Inverse Problems"
-subtitle: Derivations and discussion of linear Gaussian inverse problems.
+description: Derivations and discussion of linear Gaussian inverse problems.
 layout: default
 date: 2024-07-03
 categories: [statistics, inverse-problem]

@@ -654,6 +654,7 @@ inherit Gaussianity from $\mathbf{x}$. Thus, under this stronger assumption
 we are able to characterize the distribution of the weights exactly.
 
 
+<!--
 ### Maximum Likelihood Estimation with Gaussian Noise
 ### Probabilistic PCA
 https://stats.stackexchange.com/questions/190308/why-does-probabilistic-pca-use-gaussian-prior-over-latent-variables
@@ -667,7 +668,7 @@ https://stats.stackexchange.com/questions/190308/why-does-probabilistic-pca-use-
 2. SVD
 
 # Part 5: Application and Code
-
+-->
 
 # Appendix
 
