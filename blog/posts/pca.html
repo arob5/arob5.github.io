@@ -196,13 +196,8 @@ window.Quarto = {
   <li><a href="#statisticalprobabalistic-perspectives" id="toc-statisticalprobabalistic-perspectives" class="nav-link" data-scroll-target="#statisticalprobabalistic-perspectives">Statistical/Probabalistic Perspectives</a>
   <ul class="collapse">
   <li><a href="#a-special-case-of-the-karhunen-loeve-expansion" id="toc-a-special-case-of-the-karhunen-loeve-expansion" class="nav-link" data-scroll-target="#a-special-case-of-the-karhunen-loeve-expansion">A Special Case of the Karhunen-Loeve Expansion</a></li>
-  <li><a href="#maximum-likelihood-estimation-with-gaussian-noise" id="toc-maximum-likelihood-estimation-with-gaussian-noise" class="nav-link" data-scroll-target="#maximum-likelihood-estimation-with-gaussian-noise">Maximum Likelihood Estimation with Gaussian Noise</a></li>
-  <li><a href="#probabilistic-pca" id="toc-probabilistic-pca" class="nav-link" data-scroll-target="#probabilistic-pca">Probabilistic PCA</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#part-3-using-pca" id="toc-part-3-using-pca" class="nav-link" data-scroll-target="#part-3-using-pca">Part 3: Using PCA</a></li>
-  <li><a href="#part-4-computing-pca" id="toc-part-4-computing-pca" class="nav-link" data-scroll-target="#part-4-computing-pca">Part 4: Computing PCA</a></li>
-  <li><a href="#part-5-application-and-code" id="toc-part-5-application-and-code" class="nav-link" data-scroll-target="#part-5-application-and-code">Part 5: Application and Code</a></li>
   <li><a href="#appendix" id="toc-appendix" class="nav-link" data-scroll-target="#appendix">Appendix</a>
   <ul class="collapse">
   <li><a href="#eigenvalue-problems" id="toc-eigenvalue-problems" class="nav-link" data-scroll-target="#eigenvalue-problems">Eigenvalue Problems</a></li>
@@ -487,33 +482,24 @@ where <span class="math inline">\(C := \text{Cov}[\mathbf{x}]\)</span>. Here we 
 <p>The above derivations did not make any assumptions regarding the distribution of <span class="math inline">\(\mathbf{x}\)</span>, just that its covariance exists. Consequently, the main result (15) does not give the distribution of the weights <span class="math inline">\(\mathbf{\tilde{w}}_r\)</span>, only that they are uncorrelated, have zero mean, and unit variance. If we add the distributional assumption <span class="math inline">\(\mathbf{x} \sim \mathcal{N}(\mathbf{m}, C)\)</span> then we are able to say more. Indeed, recalling that the (unscaled) weights are given by projections <span class="math inline">\(\mathbf{w}_r = \langle \mathbf{x} - \mathbf{m}, \mathbf{v}_r \rangle\)</span>, then we find that <span class="math display">\[
 \mathbf{w} = V^\top (\mathbf{x} - \mathbf{m}) \sim \mathcal{N}(0, V^\top C V).
 \]</span> The key point here are that the <span class="math inline">\(\mathbf{w}_r\)</span> are <em>jointly</em> Gaussian, and hence their uncorrelatedness implies that they are in fact independent. The weights inherit Gaussianity from <span class="math inline">\(\mathbf{x}\)</span>. Thus, under this stronger assumption we are able to characterize the distribution of the weights exactly.</p>
+<!--
+### Maximum Likelihood Estimation with Gaussian Noise
+### Probabilistic PCA
+https://stats.stackexchange.com/questions/190308/why-does-probabilistic-pca-use-gaussian-prior-over-latent-variables
+
+# Part 3: Using PCA
+1. Decorrelating
+2. Dimensionality reduction
+
+# Part 4: Computing PCA
+1. Eigendecomposition
+2. SVD
+
+# Part 5: Application and Code
+-->
 </section>
 </section>
-<section id="maximum-likelihood-estimation-with-gaussian-noise" class="level3">
-<h3 class="anchored" data-anchor-id="maximum-likelihood-estimation-with-gaussian-noise">Maximum Likelihood Estimation with Gaussian Noise</h3>
 </section>
-<section id="probabilistic-pca" class="level3">
-<h3 class="anchored" data-anchor-id="probabilistic-pca">Probabilistic PCA</h3>
-<p>https://stats.stackexchange.com/questions/190308/why-does-probabilistic-pca-use-gaussian-prior-over-latent-variables</p>
-</section>
-</section>
-</section>
-<section id="part-3-using-pca" class="level1">
-<h1>Part 3: Using PCA</h1>
-<ol type="1">
-<li>Decorrelating</li>
-<li>Dimensionality reduction</li>
-</ol>
-</section>
-<section id="part-4-computing-pca" class="level1">
-<h1>Part 4: Computing PCA</h1>
-<ol type="1">
-<li>Eigendecomposition</li>
-<li>SVD</li>
-</ol>
-</section>
-<section id="part-5-application-and-code" class="level1">
-<h1>Part 5: Application and Code</h1>
 </section>
 <section id="appendix" class="level1">
 <h1>Appendix</h1>
