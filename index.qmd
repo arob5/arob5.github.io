@@ -4,6 +4,9 @@ image: headshot_photo.png
 about:
   template: trestles
   links:
+    - icon: file-pdffill
+      text: CV
+      href: CV.pdf
     - icon: github
       text: GitHub
       href: https://github.com/arob5
