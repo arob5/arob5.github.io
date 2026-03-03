@@ -1,0 +1,103 @@
+---
+title: "Neural Likelihood vs. Neural Posterior Estimation"
+description: Two common neural density estimation strategies used in simulation-based inference.
+layout: default
+date: 2026-03-03
+categories: [Computational Statistics, Bayesian Statistics, Machine Learning]
+bibliography: nde.bib
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+<div class="hidden-macros">
+$$
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\pipes}{\|}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\argmin}{\mathrm{argmin}}
+\newcommand{\loss}{\mathcal{L}}
+$$
+</div>
+
+This post provides a brief introduction to neural posterior estimation (NPE) and
+neural likelihood estimation (NLE). The goal of both methods is to approximate 
+a posterior distribution $p(\theta \mid x_o)$ using samples form the joint 
+$(\theta_i, x_i) \sim p(\theta, x)$. This is typically motivated by the 
+"likelihood-free" setting, in which it is intractable to evaluate the density
+$p(x_o \mid \theta)$. However, it is more broadly applicable to any case where
+the joint model can be sampled. Note that this is a high-level conceptual introduction,
+not a deep dive into the relevant neural network architectures.
+
+# Background
+Throughout we will let $p(\theta, x)$ denote a joint probability density
+over parameters $\theta$ and data $x$. In Bayesian inference, we are interested 
+in characterizing the conditional $p(\theta \mid x_o) := p(\theta \mid x = x_o)$
+for a particular data realization $x_o$. We will make use of the Kullback-Leibler (KL)
+divergence
+$$
+\KL(r \pipes q) = \int \log\left\{\frac{r(u)}{q(u)}\right\} r(u) du
+$$
+
+between two densities $r(u)$ and $q(u)$. A relevant fact is that $\KL(r \pipes q) \geq 0$,
+with equality holding only when $r(u) = q(u)$ for all $u$ with $r(u) > 0$.
+
+# Neural Posterior Estimation
+Neural posterior estimation (NPE), proposed in @NPE2016, trains a neural network to 
+predict the conditional density $p(\theta \mid x)$ as a function of $x$. Once trained,
+the posterior $p(\theta \mid x_o)$ is estimated via one forward pass through the network
+with input $x_o$.
+
+From the above KL fact, for each $x$ we have that 
+$\KL(p(\theta \mid x) \pipes q(\theta \mid x))$ is minimized when 
+the two distributions are equal ($p(\theta \mid x)$-almost surely). 
+It stands to reason that $\E_{p(x)} \{\KL(p(\theta \mid x) \pipes q(\theta \mid x))\}$ 
+is minimized when the same equality holds $p(x)$-almost surely. The idea is thus
+to optimize this expected KL objective over a parameterized family of conditional 
+density estimators $q_\phi(\theta \mid x)$. We want this family to be sufficiently
+flexible such that there is a value of $\phi$ that makes $q_\phi(\theta \mid x)$
+a good approximation of the optimal $q(\theta \mid x)$.
+
+To be clear: $q_\phi(\theta \mid x)$ represents a neural network with parameters
+$\phi$ that takes input $x$. The output of the network is a probability distribution
+that represents a conditional given the passed value of $x$. In practice, the outputs
+of the network will be some quantities that parameterize a probability distribution---
+@NPE2016 use a network that output the parameters of a Gaussian mixture.
+
+While the objective cannot be evaluated exactly, it can be estimated from
+samples $(\theta_i, x_i) \sim p(\theta, x)$. First, let's re-write it
+in a more useful form:
+$$
+\begin{align}
+\phi_\star 
+&= \argmin_{\phi} \E_{p(x)} \{\KL(p(\theta \mid x) \pipes q_\phi(\theta \mid x))\} \\
+&= \argmin_{\phi} \E_{p(\theta, x)} \{-\log q_\phi(\theta \mid x) \}
+\end{align}
+$$ {#eq-kl-objective}
+
+::: {.callout-note title="Derivation" collapse=true}
+This follows from
+\begin{align*}
+\E_{p(x)} \{\KL(p(\theta \mid x) \pipes q_\phi(\theta \mid x))\}
+&= \int \log\left\{\frac{p(\theta \mid x)}{q_\phi(\theta \mid x)}\right\} p(\theta \mid x) p(x) d\theta dx \\
+&= \int \log\left\{\frac{p(\theta \mid x)}{q_\phi(\theta \mid x)}\right\} p(\theta, x) d\theta dx \\
+&= \int - \log\{q_\phi(\theta \mid x)\} p(\theta, x) d\theta dx + \mathrm{constant},
+\end{align*}
+where the constant is independent of $\phi$.
+:::
+
+The final expression in @eq-kl-objective tells us that we should maximize the likelihood of the 
+model $q_\phi(\theta \mid x)$, on average over the joint distribution $p(\theta, x)$. We now 
+approximate the expectation with a Monte Carlo estimate to arrive at the final loss function:
+$$
+\loss(\phi) := - \sum_{i=1}^{n} q_\phi(\theta_i \mid x_i), \qquad (\theta_i, x_i) \sim p(\theta, x)
+$$
+
+Notice that the prior $p(\theta)$ exerts influence on the objective; the regions with more prior 
+mass will result in more samples $\theta_i$ and will thus have more influence on the loss. This
+is of course necessary since we are trying to learn the posterior, which depends on the prior.
