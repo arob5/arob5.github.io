@@ -22,6 +22,7 @@ $$
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\argmin}{\mathrm{argmin}}
 \newcommand{\loss}{\mathcal{L}}
+\newcommand{\proposal}{\tilde{p}}
 $$
 </div>
 
@@ -95,9 +96,55 @@ The final expression in @eq-kl-objective tells us that we should maximize the li
 model $q_\phi(\theta \mid x)$, on average over the joint distribution $p(\theta, x)$. We now 
 approximate the expectation with a Monte Carlo estimate to arrive at the final loss function:
 $$
-\loss(\phi) := - \sum_{i=1}^{n} q_\phi(\theta_i \mid x_i), \qquad (\theta_i, x_i) \sim p(\theta, x)
+\loss(\phi) := - \sum_{i=1}^{n} \log q_\phi(\theta_i \mid x_i), \qquad (\theta_i, x_i) \sim p(\theta, x)
 $$
 
 Notice that the prior $p(\theta)$ exerts influence on the objective; the regions with more prior 
 mass will result in more samples $\theta_i$ and will thus have more influence on the loss. This
 is of course necessary since we are trying to learn the posterior, which depends on the prior.
+Also note that we ultimately want to evaluate the NPE $q_\phi(\theta \mid x_o)$ at a particular data 
+realization $x_o$. If our $p(\theta, x)$ is poorly specified such that $x_o$ is outside the
+support of $p(x)$ under this joint model, then we cannot expect the approximation 
+$q_\phi(\theta \mid x_o)$ to be any good. It is not surprising that dealing with model misspecification
+is a big focus of research in this area. 
+
+Recalling the KL form of the objective in 
+@eq-kl-objective is useful in this regard: $\phi$ is chosen such that 
+$q_\phi(\theta \mid x) \approx p(\theta \mid x)$ on average with respect to $x \sim p(x)$.
+In general, there is no guarantee that it is good for a particular $x$. To address this, one
+might think to intentionally sample points clustered around $x$. Doing this would mean 
+sampling from a proposal $\proposal(\theta)$ such that if $\tilde{\theta} \sim \proposal(\theta)$
+then $x_o \approx x \sim p(x \mid \tilde{\theta})$. However, doing so would bias the procedure, 
+as it would be targeting the model 
+$\proposal(\theta \mid x) \propto \proposal(\theta) p(x \mid \theta)$ with a modified prior.
+
+
+# Neural Likelihood Estimation
+Neural likelihood estimators (NPE) seek to learn the likelihood $p(x \mid \theta)$; i.e., 
+the reverse conditional under the joint model as compared to NPE (@eq-kl-objective). 
+In this case, the conditional density estimator $q_\phi(x \mid \theta)$ accepts 
+$\theta$ as input and returns a density that approximates $p(x \mid \theta)$.
+
+The same logic follows from before with the roles of $x$ and $\theta$ reversed.
+For each $\theta$, $\KL(p(x \mid \theta) \pipes q(x \mid \theta))$ is minimized
+when the two distributions are equal ($p(x \mid \theta)$-almost surely).
+Thus, $\E_{p(\theta)} \{\KL(p(x \mid \theta) \pipes q(x \mid \theta))\}$
+is minimized when the same equality holds $p(\theta)$-almost surely.
+However, there is a key distinction from the NPE setting: we can directly
+sample from $p(\theta)$, and changing this distribution has no effect
+on the conditionals $p(x \mid \theta)$. Thus, we are free to replace 
+$p(\theta)$ with $\proposal(\theta)$, with the understanding that 
+this will effect the values of $\theta$ at which we expect 
+$q(x \mid \theta)$ to be a good approximation. In other words, so long
+as $p(\theta)$ and $\proposal(\theta)$ have the same support, then 
+minimizing the expected KL objective will still yield the target
+conditionals. In practice, with a finite computational budget the approximations 
+$q_\phi(x \mid \theta)$ will be imperfect, but ideally we design
+$\proposal(\theta)$ to focus on regions where the true posterior
+$p(\theta \mid x_o)$ is large. 
+
+The derivations from @eq-kl-objective go through identically in this case, yielding
+the loss function
+$$
+\loss(\phi) := - \sum_{i=1}^{n} \log q_\phi(x_i \mid \theta_i), \qquad (\theta_i, x_i) \sim \proposal(\theta)p(x \mid \theta).
+$$

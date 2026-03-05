@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/transformers/rnn_to_attention.html",
       "/posts/nde/npe_nle.html",
       "/posts/construct-cov/construct_cov.html",
       "/posts/enkf_perspectives/enkf_perspectives.html",

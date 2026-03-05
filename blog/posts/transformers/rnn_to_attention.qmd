@@ -1,0 +1,63 @@
+---
+title: "From RNNs to the Attention Mechanism"
+description: Transformers part one
+layout: default
+date: 2026-03-05
+categories: [Machine Learning, Neural Network]
+bibliography: transformers.bib
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+
+This post roughly follows the lecture @StanfordAttention.
+
+# Encoder-Decoder RNNs
+Consider the problem of sequence-to-sequence modeling. A canonical example is machine translation:
+the input sequence  $x_1, \dots, x_N$ is a chunk of text in one language, and the goal is to produce 
+a new sequence $y_1, \dots, y_M$ representing the same text in some other language. 
+Translating word-by-word will generally produce mediocre results---different languages may express 
+the same idea using different numbers of words, or words presented in different orders. This motivates 
+architectures with encoder-decoder structure: the input sequence is first *encoded* into 
+a sequence of latent vectors $h_1, \dots, h_N$ (via an RNN), which is then summarized by some fixed-length
+context vector $c$ that somehow captures the meaning of the input text. The context $c$
+is then fed to the *decoder*, which produces $y_1, \dots, y_M$. This is done sequentially
+via another RNN. At each step, the model outputs $y_m$, in addition to a latent vector
+$s_m$ that is fed into the next step. The hidden states are produced sequentially as
+$s_m = f(s_{m-1}, y_{m-1}, c)$, with the corresponding outputs given by $y_m = g(y_{m-1}, s_m, c)$.
+The context $c$ is present and constant throughout this whole procedure. 
+The issue here is that $c$ acts as a bottleneck. As the length $N$ of the input sequence grows,
+$c$ must somehow encode all of the meaning within a fixed-length vector. Ideally, we would like 
+the context to adapt to the input length.
+
+# Attention in RNNs
+The now famous attention mechanism is originally proposed in @AlignAndTranslate as a solution to this
+problem. They update the decoder architecture as 
+$$
+\begin{align}
+&y_m = g(y_{m-1}, s_m, c_m), &&s_m = f(s_{m-1}, y_{m-1}, c_m),
+\end{align}
+$$
+
+such that each output decoding step depends on a different context vector $c_m$.
+We want the neural network to learn $c_m$ such that it provides a summary of the input sequence
+that is particuarly useful for predicting the current output $y_m$. In machine translation,
+we would generally expect input tokens that are approximately in the same location as
+$y_m$ in the sequence to provide the most useful context. But it is possible that longer-range
+dependencies are also important in translating the current word. The simple parameterization
+$$
+\begin{align}
+&c_m = \sum_{n=1}^{N} a_{mn} h_n, &&\sum_{n=1}^{N} a_{mn} = 1
+\end{align}
+$$
+
+gives the neural network this flexibility. The $a_{mn}$ are learnable parameters, so the network
+can determine how to weight the $h_n$ (recall that these are the encoded inputs) based on the 
+information available at the current step. Put more succinctly by the original authors:
+"The decoder decides parts of the source sentence to pay attention to" (@AlignAndTranslate).

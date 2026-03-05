@@ -88,5 +88,8 @@
   },
   "posts/nde/npe_nle.qmd": {
     "npe_nle.html": "0957a4d1"
+  },
+  "posts/transformers/rnn_to_attention.qmd": {
+    "rnn_to_attention.html": "5b804eb4"
   }
 }
