@@ -55,9 +55,75 @@ $$
 \begin{align}
 &c_m = \sum_{n=1}^{N} a_{mn} h_n, &&\sum_{n=1}^{N} a_{mn} = 1
 \end{align}
-$$
+$$ {#eq-wt-sum}
 
 gives the neural network this flexibility. The $a_{mn}$ are learnable parameters, so the network
 can determine how to weight the $h_n$ (recall that these are the encoded inputs) based on the 
 information available at the current step. Put more succinctly by the original authors:
 "The decoder decides parts of the source sentence to pay attention to" (@AlignAndTranslate).
+The fact that the weights are constrained to sum to one implies a probabilistic interpretation:
+$a_{mn}$ is the probability that the target token $y_m$ is "aligned to" the input token
+$x_n$. The weighted sum @eq-wt-sum is thus an expectation of the $h_n$, with more weight
+given to inputs that align with $y_m$. The paper also offers an interpretation in terms 
+of machine translation language: $h_n$ is an *annotation* for input $x_n$ (note that 
+this annotation also absorbs information from other input tokens), $a_{mn}$ is the 
+probability that $y_m$ is "translated from" $x_n$, and $c_m$ is the "expected annotation".
+
+We have yet to discuss how the $a_{mn}$ are actually parameterized and learned. The
+weight $a_{mn}$ should depend on $x_n$ and the current output position and return 
+a scalar that represents their alignment in some sense.
+More concretely, the alignment is considered between $h_n$ (the hidden state 
+associated with $x_n$) and $s_{m-1}$ (the hidden state that represents the current 
+step in the output sequence) and is thus of the form $a_{mn} = \phi(h_n, s_{m-1})$
+for some scalar-valued function $\phi$. In the original paper, 
+the "alignment model" $\phi$ is parameterized as a feedforward neural network,
+with outputs fed through a softmax to enforce the sum-to-one constraint.
+The unnormalized alignment scores $e_{mn}$ are computed as
+$$
+e_{mn} = v^\top \mathrm{tanh}(Ws_{m-1} + Uh_n)
+$$ {#eq-bahdanau-att}
+and then normalized 
+$$
+a_{mn} = \frac{\exp(e_{mn})}{\sum_{i=1}^{N} \exp(e_{mi})}.
+$$
+
+Thus, $v$, $W$, and $U$ are the learnable parameters parameterizing the alignment
+model. Note that the inner linear term in @eq-bahdanau-att is equivalent to 
+applying a single linear transformation to the concatenated vector $[s_{m-1}; h_n]$. 
+Writing it in this way (as in the original paper) makes clear that $Uh_n$ does not depend on $m$
+(the current output step) and thus can be pre-computed. This is important 
+considering that @eq-bahdanau-att needs to be computed $MN$ times for each new 
+input sequence and associated outputs.
+
+In the seq-to-seq
+literature, this parameterization has come to be known as 
+*Bahdanau attention* after the first author of the paper. See @LuongAttention
+and @PytorchSeq2Seq for discussion on alternative parameterizations.
+
+# Towards the Attention Primitive
+While the attention mechanism was originally introduced for RNNs as described above,
+it has ultimately proved useful in basically every area of deep learning. We now
+divorce the attention mechanism from RNNs, re-defining it as a powerful computational
+primitive in its own right.
+
+## Inputs and Outputs
+To start, let's be clear about what enters and exists the attention operator.
+It accepts two sets of vectors and returns another set of vectors. We will 
+refer to the two input sets as the *data vectors* $x_1, \dots, x_N$
+and *query vectors* $q_1, \dots, q_M$. The returned set is the output
+vectors $y_1, \dots, y_M$.
+
+We are generalizing the ideas and notation here, so should try to forget
+about the RNN notation above. However, to see how things fit together,
+here are the connections to the RNN setting:  
+* The data vectors are the input token hidden states $h_1, \dots, h_N$.  
+* The query vectors are the output token hidden states $s_1, \dots, s_M$.  
+* The output vectors are the contexts $c_1, \dots, c_M$.
+
+In the RNN model, the queries were generated sequentially as part of the
+model in a way that depended on the data vectors and the context vectors.
+We are now looking at things more generically and treating the queries
+simply as a given set of vectors. The attention operator produces one 
+output $y_m$ associated with each query $q_m$. This transformation is 
+informed by the whole set of data vectors $x_1, \dots, x_N$.
+
