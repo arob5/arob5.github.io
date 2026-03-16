@@ -1,0 +1,121 @@
+---
+title: "Permutation Entropy and its Variants"
+description: Meausuring the predictability of a time series.
+layout: default
+date: 2026-03-16
+categories: [Statistics, Information Theory]
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+Permutation entropy (PE) is a measure that is used to quantify the uncertainty in a 
+univariate time series.
+
+## Preliminaries
+We start by defining a few concepts underlying the definition of PE.
+
+### Shannon Entropy
+Let $X$ be a discrete random variable taking values in the finite set 
+$\mathcal{X}$ with probability mass function (PMF) $p(x)$.
+The *Shannon entropy* (henceforth, simply "entropy") is
+defined as 
+$$
+H(X) \coloneqq -\sum_{x \in \mathcal{X}} p(x) \log p(x),
+$$
+with the convention that the summand is zero when $p(x) = 0$.
+This quantity is a measure of the uncertainty in $X$; it measures the 
+expected uncertainty reduction due to observing a realization of the 
+random variable. Its minimal value $H(X) = 0$ is achieved when 
+$X$ is deterministic (i.e., $p(x) = 1$ for some $x \in \mathcal{X}$).
+It is maximized when $X$ has a uniform distribution. Supposing the 
+set $\mathcal{X}$ has $M$ values, then this means $p(x_m) = 1/M$
+for each $x_m$, in which case
+$$
+H(X) = -\sum_{m=1}^{M} (1/M) \log(1/M) = \log M.
+$$
+
+
+### Time series and Permutation Patterns
+Consider a univariate time series of the form 
+$$
+x_{1:T} \coloneqq (x_1, \dots, x_T) \in \mathbb{R}^T.
+$$
+From a signal processing perspective, we can also think of this as a discretized signal.
+The PE is a property of such time series that depends only on the order of the
+values $x_t$, not on their magnitudes. We thus define an object that encodes the 
+ordinal structure of $x_{1:T}$. Let $[T] := \{1, \dots, T\}$ and define $P(T)$ to be
+the set of all permutations of $[T]$.
+Assuming the values $x_t$ are each distinct, we define the *perputation pattern*
+of $x_{1:T}$ as the permutation of $[T]$ that sorts the values in $x_{1:T}$ from
+smallest to largest. More precisely, define 
+$$
+\pi(x_{1:T}) \coloneqq (\pi_1, \dots, \pi_T) \in P_T,
+$$
+as the unique permutation satisfying
+$$
+x_{\pi_1} < x_{\pi_2} < \cdots < x_{\pi_M}.
+$$
+As a concrete example, 
+if $x_{1:T} = (2.2, 3.1, 1.5)$ then $\pi(x_{1:T}) = (3, 1, 2)$. 
+In the case of repeat values, 
+then some sort of tie-breaking rule is employed. One simple example is
+to break ties by index order: if $x_t = x_s$ then put $x_t$ first if $t < s$.
+Note that the total number of possible permutations of $T$ values is
+$T! = T(T-1) \cdots 2 \cdot 1$.
+
+### Subsequence Patterns
+In defining PE, we will be interested in the permutation patterns of subsequences
+of $x_{1:T}$. In particular, we will consider a sliding window of fixed length
+and compute the ordering pattern at each position of the window. For example, 
+a window of length three would produce the subsequences $(x_1, x_2, x_3)$,
+$(x_2, x_3, x_4)$, $(x_3, x_4, x_5)$, and so on. To generalize further, 
+we also allow a lag (i.e., delay). A window of length 3 and lag of 2
+produces subsequences $(x_1, x_3, x_5)$, $(x_2, x_4, x_6)$, 
+$(x_3, x_5, x_7)$, etc. We will denote these subsequences by $v_1, v_2, v_3, \dots$,
+with the index corresponding to the starting point of the window. Concretely,
+for a window length $L$ and lag $\tau$, we have
+$$
+v_t \coloneqq (x_t, x_{t+\tau}, x_{t + 2\tau}, \dots, x_{t + (L-1)\tau}) \in \mathbb{R}^{L}.
+$$
+Each $v_t$ represents an evenly spaced sub-sample of the elements of $x_t$ between the 
+indices $t$ and $t + (L-1)\tau$, which encloses $L\tau$ entries of the original 
+time series. Thus, the original sequence of length $T$ produces the vectors
+$v_1, v_2, \dots, v_{T - L\tau + 1}$, so that there are $N \coloneqq T - (L\tau - 1)$ total 
+vectors of length $L$.
+
+## Permutation Entropy
+Given the input signal $x_{1:T}$, construct the subsequences $v_1, v_2, \dots, v_N$
+as described above. Each of these produces an ordinal pattern 
+$\pi(v_t)$, which is a permutation of $[L]$. Consider the discrete probability 
+distribution over the sample space $P_L$ defined by
+$$
+p(\pi) \coloneqq 
+\frac{\textrm{number of } v_t \textrm{ with pattern } \pi}{N}
+= \frac{\lvert\{t: \pi(v_t) = \pi\}\rvert}{N}
+$$
+for each $\pi \in P_L$. This is a probability distribution over length-$L$
+permutations defined by the empirical ordering frequencies in the time series.
+The permutation entropy (EP) of $x_{1:T}$ is the entropy of this distribution:
+$$
+\mathrm{PE}(L, \tau) \coloneqq -\sum_{\pi \in P_L} p(\pi) \log p(\pi).
+$$
+
+Note that there are $L!$ terms in the sum since there are $L!$ possible
+permutations. Here are a few examples to make this concrete.
+
+::: {.callout-note title="Example"}
+Consider $x_{1:T} = (1, 2, 3, 4, 5, 6, 7, 8$ and set $L = 3$, $\tau = 1$.
+Then the set of $v_t$ vectors consists of $(1, 2, 3)$, $(2, 3, 4)$, $(3, 4, 5)$,
+$(4, 5, 6)$, $(5, 6, 7)$, $(6, 7, 8)$. Note that there are indeed 
+$N = T - (L\tau - 1) = 8 - (3 \cdot 1 - 1) = 6$ vectors here. They all have 
+the same ordering pattern $\pi = (1, 2, 3)$ and thus the entropy of the
+permutation distribution is $0$. In general, the only way to end up with 
+$\mathrm{PE} = 0$ is for the input signal to be monotonically increasing 
+or decreasing.
+:::

@@ -116,10 +116,9 @@ vectors $y_1, \dots, y_M$.
 We are generalizing the ideas and notation here, so should try to forget
 about the RNN notation above. However, to see how things fit together,
 here are the connections to the RNN setting:  
-* The data vectors are the input token hidden states $h_1, \dots, h_N$.  
-* The query vectors are the output token hidden states $s_1, \dots, s_M$.  
-* The output vectors are the contexts $c_1, \dots, c_M$.
-
+* The data vectors are the source hidden states $h_1, \dots, h_N$.  
+* The query vectors are the target hidden states $s_1, \dots, s_M$.  
+* The output vectors are the contexts $c_1, \dots, c_M$.  
 In the RNN model, the queries were generated sequentially as part of the
 model in a way that depended on the data vectors and the context vectors.
 We are now looking at things more generically and treating the queries
