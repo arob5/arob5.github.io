@@ -1,0 +1,84 @@
+---
+title: "Introduction to Prior-Fitted Networks"
+description: Metalearning for Bayesian prediction
+layout: default
+date: 2026-03-17
+categories: [Machine Learning, Neural Network, Bayesian Inference]
+bibliography: pfn_references.bib
+format:
+  html:
+    css: ../../styles.css
+    number-sections: true
+    number-depth: 3
+    fig-cap-location: top
+    math:
+      method: mathjax
+---
+
+<div class="hidden-macros">
+$$
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\pipes}{\|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Gaussian}{\mathcal{N}}
+\newcommand{\argmin}{\mathrm{argmin}}
+\newcommand{\loss}{\mathcal{L}}
+\newcommand{\proposal}{\tilde{p}}
+\newcommand{\nnPar}{\phi}
+\newcommand{\bayesPar}{\theta}
+\newcommand{\dataset}{\mathcal{D}}
+\newcommand{\nobs}{N}
+\newcommand{\obsidx}{n}
+\newcommand{\inSpace}{\mathcal{X}}
+\newcommand{\outSpace}{\mathcal{Y}}
+$$
+</div>
+
+
+## Bayesian Perspective
+We start by considering the goal of posterior predictive estimation in a regression
+or classiciation problem. Concretely, we consider a joint probability model 
+$\pi(x, y)$ over inputs $x \in \inSpace$ and their associated targets $y \in \outSpace$.
+In regression problems $\outSpace = \R$, and in classification problems $\outSpace$
+is a finite set. Supposing we have 
+observed the data $\dataset_\nobs = \{x_\obsidx, y_\obsidx\}_{\obsidx=1}^{\nobs}$,
+the task is to characterize the conditional distribution $\pi(y \mid x, \dataset_\nobs)$
+for some new input $x$. 
+
+In typical Bayesian workflows, a model is assumed for the data-generating process 
+for $y$ given $x$; e.g., $y \mid x, \bayesPar \sim \Gaussian(\bayesPar x, 1)$. In the PFN
+context, we consider a full generative model over both $x$ and $y$. 
+In particular, the full probability model is $\pi(x, y, \bayesPar)$, where $\bayesPar$
+are the parameters of some parametric model. The distribution $\pi(x, y)$ mentioned
+above thus arises as the marginal of this model:
+$$
+\pi(x, y) = \int \pi(x, y, \bayesPar) d\bayesPar.
+$$
+We have been quite general up to this point, but let's now assume that the joint
+factorizes as
+$$
+\pi(x, y, \bayesPar) = \pi(y \mid x, \bayesPar) \pi(\bayesPar) \pi(x),
+$$
+which imposes two typical assumptions:
+  
+1. The parameter $\bayesPar$ controls only the model for the conditional distribution of $y$ given $x$.  
+2. Observing $x$ does not give information about $\bayesPar$; i.e., the factorization $\pi(x, y) = \pi(y \mid x)\pi(x)$ holds.
+
+These assumptions typically hold by construction in standard Bayesian models, but are worth emphasizing
+here. @NaglerFoundations highlight this point in a Bayesian nonparametric formulation.
+In considering the posterior predictive, we make the additional assumption that the targets are conditionally
+independent given the inputs and parameters; that is,
+$$
+\pi(y, y^\prime \mid x, x^\prime, \bayesPar) = \pi(y \mid x, \bayesPar) \pi(y^\prime \mid x^\prime, \bayesPar).
+$$
+Under these assumptions, we can write the posterior predictive as 
+$$
+\begin{align}
+\pi(y \mid x, \dataset_\nobs) 
+&= \int \pi(y, \bayesPar \mid x, \dataset_\nobs) d\bayesPar \\
+&= \int \pi(y \mid x, \bayesPar, \dataset_\nobs) \pi(\bayesPar \mid x, \dataset_\nobs) d\bayesPar \\
+&= \int \pi(y \mid x, \bayesPar) \pi(\bayesPar \mid \dataset_\nobs) d\bayesPar,
+\end{align}
+$$
+where the final line follows from conditional independence (first term) and assumption 2 (second term).

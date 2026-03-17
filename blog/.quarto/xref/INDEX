@@ -91,5 +91,8 @@
   },
   "posts/transformers/rnn_to_attention.qmd": {
     "rnn_to_attention.html": "5b804eb4"
+  },
+  "posts/pfn/intro_to_pfns.qmd": {
+    "intro_to_pfns.html": "2749b5f6"
   }
 }

@@ -119,3 +119,9 @@ permutation distribution is $0$. In general, the only way to end up with
 $\mathrm{PE} = 0$ is for the input signal to be monotonically increasing 
 or decreasing.
 :::
+
+## Weighted Permutation Entropy
+
+::: {.callout-note title="Two Fixed Points with Noise"}
+
+:::
