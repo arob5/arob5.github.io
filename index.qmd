@@ -77,8 +77,17 @@ Prior to BU, I worked as a research assistant at the Federal Reserve Bank of Bos
 <div id="refs">
 
 <p>
+<strong>Surrogate-Based Bayesian Inference: Uncertainty Quantification and Active Learning</strong><br>
+<strong>Andrew Gerard Roberts</strong>, Michael C. Dietze, and Jonathan H. Huggins<br>
+<em>arXiv preprint</em>, 2026<br>
+<span class="pub-links">
+  <a href="https://arxiv.org/abs/2603.13646" target="_blank">ArXiv</a>
+</span>
+</p>
+
+<p>
 <strong>Propagating Surrogate Uncertainty in Bayesian Inverse Problems</strong><br>
-<strong>Andrew Gerard Roberts</strong>, Michael Dietze, and Jonathan Huggins<br>
+<strong>Andrew Gerard Roberts</strong>, Michael C. Dietze, and Jonathan H. Huggins<br>
 <em>arXiv preprint</em>, 2026<br>
 <span class="pub-links">
   <a href="https://arxiv.org/abs/2601.03532" target="_blank">ArXiv</a>
