@@ -37,6 +37,8 @@ $$
 
 
 ## Bayesian Perspective
+
+### Background
 We start by considering the goal of posterior predictive estimation in a regression
 or classiciation problem. Concretely, we consider a joint probability model 
 $\pi(x, y)$ over inputs $x \in \inSpace$ and their associated targets $y \in \outSpace$.
@@ -82,3 +84,16 @@ $$
 \end{align}
 $$
 where the final line follows from conditional independence (first term) and assumption 2 (second term).
+The standard Bayesian approach is to first compute the posterior $\pi(\bayesPar \mid \dataset_\nobs)$,
+which is then used to compute the posterior predictive. Note that the prior distribution over $x$
+plays no role here---the posterior predictive is conditional on a particular value of $x$. Indeed,
+many standard regression models make no attempt to model the variability in $x$.
+The reason we defined the joint probability model to include $x$ is that it becomes relevant
+in the PFN approach, which we now discuss. 
+
+### PFNs for Bayesian Prediction
+PFNs bypass 
+
+
+### More General Perspectives
+Multiple tasks, no explicit model
